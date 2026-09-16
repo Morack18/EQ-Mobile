@@ -1,0 +1,20 @@
+{
+  "description": "Reviewed P1999 correction overlay for Halas NPC roster, spawns, and pathgrids.",
+  "grids": {
+    "deletions": [],
+    "replacements": {}
+  },
+  "npc_types": {
+    "additions": [],
+    "deletions": [],
+    "overrides": {}
+  },
+  "schema_version": 1,
+  "spawns": {
+    "additions": [],
+    "deletions": [],
+    "overrides": {}
+  },
+  "target_era": "classic_p1999",
+  "zone": "halas"
+}

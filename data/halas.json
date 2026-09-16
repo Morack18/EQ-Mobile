@@ -1,0 +1,35 @@
+{
+  "id": "halas",
+  "display_name": "Halas",
+  "geometry_scene": "res://assets/imported/halas/halas.glb",
+  "geometry_scale": 10.0,
+  "object_instances": "res://data/halas_objects.json",
+  "object_model_directory": "res://assets/imported/halas/objects",
+  "npc_source": "res://data/halas_npcs.json",
+  "npc_model_directory": "res://assets/imported/halas/characters",
+  "enable_training_npc": true,
+  "player_respawn_seconds": 2.5,
+  "player_spawn_revision": 6,
+  "bounds": { "half_extent": 820.0 },
+  "player_spawn": [-13.0, 4.38, -10.0],
+  "spawns": [
+    {
+      "id": "training_spark",
+      "archetype": "training_spark",
+      "position": [3.0, 1.0, -4.0],
+      "respawn_seconds": 12.0
+    }
+  ],
+  "npc_archetypes": {
+    "training_spark": {
+      "name": "Training Spark",
+      "max_health": 35.0,
+      "damage": 5.0,
+      "move_speed": 2.3,
+      "aggro_range": 8.0,
+      "attack_range": 1.7,
+      "attack_cooldown": 1.4,
+      "loot": [{ "item_id": "training_spark_fragment", "quantity": 1 }]
+    }
+  }
+}

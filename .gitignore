@@ -1,0 +1,29 @@
+# Godot generated/cache
+.godot/
+/android/
+
+# Build/export output
+*.apk
+*.apk.idsig
+log.txt
+*.log
+
+# Large local reference/source trees and EverQuest data.
+# These are development inputs, not part of the GitHub repository.
+resources/*
+
+# Allow reusable EQ Mobile-generated research if/when present.
+!resources/generated-reference/
+!resources/generated-reference/**
+
+# Imported/extracted game assets stay local unless explicitly reviewed.
+assets/imported/
+
+# Misc local output
+build/
+builds/
+dist/
+
+# Python generated cache
+__pycache__/
+*.py[cod]

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "zone_id": "halas",
+  "runtime": {
+    "zone_definition": "data/halas.json",
+    "geometry": "assets/imported/halas/halas.glb",
+    "placement_manifest": "data/halas_objects.json",
+    "prop_directory": "assets/imported/halas/objects"
+  },
+  "staging": {
+    "geometry_source": "resources/LanternExtractor/Exports/halas/Zone/halas.glb",
+    "placement_source": "resources/LanternExtractor/Exports/halas/Zone/object_instances.txt",
+    "prop_source_directory": "resources/LanternExtractor/Exports/halas/Objects"
+  },
+  "peq": {
+    "zone_short_name": "halas",
+    "npc_output": "data/halas_npcs_source.json"
+  }
+}

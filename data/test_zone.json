@@ -1,0 +1,25 @@
+{
+  "id": "starter_clearing",
+  "display_name": "Starter Clearing",
+  "bounds": { "half_extent": 18.0 },
+  "player_spawn": [0.0, 0.0, 7.0],
+  "spawns": [
+    {
+      "id": "training_spark",
+      "archetype": "training_spark",
+      "position": [0.0, 0.0, -4.0],
+      "respawn_seconds": 12.0
+    }
+  ],
+  "npc_archetypes": {
+    "training_spark": {
+      "name": "Training Spark",
+      "max_health": 35.0,
+      "damage": 5.0,
+      "move_speed": 2.3,
+      "aggro_range": 8.0,
+      "attack_range": 1.7,
+      "attack_cooldown": 1.4
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "source": {
+    "kind": "original_development_fixture",
+    "note": "These placeholder items are not EverQuest content."
+  },
+  "items": {
+    "training_spark_fragment": {
+      "display_name": "Training Spark Fragment",
+      "description": "A harmless original fixture reward for the offline loot loop."
+    }
+  }
+}

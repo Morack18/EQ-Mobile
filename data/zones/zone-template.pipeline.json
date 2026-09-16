@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "zone_id": "replace_with_zone_short_name",
+  "runtime": {
+    "zone_definition": "data/replace_with_zone_short_name.json",
+    "geometry": "assets/imported/replace_with_zone_short_name/replace_with_zone_short_name.glb",
+    "placement_manifest": "data/replace_with_zone_short_name_objects.json",
+    "prop_directory": "assets/imported/replace_with_zone_short_name/objects"
+  },
+  "staging": {
+    "geometry_source": "resources/LanternExtractor/Exports/replace_with_zone_short_name/Zone/replace_with_zone_short_name.glb",
+    "placement_source": "resources/LanternExtractor/Exports/replace_with_zone_short_name/Zone/object_instances.txt",
+    "prop_source_directory": "resources/LanternExtractor/Exports/replace_with_zone_short_name/Objects"
+  },
+  "peq": {
+    "zone_short_name": "replace_with_zone_short_name",
+    "npc_output": "data/replace_with_zone_short_name_npcs_source.json"
+  }
+}
