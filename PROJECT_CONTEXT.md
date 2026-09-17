@@ -24,6 +24,12 @@ rights are confirmed, create original branding, art, text, audio, quests, and
 world content; treat the supplied client files as private reference material
 only. This is not legal advice.
 
+The binding implementation policy is [docs/foundation-contract.md](docs/foundation-contract.md).
+It defines the pre-Kunark default, later-era opt-in rules, source authority,
+evidence labels, provenance boundary, and the required
+[deviation registry](docs/deviation-registry.md). New systems must follow it
+before choosing a source value or behavior.
+
 ## Current workspace
 
 - Engine: Godot 4.7 project (`project.godot`), Mobile renderer and Jolt 3D
