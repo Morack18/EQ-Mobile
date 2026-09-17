@@ -61,6 +61,7 @@ NPC_TYPE_FIELDS = {
 
 SPAWN_FIELDS = {
     "spawn2_id": int,
+    "spawn_group_id": int,
     "position_eq": list,
     "heading_eq": (int, float),
     "respawn_seconds": int,
@@ -474,6 +475,22 @@ def apply_overlay(
         str(k): grids_map[str(k)] for k in sorted(grids_map.keys(), key=lambda x: int(x))
     }
 
+    # Typed keys are a derived neutral-data contract. Raw PEQ snapshots keep
+    # their source-shaped numeric fields so overlay application remains a
+    # transparent correction step rather than an identity rewrite.
+    for npc in sorted_npc_types:
+        npc["key"] = f"peq:npc:{int(npc['id'])}"
+    for spawn in sorted_spawns:
+        spawn["key"] = f"peq:spawn:{int(spawn['spawn2_id'])}"
+        spawn["spawn_group_ref"] = f"peq:spawn_group:{int(spawn['spawn_group_id'])}"
+        for candidate in spawn["candidates"]:
+            candidate["npc_ref"] = f"peq:npc:{int(candidate['npc_type_id'])}"
+    derived_groups = copy.deepcopy(source_data.get("spawn_groups", {}))
+    for group_id, group in derived_groups.items():
+        group["key"] = f"peq:spawn_group:{int(group_id)}"
+        for candidate in group.get("candidates", []):
+            candidate["npc_ref"] = f"peq:npc:{int(candidate['npc_type_id'])}"
+
     # Derived provenance metadata
     raw_source_meta = source_data.get("source", {})
     derived_source = dict(raw_source_meta)
@@ -484,10 +501,11 @@ def apply_overlay(
     derived_source["schema"] = "ProjectEQ content SQL with P1999 overlay"
 
     derived = {
-        "grids": sorted_grids,
-        "npc_types": sorted_npc_types,
-        "source": derived_source,
-        "spawns": sorted_spawns,
+		"grids": sorted_grids,
+		"npc_types": sorted_npc_types,
+		"source": derived_source,
+		"spawns": sorted_spawns,
+		"spawn_groups": derived_groups,
     }
     return derived
 

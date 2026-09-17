@@ -46,6 +46,7 @@ def main() -> None:
     spawns = content["spawns"]
     npc_types = content["npc_types"]
     grids = content["grids"]
+    spawn_groups = content.get("spawn_groups", {})
 
     npc_type_ids: set[int] = set()
     for npc_type in npc_types:
@@ -62,6 +63,9 @@ def main() -> None:
         if spawn_id in spawn_ids:
             fail(f"duplicate spawn2 ID: {spawn_id}")
         spawn_ids.add(spawn_id)
+        group_id = spawn.get("spawn_group_id")
+        if not isinstance(group_id, int) or str(group_id) not in spawn_groups:
+            fail(f"spawn {spawn_id} references missing spawn group {group_id}")
         position(spawn["position_eq"], f"spawn {spawn_id} position_eq")
         heading(spawn["heading_eq"], f"spawn {spawn_id} heading_eq")
         grid_id = spawn["grid_id"]
@@ -72,6 +76,8 @@ def main() -> None:
             npc_type_id = candidate["npc_type_id"]
             if npc_type_id not in npc_type_ids:
                 fail(f"spawn {spawn_id} references missing npc type {npc_type_id}")
+        if spawn_groups[str(group_id)].get("candidates") != spawn["candidates"]:
+            fail(f"spawn {spawn_id} candidates disagree with spawn group {group_id}")
 
     grid_ids: set[int] = set()
     point_count = 0

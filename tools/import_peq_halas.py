@@ -215,7 +215,15 @@ def main() -> None:
             spawn["unavailable_grid_id"] = spawn["grid_id"]
             spawn["grid_id"] = 0
             unavailable_grid_references += 1
-        spawn["candidates"] = candidates[spawn.pop("spawn_group_id")]
+        spawn["candidates"] = candidates[spawn["spawn_group_id"]]
+
+    # Retain the group relationship as a first-class definition. Candidates are
+    # duplicated on a spawn for backward-compatible runtime selection, but the
+    # source distinction remains available to neutral-schema importers.
+    spawn_groups = {
+        str(group_id): {"id": group_id, "candidates": candidates[group_id]}
+        for group_id in sorted({spawn["spawn_group_id"] for spawn in spawns})
+    }
 
     result = {
         "source": {
@@ -233,6 +241,7 @@ def main() -> None:
             "p1999_overlay": "pending reviewed P1999-specific corrections",
         },
         "spawns": spawns,
+        "spawn_groups": spawn_groups,
         "npc_types": list(npc_types.values()),
         "grids": grids,
     }

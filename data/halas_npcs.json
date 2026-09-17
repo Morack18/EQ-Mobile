@@ -1805,6 +1805,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29000,
+      "key": "peq:npc:29000",
       "lastname": "Alchemy Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -1835,6 +1836,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29001,
+      "key": "peq:npc:29001",
       "lastname": "Shaman Spells",
       "level": 45,
       "loottable_id": 0,
@@ -1865,6 +1867,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29002,
+      "key": "peq:npc:29002",
       "lastname": "Shaman Spells",
       "level": 45,
       "loottable_id": 0,
@@ -1895,6 +1898,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29003,
+      "key": "peq:npc:29003",
       "lastname": "Shaman Spells",
       "level": 45,
       "loottable_id": 0,
@@ -1925,6 +1929,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29004,
+      "key": "peq:npc:29004",
       "lastname": "Shaman Spells",
       "level": 45,
       "loottable_id": 0,
@@ -1955,6 +1960,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29005,
+      "key": "peq:npc:29005",
       "lastname": "Shaman Spells",
       "level": 45,
       "loottable_id": 0,
@@ -1985,6 +1991,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29006,
+      "key": "peq:npc:29006",
       "lastname": "Shaman Spells",
       "level": 45,
       "loottable_id": 0,
@@ -2015,6 +2022,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 25,
       "id": 29012,
+      "key": "peq:npc:29012",
       "lastname": "",
       "level": 40,
       "loottable_id": 0,
@@ -2045,6 +2053,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 0,
       "id": 29013,
+      "key": "peq:npc:29013",
       "lastname": "",
       "level": 5,
       "loottable_id": 0,
@@ -2075,6 +2084,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29014,
+      "key": "peq:npc:29014",
       "lastname": "Smithing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2105,6 +2115,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29015,
+      "key": "peq:npc:29015",
       "lastname": "Brewing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2135,6 +2146,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29017,
+      "key": "peq:npc:29017",
       "lastname": "Alchemy Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2165,6 +2177,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29018,
+      "key": "peq:npc:29018",
       "lastname": "Smithing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2195,6 +2208,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29019,
+      "key": "peq:npc:29019",
       "lastname": "Smithing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2225,6 +2239,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29020,
+      "key": "peq:npc:29020",
       "lastname": "Smithing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2255,6 +2270,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 250,
       "id": 29021,
+      "key": "peq:npc:29021",
       "lastname": "Baking Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2285,6 +2301,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29022,
+      "key": "peq:npc:29022",
       "lastname": "Pottery Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2315,6 +2332,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29023,
+      "key": "peq:npc:29023",
       "lastname": "Shaman Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -2345,6 +2363,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29024,
+      "key": "peq:npc:29024",
       "lastname": "Warrior Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -2375,6 +2394,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 0,
       "id": 29025,
+      "key": "peq:npc:29025",
       "lastname": "",
       "level": 5,
       "loottable_id": 102638,
@@ -2405,6 +2425,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 0,
       "id": 29026,
+      "key": "peq:npc:29026",
       "lastname": "",
       "level": 3,
       "loottable_id": 102638,
@@ -2435,6 +2456,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29027,
+      "key": "peq:npc:29027",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2465,6 +2487,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 0,
       "id": 29028,
+      "key": "peq:npc:29028",
       "lastname": "",
       "level": 1,
       "loottable_id": 0,
@@ -2495,6 +2518,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29029,
+      "key": "peq:npc:29029",
       "lastname": "Pottery Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2525,6 +2549,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29030,
+      "key": "peq:npc:29030",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2555,6 +2580,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29031,
+      "key": "peq:npc:29031",
       "lastname": "",
       "level": 40,
       "loottable_id": 102640,
@@ -2585,6 +2611,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29032,
+      "key": "peq:npc:29032",
       "lastname": "",
       "level": 40,
       "loottable_id": 102641,
@@ -2615,6 +2642,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29033,
+      "key": "peq:npc:29033",
       "lastname": "",
       "level": 40,
       "loottable_id": 102642,
@@ -2645,6 +2673,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29034,
+      "key": "peq:npc:29034",
       "lastname": "",
       "level": 40,
       "loottable_id": 102643,
@@ -2675,6 +2704,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 251,
       "id": 29035,
+      "key": "peq:npc:29035",
       "lastname": "Baking Supplies",
       "level": 30,
       "loottable_id": 0,
@@ -2705,6 +2735,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29036,
+      "key": "peq:npc:29036",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2735,6 +2766,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29037,
+      "key": "peq:npc:29037",
       "lastname": "Satchels",
       "level": 45,
       "loottable_id": 0,
@@ -2765,6 +2797,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29038,
+      "key": "peq:npc:29038",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2795,6 +2828,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 250,
       "id": 29039,
+      "key": "peq:npc:29039",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2825,6 +2859,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29041,
+      "key": "peq:npc:29041",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2855,6 +2890,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29042,
+      "key": "peq:npc:29042",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2885,6 +2921,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 253,
       "id": 29043,
+      "key": "peq:npc:29043",
       "lastname": "Alchemy Supplies",
       "level": 35,
       "loottable_id": 0,
@@ -2915,6 +2952,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 250,
       "id": 29044,
+      "key": "peq:npc:29044",
       "lastname": "Fletching Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -2945,6 +2983,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29045,
+      "key": "peq:npc:29045",
       "lastname": "Armor",
       "level": 45,
       "loottable_id": 0,
@@ -2975,6 +3014,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29046,
+      "key": "peq:npc:29046",
       "lastname": "Armor",
       "level": 45,
       "loottable_id": 0,
@@ -3005,6 +3045,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29047,
+      "key": "peq:npc:29047",
       "lastname": "Weapons",
       "level": 45,
       "loottable_id": 0,
@@ -3035,6 +3076,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29049,
+      "key": "peq:npc:29049",
       "lastname": "Smithing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -3065,6 +3107,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29051,
+      "key": "peq:npc:29051",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -3095,6 +3138,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 250,
       "id": 29052,
+      "key": "peq:npc:29052",
       "lastname": "Armor",
       "level": 45,
       "loottable_id": 0,
@@ -3125,6 +3169,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29053,
+      "key": "peq:npc:29053",
       "lastname": "Armor",
       "level": 45,
       "loottable_id": 0,
@@ -3155,6 +3200,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 250,
       "id": 29054,
+      "key": "peq:npc:29054",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -3185,6 +3231,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29055,
+      "key": "peq:npc:29055",
       "lastname": "Warrior Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3215,6 +3262,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29056,
+      "key": "peq:npc:29056",
       "lastname": "Warrior Guildmaster",
       "level": 61,
       "loottable_id": 1431,
@@ -3245,6 +3293,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29057,
+      "key": "peq:npc:29057",
       "lastname": "Warrior Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3275,6 +3324,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29058,
+      "key": "peq:npc:29058",
       "lastname": "Shaman Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3305,6 +3355,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29059,
+      "key": "peq:npc:29059",
       "lastname": "Shaman Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3335,6 +3386,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29060,
+      "key": "peq:npc:29060",
       "lastname": "Shaman Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3365,6 +3417,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29061,
+      "key": "peq:npc:29061",
       "lastname": "Armor",
       "level": 45,
       "loottable_id": 0,
@@ -3395,6 +3448,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29062,
+      "key": "peq:npc:29062",
       "lastname": "Armor",
       "level": 45,
       "loottable_id": 0,
@@ -3425,6 +3479,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29063,
+      "key": "peq:npc:29063",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -3455,6 +3510,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29064,
+      "key": "peq:npc:29064",
       "lastname": "",
       "level": 40,
       "loottable_id": 102645,
@@ -3485,6 +3541,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29065,
+      "key": "peq:npc:29065",
       "lastname": "",
       "level": 40,
       "loottable_id": 102646,
@@ -3515,6 +3572,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 250,
       "id": 29066,
+      "key": "peq:npc:29066",
       "lastname": "Banker",
       "level": 45,
       "loottable_id": 0,
@@ -3545,6 +3603,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29067,
+      "key": "peq:npc:29067",
       "lastname": "General Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -3575,6 +3634,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29069,
+      "key": "peq:npc:29069",
       "lastname": "Rogue Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3605,6 +3665,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29070,
+      "key": "peq:npc:29070",
       "lastname": "Rogue Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3635,6 +3696,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 255,
       "id": 29071,
+      "key": "peq:npc:29071",
       "lastname": "Rogue Guildmaster",
       "level": 61,
       "loottable_id": 0,
@@ -3665,6 +3727,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29072,
+      "key": "peq:npc:29072",
       "lastname": "",
       "level": 40,
       "loottable_id": 102647,
@@ -3695,6 +3758,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 35,
       "id": 29073,
+      "key": "peq:npc:29073",
       "lastname": "",
       "level": 40,
       "loottable_id": 102648,
@@ -3725,6 +3789,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 252,
       "id": 29074,
+      "key": "peq:npc:29074",
       "lastname": "Fishing Supplies",
       "level": 45,
       "loottable_id": 0,
@@ -3755,6 +3820,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 16,
       "id": 29077,
+      "key": "peq:npc:29077",
       "lastname": "",
       "level": 25,
       "loottable_id": 0,
@@ -3785,6 +3851,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 16,
       "id": 29085,
+      "key": "peq:npc:29085",
       "lastname": "",
       "level": 50,
       "loottable_id": 0,
@@ -3815,6 +3882,7 @@
       "hp_regen_per_second": 0,
       "hp_regen_rate": 70,
       "id": 202372,
+      "key": "peq:npc:202372",
       "lastname": null,
       "level": 80,
       "loottable_id": 0,
@@ -3847,16 +3915,768 @@
     "zone_id": 29,
     "zone_table_id": 160
   },
+  "spawn_groups": {
+    "1769": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29006",
+          "npc_type_id": 29006
+        }
+      ],
+      "id": 1769,
+      "key": "peq:spawn_group:1769"
+    },
+    "1770": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29005",
+          "npc_type_id": 29005
+        }
+      ],
+      "id": 1770,
+      "key": "peq:spawn_group:1770"
+    },
+    "1771": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29002",
+          "npc_type_id": 29002
+        }
+      ],
+      "id": 1771,
+      "key": "peq:spawn_group:1771"
+    },
+    "1772": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29074",
+          "npc_type_id": 29074
+        }
+      ],
+      "id": 1772,
+      "key": "peq:spawn_group:1772"
+    },
+    "1773": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29073",
+          "npc_type_id": 29073
+        }
+      ],
+      "id": 1773,
+      "key": "peq:spawn_group:1773"
+    },
+    "1774": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29072",
+          "npc_type_id": 29072
+        }
+      ],
+      "id": 1774,
+      "key": "peq:spawn_group:1774"
+    },
+    "1775": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29071",
+          "npc_type_id": 29071
+        }
+      ],
+      "id": 1775,
+      "key": "peq:spawn_group:1775"
+    },
+    "1776": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29070",
+          "npc_type_id": 29070
+        }
+      ],
+      "id": 1776,
+      "key": "peq:spawn_group:1776"
+    },
+    "1777": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29069",
+          "npc_type_id": 29069
+        }
+      ],
+      "id": 1777,
+      "key": "peq:spawn_group:1777"
+    },
+    "1779": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29067",
+          "npc_type_id": 29067
+        }
+      ],
+      "id": 1779,
+      "key": "peq:spawn_group:1779"
+    },
+    "1780": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29066",
+          "npc_type_id": 29066
+        }
+      ],
+      "id": 1780,
+      "key": "peq:spawn_group:1780"
+    },
+    "1781": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29065",
+          "npc_type_id": 29065
+        }
+      ],
+      "id": 1781,
+      "key": "peq:spawn_group:1781"
+    },
+    "1782": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29064",
+          "npc_type_id": 29064
+        }
+      ],
+      "id": 1782,
+      "key": "peq:spawn_group:1782"
+    },
+    "1783": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29063",
+          "npc_type_id": 29063
+        }
+      ],
+      "id": 1783,
+      "key": "peq:spawn_group:1783"
+    },
+    "1784": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29062",
+          "npc_type_id": 29062
+        }
+      ],
+      "id": 1784,
+      "key": "peq:spawn_group:1784"
+    },
+    "1785": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29061",
+          "npc_type_id": 29061
+        }
+      ],
+      "id": 1785,
+      "key": "peq:spawn_group:1785"
+    },
+    "1786": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29060",
+          "npc_type_id": 29060
+        }
+      ],
+      "id": 1786,
+      "key": "peq:spawn_group:1786"
+    },
+    "1787": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29059",
+          "npc_type_id": 29059
+        }
+      ],
+      "id": 1787,
+      "key": "peq:spawn_group:1787"
+    },
+    "1788": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29058",
+          "npc_type_id": 29058
+        }
+      ],
+      "id": 1788,
+      "key": "peq:spawn_group:1788"
+    },
+    "1789": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29057",
+          "npc_type_id": 29057
+        }
+      ],
+      "id": 1789,
+      "key": "peq:spawn_group:1789"
+    },
+    "1790": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29056",
+          "npc_type_id": 29056
+        }
+      ],
+      "id": 1790,
+      "key": "peq:spawn_group:1790"
+    },
+    "1791": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29055",
+          "npc_type_id": 29055
+        }
+      ],
+      "id": 1791,
+      "key": "peq:spawn_group:1791"
+    },
+    "1792": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29054",
+          "npc_type_id": 29054
+        }
+      ],
+      "id": 1792,
+      "key": "peq:spawn_group:1792"
+    },
+    "1793": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29053",
+          "npc_type_id": 29053
+        }
+      ],
+      "id": 1793,
+      "key": "peq:spawn_group:1793"
+    },
+    "1794": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29052",
+          "npc_type_id": 29052
+        }
+      ],
+      "id": 1794,
+      "key": "peq:spawn_group:1794"
+    },
+    "1795": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29051",
+          "npc_type_id": 29051
+        }
+      ],
+      "id": 1795,
+      "key": "peq:spawn_group:1795"
+    },
+    "1797": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29049",
+          "npc_type_id": 29049
+        }
+      ],
+      "id": 1797,
+      "key": "peq:spawn_group:1797"
+    },
+    "1799": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29047",
+          "npc_type_id": 29047
+        }
+      ],
+      "id": 1799,
+      "key": "peq:spawn_group:1799"
+    },
+    "1800": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29046",
+          "npc_type_id": 29046
+        }
+      ],
+      "id": 1800,
+      "key": "peq:spawn_group:1800"
+    },
+    "1801": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29045",
+          "npc_type_id": 29045
+        }
+      ],
+      "id": 1801,
+      "key": "peq:spawn_group:1801"
+    },
+    "1802": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29044",
+          "npc_type_id": 29044
+        }
+      ],
+      "id": 1802,
+      "key": "peq:spawn_group:1802"
+    },
+    "1803": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29043",
+          "npc_type_id": 29043
+        }
+      ],
+      "id": 1803,
+      "key": "peq:spawn_group:1803"
+    },
+    "1804": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29042",
+          "npc_type_id": 29042
+        }
+      ],
+      "id": 1804,
+      "key": "peq:spawn_group:1804"
+    },
+    "1805": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29041",
+          "npc_type_id": 29041
+        }
+      ],
+      "id": 1805,
+      "key": "peq:spawn_group:1805"
+    },
+    "1807": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29039",
+          "npc_type_id": 29039
+        }
+      ],
+      "id": 1807,
+      "key": "peq:spawn_group:1807"
+    },
+    "1808": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29038",
+          "npc_type_id": 29038
+        }
+      ],
+      "id": 1808,
+      "key": "peq:spawn_group:1808"
+    },
+    "1809": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29037",
+          "npc_type_id": 29037
+        }
+      ],
+      "id": 1809,
+      "key": "peq:spawn_group:1809"
+    },
+    "1810": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29036",
+          "npc_type_id": 29036
+        }
+      ],
+      "id": 1810,
+      "key": "peq:spawn_group:1810"
+    },
+    "1811": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29035",
+          "npc_type_id": 29035
+        }
+      ],
+      "id": 1811,
+      "key": "peq:spawn_group:1811"
+    },
+    "1812": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29034",
+          "npc_type_id": 29034
+        }
+      ],
+      "id": 1812,
+      "key": "peq:spawn_group:1812"
+    },
+    "1813": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29033",
+          "npc_type_id": 29033
+        }
+      ],
+      "id": 1813,
+      "key": "peq:spawn_group:1813"
+    },
+    "1814": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29032",
+          "npc_type_id": 29032
+        }
+      ],
+      "id": 1814,
+      "key": "peq:spawn_group:1814"
+    },
+    "1815": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29031",
+          "npc_type_id": 29031
+        }
+      ],
+      "id": 1815,
+      "key": "peq:spawn_group:1815"
+    },
+    "1816": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29030",
+          "npc_type_id": 29030
+        }
+      ],
+      "id": 1816,
+      "key": "peq:spawn_group:1816"
+    },
+    "1817": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29029",
+          "npc_type_id": 29029
+        }
+      ],
+      "id": 1817,
+      "key": "peq:spawn_group:1817"
+    },
+    "1818": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29028",
+          "npc_type_id": 29028
+        }
+      ],
+      "id": 1818,
+      "key": "peq:spawn_group:1818"
+    },
+    "1819": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29027",
+          "npc_type_id": 29027
+        }
+      ],
+      "id": 1819,
+      "key": "peq:spawn_group:1819"
+    },
+    "1820": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29026",
+          "npc_type_id": 29026
+        }
+      ],
+      "id": 1820,
+      "key": "peq:spawn_group:1820"
+    },
+    "1821": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29025",
+          "npc_type_id": 29025
+        }
+      ],
+      "id": 1821,
+      "key": "peq:spawn_group:1821"
+    },
+    "1822": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29024",
+          "npc_type_id": 29024
+        }
+      ],
+      "id": 1822,
+      "key": "peq:spawn_group:1822"
+    },
+    "1823": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29023",
+          "npc_type_id": 29023
+        }
+      ],
+      "id": 1823,
+      "key": "peq:spawn_group:1823"
+    },
+    "1824": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29022",
+          "npc_type_id": 29022
+        }
+      ],
+      "id": 1824,
+      "key": "peq:spawn_group:1824"
+    },
+    "1825": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29021",
+          "npc_type_id": 29021
+        }
+      ],
+      "id": 1825,
+      "key": "peq:spawn_group:1825"
+    },
+    "1826": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29020",
+          "npc_type_id": 29020
+        }
+      ],
+      "id": 1826,
+      "key": "peq:spawn_group:1826"
+    },
+    "1827": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29019",
+          "npc_type_id": 29019
+        }
+      ],
+      "id": 1827,
+      "key": "peq:spawn_group:1827"
+    },
+    "1828": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29018",
+          "npc_type_id": 29018
+        }
+      ],
+      "id": 1828,
+      "key": "peq:spawn_group:1828"
+    },
+    "1829": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29017",
+          "npc_type_id": 29017
+        }
+      ],
+      "id": 1829,
+      "key": "peq:spawn_group:1829"
+    },
+    "1831": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29015",
+          "npc_type_id": 29015
+        }
+      ],
+      "id": 1831,
+      "key": "peq:spawn_group:1831"
+    },
+    "1832": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29014",
+          "npc_type_id": 29014
+        }
+      ],
+      "id": 1832,
+      "key": "peq:spawn_group:1832"
+    },
+    "1833": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29013",
+          "npc_type_id": 29013
+        }
+      ],
+      "id": 1833,
+      "key": "peq:spawn_group:1833"
+    },
+    "1834": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29012",
+          "npc_type_id": 29012
+        }
+      ],
+      "id": 1834,
+      "key": "peq:spawn_group:1834"
+    },
+    "48192": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:202372",
+          "npc_type_id": 202372
+        }
+      ],
+      "id": 48192,
+      "key": "peq:spawn_group:48192"
+    },
+    "5670": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29004",
+          "npc_type_id": 29004
+        }
+      ],
+      "id": 5670,
+      "key": "peq:spawn_group:5670"
+    },
+    "5671": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29003",
+          "npc_type_id": 29003
+        }
+      ],
+      "id": 5671,
+      "key": "peq:spawn_group:5671"
+    },
+    "5672": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29001",
+          "npc_type_id": 29001
+        }
+      ],
+      "id": 5672,
+      "key": "peq:spawn_group:5672"
+    },
+    "5673": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29000",
+          "npc_type_id": 29000
+        }
+      ],
+      "id": 5673,
+      "key": "peq:spawn_group:5673"
+    },
+    "7427": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29077",
+          "npc_type_id": 29077
+        }
+      ],
+      "id": 7427,
+      "key": "peq:spawn_group:7427"
+    },
+    "7435": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_ref": "peq:npc:29085",
+          "npc_type_id": 29085
+        }
+      ],
+      "id": 7435,
+      "key": "peq:spawn_group:7435"
+    }
+  },
   "spawns": [
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29000",
           "npc_type_id": 29000
         }
       ],
       "grid_id": 0,
       "heading_eq": 304.0,
+      "key": "peq:spawn:10019",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3865,17 +4685,21 @@
         4.38
       ],
       "respawn_seconds": 660,
-      "spawn2_id": 10019
+      "spawn2_id": 10019,
+      "spawn_group_id": 5673,
+      "spawn_group_ref": "peq:spawn_group:5673"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29001",
           "npc_type_id": 29001
         }
       ],
       "grid_id": 0,
       "heading_eq": 319.0,
+      "key": "peq:spawn:10020",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3884,17 +4708,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10020
+      "spawn2_id": 10020,
+      "spawn_group_id": 5672,
+      "spawn_group_ref": "peq:spawn_group:5672"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29002",
           "npc_type_id": 29002
         }
       ],
       "grid_id": 0,
       "heading_eq": 408.0,
+      "key": "peq:spawn:10021",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3903,17 +4731,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10021
+      "spawn2_id": 10021,
+      "spawn_group_id": 1771,
+      "spawn_group_ref": "peq:spawn_group:1771"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29003",
           "npc_type_id": 29003
         }
       ],
       "grid_id": 0,
       "heading_eq": 400.0,
+      "key": "peq:spawn:10022",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3922,17 +4754,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10022
+      "spawn2_id": 10022,
+      "spawn_group_id": 5671,
+      "spawn_group_ref": "peq:spawn_group:5671"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29004",
           "npc_type_id": 29004
         }
       ],
       "grid_id": 0,
       "heading_eq": 256.0,
+      "key": "peq:spawn:10023",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3941,17 +4777,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10023
+      "spawn2_id": 10023,
+      "spawn_group_id": 5670,
+      "spawn_group_ref": "peq:spawn_group:5670"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29005",
           "npc_type_id": 29005
         }
       ],
       "grid_id": 0,
       "heading_eq": 256.0,
+      "key": "peq:spawn:10024",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3960,17 +4800,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10024
+      "spawn2_id": 10024,
+      "spawn_group_id": 1770,
+      "spawn_group_ref": "peq:spawn_group:1770"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29006",
           "npc_type_id": 29006
         }
       ],
       "grid_id": 0,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10025",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3979,17 +4823,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10025
+      "spawn2_id": 10025,
+      "spawn_group_id": 1769,
+      "spawn_group_ref": "peq:spawn_group:1769"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29012",
           "npc_type_id": 29012
         }
       ],
       "grid_id": 0,
       "heading_eq": 116.0,
+      "key": "peq:spawn:10031",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -3998,17 +4846,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10031
+      "spawn2_id": 10031,
+      "spawn_group_id": 1834,
+      "spawn_group_ref": "peq:spawn_group:1834"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29013",
           "npc_type_id": 29013
         }
       ],
       "grid_id": 0,
       "heading_eq": 260.0,
+      "key": "peq:spawn:10032",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4017,17 +4869,21 @@
         3.75
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10032
+      "spawn2_id": 10032,
+      "spawn_group_id": 1833,
+      "spawn_group_ref": "peq:spawn_group:1833"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29014",
           "npc_type_id": 29014
         }
       ],
       "grid_id": 0,
       "heading_eq": 263.0,
+      "key": "peq:spawn:10033",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4036,17 +4892,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10033
+      "spawn2_id": 10033,
+      "spawn_group_id": 1832,
+      "spawn_group_ref": "peq:spawn_group:1832"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29015",
           "npc_type_id": 29015
         }
       ],
       "grid_id": 0,
       "heading_eq": 392.0,
+      "key": "peq:spawn:10034",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4055,17 +4915,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10034
+      "spawn2_id": 10034,
+      "spawn_group_id": 1831,
+      "spawn_group_ref": "peq:spawn_group:1831"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29017",
           "npc_type_id": 29017
         }
       ],
       "grid_id": 0,
       "heading_eq": 223.0,
+      "key": "peq:spawn:10036",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4074,17 +4938,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10036
+      "spawn2_id": 10036,
+      "spawn_group_id": 1829,
+      "spawn_group_ref": "peq:spawn_group:1829"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29018",
           "npc_type_id": 29018
         }
       ],
       "grid_id": 0,
       "heading_eq": 128.0,
+      "key": "peq:spawn:10037",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4093,17 +4961,21 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10037
+      "spawn2_id": 10037,
+      "spawn_group_id": 1828,
+      "spawn_group_ref": "peq:spawn_group:1828"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29019",
           "npc_type_id": 29019
         }
       ],
       "grid_id": 0,
       "heading_eq": 1.0,
+      "key": "peq:spawn:10038",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4112,17 +4984,21 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10038
+      "spawn2_id": 10038,
+      "spawn_group_id": 1827,
+      "spawn_group_ref": "peq:spawn_group:1827"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29020",
           "npc_type_id": 29020
         }
       ],
       "grid_id": 0,
       "heading_eq": 37.0,
+      "key": "peq:spawn:10039",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4131,17 +5007,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10039
+      "spawn2_id": 10039,
+      "spawn_group_id": 1826,
+      "spawn_group_ref": "peq:spawn_group:1826"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29021",
           "npc_type_id": 29021
         }
       ],
       "grid_id": 0,
       "heading_eq": 250.0,
+      "key": "peq:spawn:10040",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4150,17 +5030,21 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10040
+      "spawn2_id": 10040,
+      "spawn_group_id": 1825,
+      "spawn_group_ref": "peq:spawn_group:1825"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29022",
           "npc_type_id": 29022
         }
       ],
       "grid_id": 0,
       "heading_eq": 164.0,
+      "key": "peq:spawn:10041",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4169,17 +5053,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10041
+      "spawn2_id": 10041,
+      "spawn_group_id": 1824,
+      "spawn_group_ref": "peq:spawn_group:1824"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29023",
           "npc_type_id": 29023
         }
       ],
       "grid_id": 0,
       "heading_eq": 88.0,
+      "key": "peq:spawn:10042",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4188,17 +5076,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10042
+      "spawn2_id": 10042,
+      "spawn_group_id": 1823,
+      "spawn_group_ref": "peq:spawn_group:1823"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29024",
           "npc_type_id": 29024
         }
       ],
       "grid_id": 0,
       "heading_eq": 325.0,
+      "key": "peq:spawn:10043",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4207,17 +5099,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10043
+      "spawn2_id": 10043,
+      "spawn_group_id": 1822,
+      "spawn_group_ref": "peq:spawn_group:1822"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29025",
           "npc_type_id": 29025
         }
       ],
       "grid_id": 0,
       "heading_eq": 382.0,
+      "key": "peq:spawn:10044",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4226,17 +5122,21 @@
         1.88
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10044
+      "spawn2_id": 10044,
+      "spawn_group_id": 1821,
+      "spawn_group_ref": "peq:spawn_group:1821"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29026",
           "npc_type_id": 29026
         }
       ],
       "grid_id": 0,
       "heading_eq": 258.0,
+      "key": "peq:spawn:10045",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4245,17 +5145,21 @@
         1.88
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10045
+      "spawn2_id": 10045,
+      "spawn_group_id": 1820,
+      "spawn_group_ref": "peq:spawn_group:1820"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29027",
           "npc_type_id": 29027
         }
       ],
       "grid_id": 0,
       "heading_eq": 111.0,
+      "key": "peq:spawn:10046",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4264,17 +5168,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10046
+      "spawn2_id": 10046,
+      "spawn_group_id": 1819,
+      "spawn_group_ref": "peq:spawn_group:1819"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29028",
           "npc_type_id": 29028
         }
       ],
       "grid_id": 17,
       "heading_eq": 257.25,
+      "key": "peq:spawn:10047",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4283,17 +5191,21 @@
         -4.0
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10047
+      "spawn2_id": 10047,
+      "spawn_group_id": 1818,
+      "spawn_group_ref": "peq:spawn_group:1818"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29029",
           "npc_type_id": 29029
         }
       ],
       "grid_id": 0,
       "heading_eq": 244.0,
+      "key": "peq:spawn:10048",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4302,17 +5214,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10048
+      "spawn2_id": 10048,
+      "spawn_group_id": 1817,
+      "spawn_group_ref": "peq:spawn_group:1817"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29030",
           "npc_type_id": 29030
         }
       ],
       "grid_id": 0,
       "heading_eq": 471.0,
+      "key": "peq:spawn:10049",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4321,17 +5237,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10049
+      "spawn2_id": 10049,
+      "spawn_group_id": 1816,
+      "spawn_group_ref": "peq:spawn_group:1816"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29031",
           "npc_type_id": 29031
         }
       ],
       "grid_id": 3,
       "heading_eq": 278.75,
+      "key": "peq:spawn:10050",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4340,17 +5260,21 @@
         3.126998
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10050
+      "spawn2_id": 10050,
+      "spawn_group_id": 1815,
+      "spawn_group_ref": "peq:spawn_group:1815"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29032",
           "npc_type_id": 29032
         }
       ],
       "grid_id": 4,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10051",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4359,17 +5283,21 @@
         4.4
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10051
+      "spawn2_id": 10051,
+      "spawn_group_id": 1814,
+      "spawn_group_ref": "peq:spawn_group:1814"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29033",
           "npc_type_id": 29033
         }
       ],
       "grid_id": 5,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10052",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4378,17 +5306,21 @@
         4.4
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10052
+      "spawn2_id": 10052,
+      "spawn_group_id": 1813,
+      "spawn_group_ref": "peq:spawn_group:1813"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29034",
           "npc_type_id": 29034
         }
       ],
       "grid_id": 6,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10053",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4397,17 +5329,21 @@
         4.4
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10053
+      "spawn2_id": 10053,
+      "spawn_group_id": 1812,
+      "spawn_group_ref": "peq:spawn_group:1812"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29035",
           "npc_type_id": 29035
         }
       ],
       "grid_id": 0,
       "heading_eq": 142.0,
+      "key": "peq:spawn:10054",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4416,17 +5352,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10054
+      "spawn2_id": 10054,
+      "spawn_group_id": 1811,
+      "spawn_group_ref": "peq:spawn_group:1811"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29036",
           "npc_type_id": 29036
         }
       ],
       "grid_id": 0,
       "heading_eq": 158.0,
+      "key": "peq:spawn:10055",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4435,17 +5375,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10055
+      "spawn2_id": 10055,
+      "spawn_group_id": 1810,
+      "spawn_group_ref": "peq:spawn_group:1810"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29037",
           "npc_type_id": 29037
         }
       ],
       "grid_id": 0,
       "heading_eq": 417.0,
+      "key": "peq:spawn:10056",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4454,17 +5398,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10056
+      "spawn2_id": 10056,
+      "spawn_group_id": 1809,
+      "spawn_group_ref": "peq:spawn_group:1809"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29038",
           "npc_type_id": 29038
         }
       ],
       "grid_id": 0,
       "heading_eq": 284.0,
+      "key": "peq:spawn:10057",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4473,17 +5421,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10057
+      "spawn2_id": 10057,
+      "spawn_group_id": 1808,
+      "spawn_group_ref": "peq:spawn_group:1808"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29039",
           "npc_type_id": 29039
         }
       ],
       "grid_id": 0,
       "heading_eq": 511.0,
+      "key": "peq:spawn:10058",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4492,17 +5444,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10058
+      "spawn2_id": 10058,
+      "spawn_group_id": 1807,
+      "spawn_group_ref": "peq:spawn_group:1807"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29041",
           "npc_type_id": 29041
         }
       ],
       "grid_id": 0,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10060",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4511,17 +5467,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10060
+      "spawn2_id": 10060,
+      "spawn_group_id": 1805,
+      "spawn_group_ref": "peq:spawn_group:1805"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29042",
           "npc_type_id": 29042
         }
       ],
       "grid_id": 0,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10061",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4530,17 +5490,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10061
+      "spawn2_id": 10061,
+      "spawn_group_id": 1804,
+      "spawn_group_ref": "peq:spawn_group:1804"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29043",
           "npc_type_id": 29043
         }
       ],
       "grid_id": 0,
       "heading_eq": 126.0,
+      "key": "peq:spawn:10062",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4549,17 +5513,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10062
+      "spawn2_id": 10062,
+      "spawn_group_id": 1803,
+      "spawn_group_ref": "peq:spawn_group:1803"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29044",
           "npc_type_id": 29044
         }
       ],
       "grid_id": 0,
       "heading_eq": 43.0,
+      "key": "peq:spawn:10063",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4568,17 +5536,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10063
+      "spawn2_id": 10063,
+      "spawn_group_id": 1802,
+      "spawn_group_ref": "peq:spawn_group:1802"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29045",
           "npc_type_id": 29045
         }
       ],
       "grid_id": 0,
       "heading_eq": 180.0,
+      "key": "peq:spawn:10064",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4587,17 +5559,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10064
+      "spawn2_id": 10064,
+      "spawn_group_id": 1801,
+      "spawn_group_ref": "peq:spawn_group:1801"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29046",
           "npc_type_id": 29046
         }
       ],
       "grid_id": 0,
       "heading_eq": 144.0,
+      "key": "peq:spawn:10065",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4606,17 +5582,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10065
+      "spawn2_id": 10065,
+      "spawn_group_id": 1800,
+      "spawn_group_ref": "peq:spawn_group:1800"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29047",
           "npc_type_id": 29047
         }
       ],
       "grid_id": 0,
       "heading_eq": 132.0,
+      "key": "peq:spawn:10066",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4625,17 +5605,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10066
+      "spawn2_id": 10066,
+      "spawn_group_id": 1799,
+      "spawn_group_ref": "peq:spawn_group:1799"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29049",
           "npc_type_id": 29049
         }
       ],
       "grid_id": 0,
       "heading_eq": 0.0,
+      "key": "peq:spawn:10068",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4644,17 +5628,21 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10068
+      "spawn2_id": 10068,
+      "spawn_group_id": 1797,
+      "spawn_group_ref": "peq:spawn_group:1797"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29051",
           "npc_type_id": 29051
         }
       ],
       "grid_id": 0,
       "heading_eq": 132.0,
+      "key": "peq:spawn:10070",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4664,17 +5652,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10070,
+      "spawn_group_id": 1795,
+      "spawn_group_ref": "peq:spawn_group:1795",
       "unavailable_grid_id": 8
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29052",
           "npc_type_id": 29052
         }
       ],
       "grid_id": 0,
       "heading_eq": 392.0,
+      "key": "peq:spawn:10071",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4683,17 +5675,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10071
+      "spawn2_id": 10071,
+      "spawn_group_id": 1794,
+      "spawn_group_ref": "peq:spawn_group:1794"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29053",
           "npc_type_id": 29053
         }
       ],
       "grid_id": 0,
       "heading_eq": 263.0,
+      "key": "peq:spawn:10072",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4702,17 +5698,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10072
+      "spawn2_id": 10072,
+      "spawn_group_id": 1793,
+      "spawn_group_ref": "peq:spawn_group:1793"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29054",
           "npc_type_id": 29054
         }
       ],
       "grid_id": 0,
       "heading_eq": 258.0,
+      "key": "peq:spawn:10073",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4722,17 +5722,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10073,
+      "spawn_group_id": 1792,
+      "spawn_group_ref": "peq:spawn_group:1792",
       "unavailable_grid_id": 9
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29055",
           "npc_type_id": 29055
         }
       ],
       "grid_id": 0,
       "heading_eq": 509.0,
+      "key": "peq:spawn:10074",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4741,17 +5745,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10074
+      "spawn2_id": 10074,
+      "spawn_group_id": 1791,
+      "spawn_group_ref": "peq:spawn_group:1791"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29056",
           "npc_type_id": 29056
         }
       ],
       "grid_id": 0,
       "heading_eq": 377.0,
+      "key": "peq:spawn:10075",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4760,17 +5768,21 @@
         -17.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10075
+      "spawn2_id": 10075,
+      "spawn_group_id": 1790,
+      "spawn_group_ref": "peq:spawn_group:1790"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29057",
           "npc_type_id": 29057
         }
       ],
       "grid_id": 0,
       "heading_eq": 139.0,
+      "key": "peq:spawn:10076",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4779,17 +5791,21 @@
         -17.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10076
+      "spawn2_id": 10076,
+      "spawn_group_id": 1789,
+      "spawn_group_ref": "peq:spawn_group:1789"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29058",
           "npc_type_id": 29058
         }
       ],
       "grid_id": 0,
       "heading_eq": 462.0,
+      "key": "peq:spawn:10077",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4799,17 +5815,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10077,
+      "spawn_group_id": 1788,
+      "spawn_group_ref": "peq:spawn_group:1788",
       "unavailable_grid_id": 10
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29059",
           "npc_type_id": 29059
         }
       ],
       "grid_id": 0,
       "heading_eq": 370.0,
+      "key": "peq:spawn:10078",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4818,17 +5838,21 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10078
+      "spawn2_id": 10078,
+      "spawn_group_id": 1787,
+      "spawn_group_ref": "peq:spawn_group:1787"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29060",
           "npc_type_id": 29060
         }
       ],
       "grid_id": 0,
       "heading_eq": 125.0,
+      "key": "peq:spawn:10079",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4838,17 +5862,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10079,
+      "spawn_group_id": 1786,
+      "spawn_group_ref": "peq:spawn_group:1786",
       "unavailable_grid_id": 11
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29061",
           "npc_type_id": 29061
         }
       ],
       "grid_id": 0,
       "heading_eq": 385.0,
+      "key": "peq:spawn:10080",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4857,17 +5885,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10080
+      "spawn2_id": 10080,
+      "spawn_group_id": 1785,
+      "spawn_group_ref": "peq:spawn_group:1785"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29062",
           "npc_type_id": 29062
         }
       ],
       "grid_id": 0,
       "heading_eq": 343.0,
+      "key": "peq:spawn:10081",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4876,17 +5908,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10081
+      "spawn2_id": 10081,
+      "spawn_group_id": 1784,
+      "spawn_group_ref": "peq:spawn_group:1784"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29063",
           "npc_type_id": 29063
         }
       ],
       "grid_id": 0,
       "heading_eq": 380.0,
+      "key": "peq:spawn:10082",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4895,17 +5931,21 @@
         6.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10082
+      "spawn2_id": 10082,
+      "spawn_group_id": 1783,
+      "spawn_group_ref": "peq:spawn_group:1783"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29064",
           "npc_type_id": 29064
         }
       ],
       "grid_id": 0,
       "heading_eq": 166.0,
+      "key": "peq:spawn:10083",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4915,17 +5955,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10083,
+      "spawn_group_id": 1782,
+      "spawn_group_ref": "peq:spawn_group:1782",
       "unavailable_grid_id": 12
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29065",
           "npc_type_id": 29065
         }
       ],
       "grid_id": 0,
       "heading_eq": 135.0,
+      "key": "peq:spawn:10084",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4935,17 +5979,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10084,
+      "spawn_group_id": 1781,
+      "spawn_group_ref": "peq:spawn_group:1781",
       "unavailable_grid_id": 13
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29066",
           "npc_type_id": 29066
         }
       ],
       "grid_id": 0,
       "heading_eq": 148.0,
+      "key": "peq:spawn:10085",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4955,17 +6003,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10085,
+      "spawn_group_id": 1780,
+      "spawn_group_ref": "peq:spawn_group:1780",
       "unavailable_grid_id": 14
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29067",
           "npc_type_id": 29067
         }
       ],
       "grid_id": 0,
       "heading_eq": 275.0,
+      "key": "peq:spawn:10086",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4974,17 +6026,21 @@
         30.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10086
+      "spawn2_id": 10086,
+      "spawn_group_id": 1779,
+      "spawn_group_ref": "peq:spawn_group:1779"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29069",
           "npc_type_id": 29069
         }
       ],
       "grid_id": 0,
       "heading_eq": 127.0,
+      "key": "peq:spawn:10088",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -4993,17 +6049,21 @@
         9.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10088
+      "spawn2_id": 10088,
+      "spawn_group_id": 1777,
+      "spawn_group_ref": "peq:spawn_group:1777"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29070",
           "npc_type_id": 29070
         }
       ],
       "grid_id": 0,
       "heading_eq": 122.0,
+      "key": "peq:spawn:10089",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5013,17 +6073,21 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10089,
+      "spawn_group_id": 1776,
+      "spawn_group_ref": "peq:spawn_group:1776",
       "unavailable_grid_id": 15
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29071",
           "npc_type_id": 29071
         }
       ],
       "grid_id": 0,
       "heading_eq": 228.0,
+      "key": "peq:spawn:10090",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5032,17 +6096,21 @@
         30.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10090
+      "spawn2_id": 10090,
+      "spawn_group_id": 1775,
+      "spawn_group_ref": "peq:spawn_group:1775"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29072",
           "npc_type_id": 29072
         }
       ],
       "grid_id": 0,
       "heading_eq": 254.0,
+      "key": "peq:spawn:10091",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5051,17 +6119,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10091
+      "spawn2_id": 10091,
+      "spawn_group_id": 1774,
+      "spawn_group_ref": "peq:spawn_group:1774"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29073",
           "npc_type_id": 29073
         }
       ],
       "grid_id": 0,
       "heading_eq": 254.0,
+      "key": "peq:spawn:10092",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5070,17 +6142,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10092
+      "spawn2_id": 10092,
+      "spawn_group_id": 1773,
+      "spawn_group_ref": "peq:spawn_group:1773"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29074",
           "npc_type_id": 29074
         }
       ],
       "grid_id": 0,
       "heading_eq": 375.0,
+      "key": "peq:spawn:10093",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5089,17 +6165,21 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10093
+      "spawn2_id": 10093,
+      "spawn_group_id": 1772,
+      "spawn_group_ref": "peq:spawn_group:1772"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29077",
           "npc_type_id": 29077
         }
       ],
       "grid_id": 0,
       "heading_eq": 253.0,
+      "key": "peq:spawn:10096",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5108,17 +6188,21 @@
         7.75
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10096
+      "spawn2_id": 10096,
+      "spawn_group_id": 7427,
+      "spawn_group_ref": "peq:spawn_group:7427"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:29085",
           "npc_type_id": 29085
         }
       ],
       "grid_id": 0,
       "heading_eq": 7.0,
+      "key": "peq:spawn:10104",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5127,17 +6211,21 @@
         3.75
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10104
+      "spawn2_id": 10104,
+      "spawn_group_id": 7435,
+      "spawn_group_ref": "peq:spawn_group:7435"
     },
     {
       "candidates": [
         {
           "chance": 100,
+          "npc_ref": "peq:npc:202372",
           "npc_type_id": 202372
         }
       ],
       "grid_id": 0,
       "heading_eq": 250.25,
+      "key": "peq:spawn:58618",
       "max_expansion": -1,
       "min_expansion": -1,
       "position_eq": [
@@ -5146,7 +6234,9 @@
         2.289498
       ],
       "respawn_seconds": 1200,
-      "spawn2_id": 58618
+      "spawn2_id": 58618,
+      "spawn_group_id": 48192,
+      "spawn_group_ref": "peq:spawn_group:48192"
     }
   ]
 }

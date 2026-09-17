@@ -3844,6 +3844,620 @@
     "zone_id": 29,
     "zone_table_id": 160
   },
+  "spawn_groups": {
+    "1769": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29006
+        }
+      ],
+      "id": 1769
+    },
+    "1770": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29005
+        }
+      ],
+      "id": 1770
+    },
+    "1771": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29002
+        }
+      ],
+      "id": 1771
+    },
+    "1772": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29074
+        }
+      ],
+      "id": 1772
+    },
+    "1773": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29073
+        }
+      ],
+      "id": 1773
+    },
+    "1774": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29072
+        }
+      ],
+      "id": 1774
+    },
+    "1775": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29071
+        }
+      ],
+      "id": 1775
+    },
+    "1776": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29070
+        }
+      ],
+      "id": 1776
+    },
+    "1777": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29069
+        }
+      ],
+      "id": 1777
+    },
+    "1779": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29067
+        }
+      ],
+      "id": 1779
+    },
+    "1780": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29066
+        }
+      ],
+      "id": 1780
+    },
+    "1781": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29065
+        }
+      ],
+      "id": 1781
+    },
+    "1782": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29064
+        }
+      ],
+      "id": 1782
+    },
+    "1783": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29063
+        }
+      ],
+      "id": 1783
+    },
+    "1784": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29062
+        }
+      ],
+      "id": 1784
+    },
+    "1785": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29061
+        }
+      ],
+      "id": 1785
+    },
+    "1786": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29060
+        }
+      ],
+      "id": 1786
+    },
+    "1787": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29059
+        }
+      ],
+      "id": 1787
+    },
+    "1788": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29058
+        }
+      ],
+      "id": 1788
+    },
+    "1789": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29057
+        }
+      ],
+      "id": 1789
+    },
+    "1790": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29056
+        }
+      ],
+      "id": 1790
+    },
+    "1791": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29055
+        }
+      ],
+      "id": 1791
+    },
+    "1792": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29054
+        }
+      ],
+      "id": 1792
+    },
+    "1793": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29053
+        }
+      ],
+      "id": 1793
+    },
+    "1794": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29052
+        }
+      ],
+      "id": 1794
+    },
+    "1795": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29051
+        }
+      ],
+      "id": 1795
+    },
+    "1797": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29049
+        }
+      ],
+      "id": 1797
+    },
+    "1799": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29047
+        }
+      ],
+      "id": 1799
+    },
+    "1800": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29046
+        }
+      ],
+      "id": 1800
+    },
+    "1801": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29045
+        }
+      ],
+      "id": 1801
+    },
+    "1802": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29044
+        }
+      ],
+      "id": 1802
+    },
+    "1803": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29043
+        }
+      ],
+      "id": 1803
+    },
+    "1804": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29042
+        }
+      ],
+      "id": 1804
+    },
+    "1805": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29041
+        }
+      ],
+      "id": 1805
+    },
+    "1807": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29039
+        }
+      ],
+      "id": 1807
+    },
+    "1808": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29038
+        }
+      ],
+      "id": 1808
+    },
+    "1809": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29037
+        }
+      ],
+      "id": 1809
+    },
+    "1810": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29036
+        }
+      ],
+      "id": 1810
+    },
+    "1811": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29035
+        }
+      ],
+      "id": 1811
+    },
+    "1812": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29034
+        }
+      ],
+      "id": 1812
+    },
+    "1813": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29033
+        }
+      ],
+      "id": 1813
+    },
+    "1814": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29032
+        }
+      ],
+      "id": 1814
+    },
+    "1815": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29031
+        }
+      ],
+      "id": 1815
+    },
+    "1816": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29030
+        }
+      ],
+      "id": 1816
+    },
+    "1817": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29029
+        }
+      ],
+      "id": 1817
+    },
+    "1818": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29028
+        }
+      ],
+      "id": 1818
+    },
+    "1819": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29027
+        }
+      ],
+      "id": 1819
+    },
+    "1820": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29026
+        }
+      ],
+      "id": 1820
+    },
+    "1821": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29025
+        }
+      ],
+      "id": 1821
+    },
+    "1822": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29024
+        }
+      ],
+      "id": 1822
+    },
+    "1823": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29023
+        }
+      ],
+      "id": 1823
+    },
+    "1824": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29022
+        }
+      ],
+      "id": 1824
+    },
+    "1825": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29021
+        }
+      ],
+      "id": 1825
+    },
+    "1826": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29020
+        }
+      ],
+      "id": 1826
+    },
+    "1827": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29019
+        }
+      ],
+      "id": 1827
+    },
+    "1828": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29018
+        }
+      ],
+      "id": 1828
+    },
+    "1829": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29017
+        }
+      ],
+      "id": 1829
+    },
+    "1831": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29015
+        }
+      ],
+      "id": 1831
+    },
+    "1832": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29014
+        }
+      ],
+      "id": 1832
+    },
+    "1833": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29013
+        }
+      ],
+      "id": 1833
+    },
+    "1834": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29012
+        }
+      ],
+      "id": 1834
+    },
+    "48192": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 202372
+        }
+      ],
+      "id": 48192
+    },
+    "5670": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29004
+        }
+      ],
+      "id": 5670
+    },
+    "5671": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29003
+        }
+      ],
+      "id": 5671
+    },
+    "5672": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29001
+        }
+      ],
+      "id": 5672
+    },
+    "5673": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29000
+        }
+      ],
+      "id": 5673
+    },
+    "7427": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29077
+        }
+      ],
+      "id": 7427
+    },
+    "7435": {
+      "candidates": [
+        {
+          "chance": 100,
+          "npc_type_id": 29085
+        }
+      ],
+      "id": 7435
+    }
+  },
   "spawns": [
     {
       "candidates": [
@@ -3862,7 +4476,8 @@
         4.38
       ],
       "respawn_seconds": 660,
-      "spawn2_id": 10019
+      "spawn2_id": 10019,
+      "spawn_group_id": 5673
     },
     {
       "candidates": [
@@ -3881,7 +4496,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10020
+      "spawn2_id": 10020,
+      "spawn_group_id": 5672
     },
     {
       "candidates": [
@@ -3900,7 +4516,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10021
+      "spawn2_id": 10021,
+      "spawn_group_id": 1771
     },
     {
       "candidates": [
@@ -3919,7 +4536,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10022
+      "spawn2_id": 10022,
+      "spawn_group_id": 5671
     },
     {
       "candidates": [
@@ -3938,7 +4556,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10023
+      "spawn2_id": 10023,
+      "spawn_group_id": 5670
     },
     {
       "candidates": [
@@ -3957,7 +4576,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10024
+      "spawn2_id": 10024,
+      "spawn_group_id": 1770
     },
     {
       "candidates": [
@@ -3976,7 +4596,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10025
+      "spawn2_id": 10025,
+      "spawn_group_id": 1769
     },
     {
       "candidates": [
@@ -3995,7 +4616,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10031
+      "spawn2_id": 10031,
+      "spawn_group_id": 1834
     },
     {
       "candidates": [
@@ -4014,7 +4636,8 @@
         3.75
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10032
+      "spawn2_id": 10032,
+      "spawn_group_id": 1833
     },
     {
       "candidates": [
@@ -4033,7 +4656,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10033
+      "spawn2_id": 10033,
+      "spawn_group_id": 1832
     },
     {
       "candidates": [
@@ -4052,7 +4676,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10034
+      "spawn2_id": 10034,
+      "spawn_group_id": 1831
     },
     {
       "candidates": [
@@ -4071,7 +4696,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10036
+      "spawn2_id": 10036,
+      "spawn_group_id": 1829
     },
     {
       "candidates": [
@@ -4090,7 +4716,8 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10037
+      "spawn2_id": 10037,
+      "spawn_group_id": 1828
     },
     {
       "candidates": [
@@ -4109,7 +4736,8 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10038
+      "spawn2_id": 10038,
+      "spawn_group_id": 1827
     },
     {
       "candidates": [
@@ -4128,7 +4756,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10039
+      "spawn2_id": 10039,
+      "spawn_group_id": 1826
     },
     {
       "candidates": [
@@ -4147,7 +4776,8 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10040
+      "spawn2_id": 10040,
+      "spawn_group_id": 1825
     },
     {
       "candidates": [
@@ -4166,7 +4796,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10041
+      "spawn2_id": 10041,
+      "spawn_group_id": 1824
     },
     {
       "candidates": [
@@ -4185,7 +4816,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10042
+      "spawn2_id": 10042,
+      "spawn_group_id": 1823
     },
     {
       "candidates": [
@@ -4204,7 +4836,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10043
+      "spawn2_id": 10043,
+      "spawn_group_id": 1822
     },
     {
       "candidates": [
@@ -4223,7 +4856,8 @@
         1.88
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10044
+      "spawn2_id": 10044,
+      "spawn_group_id": 1821
     },
     {
       "candidates": [
@@ -4242,7 +4876,8 @@
         1.88
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10045
+      "spawn2_id": 10045,
+      "spawn_group_id": 1820
     },
     {
       "candidates": [
@@ -4261,7 +4896,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10046
+      "spawn2_id": 10046,
+      "spawn_group_id": 1819
     },
     {
       "candidates": [
@@ -4280,7 +4916,8 @@
         -4.0
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10047
+      "spawn2_id": 10047,
+      "spawn_group_id": 1818
     },
     {
       "candidates": [
@@ -4299,7 +4936,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10048
+      "spawn2_id": 10048,
+      "spawn_group_id": 1817
     },
     {
       "candidates": [
@@ -4318,7 +4956,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10049
+      "spawn2_id": 10049,
+      "spawn_group_id": 1816
     },
     {
       "candidates": [
@@ -4337,7 +4976,8 @@
         3.126998
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10050
+      "spawn2_id": 10050,
+      "spawn_group_id": 1815
     },
     {
       "candidates": [
@@ -4356,7 +4996,8 @@
         4.4
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10051
+      "spawn2_id": 10051,
+      "spawn_group_id": 1814
     },
     {
       "candidates": [
@@ -4375,7 +5016,8 @@
         4.4
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10052
+      "spawn2_id": 10052,
+      "spawn_group_id": 1813
     },
     {
       "candidates": [
@@ -4394,7 +5036,8 @@
         4.4
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10053
+      "spawn2_id": 10053,
+      "spawn_group_id": 1812
     },
     {
       "candidates": [
@@ -4413,7 +5056,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10054
+      "spawn2_id": 10054,
+      "spawn_group_id": 1811
     },
     {
       "candidates": [
@@ -4432,7 +5076,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10055
+      "spawn2_id": 10055,
+      "spawn_group_id": 1810
     },
     {
       "candidates": [
@@ -4451,7 +5096,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10056
+      "spawn2_id": 10056,
+      "spawn_group_id": 1809
     },
     {
       "candidates": [
@@ -4470,7 +5116,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10057
+      "spawn2_id": 10057,
+      "spawn_group_id": 1808
     },
     {
       "candidates": [
@@ -4489,7 +5136,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10058
+      "spawn2_id": 10058,
+      "spawn_group_id": 1807
     },
     {
       "candidates": [
@@ -4508,7 +5156,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10060
+      "spawn2_id": 10060,
+      "spawn_group_id": 1805
     },
     {
       "candidates": [
@@ -4527,7 +5176,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10061
+      "spawn2_id": 10061,
+      "spawn_group_id": 1804
     },
     {
       "candidates": [
@@ -4546,7 +5196,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10062
+      "spawn2_id": 10062,
+      "spawn_group_id": 1803
     },
     {
       "candidates": [
@@ -4565,7 +5216,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10063
+      "spawn2_id": 10063,
+      "spawn_group_id": 1802
     },
     {
       "candidates": [
@@ -4584,7 +5236,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10064
+      "spawn2_id": 10064,
+      "spawn_group_id": 1801
     },
     {
       "candidates": [
@@ -4603,7 +5256,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10065
+      "spawn2_id": 10065,
+      "spawn_group_id": 1800
     },
     {
       "candidates": [
@@ -4622,7 +5276,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10066
+      "spawn2_id": 10066,
+      "spawn_group_id": 1799
     },
     {
       "candidates": [
@@ -4641,7 +5296,8 @@
         25.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10068
+      "spawn2_id": 10068,
+      "spawn_group_id": 1797
     },
     {
       "candidates": [
@@ -4661,6 +5317,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10070,
+      "spawn_group_id": 1795,
       "unavailable_grid_id": 8
     },
     {
@@ -4680,7 +5337,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10071
+      "spawn2_id": 10071,
+      "spawn_group_id": 1794
     },
     {
       "candidates": [
@@ -4699,7 +5357,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10072
+      "spawn2_id": 10072,
+      "spawn_group_id": 1793
     },
     {
       "candidates": [
@@ -4719,6 +5378,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10073,
+      "spawn_group_id": 1792,
       "unavailable_grid_id": 9
     },
     {
@@ -4738,7 +5398,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10074
+      "spawn2_id": 10074,
+      "spawn_group_id": 1791
     },
     {
       "candidates": [
@@ -4757,7 +5418,8 @@
         -17.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10075
+      "spawn2_id": 10075,
+      "spawn_group_id": 1790
     },
     {
       "candidates": [
@@ -4776,7 +5438,8 @@
         -17.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10076
+      "spawn2_id": 10076,
+      "spawn_group_id": 1789
     },
     {
       "candidates": [
@@ -4796,6 +5459,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10077,
+      "spawn_group_id": 1788,
       "unavailable_grid_id": 10
     },
     {
@@ -4815,7 +5479,8 @@
         -19.5
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10078
+      "spawn2_id": 10078,
+      "spawn_group_id": 1787
     },
     {
       "candidates": [
@@ -4835,6 +5500,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10079,
+      "spawn_group_id": 1786,
       "unavailable_grid_id": 11
     },
     {
@@ -4854,7 +5520,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10080
+      "spawn2_id": 10080,
+      "spawn_group_id": 1785
     },
     {
       "candidates": [
@@ -4873,7 +5540,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10081
+      "spawn2_id": 10081,
+      "spawn_group_id": 1784
     },
     {
       "candidates": [
@@ -4892,7 +5560,8 @@
         6.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10082
+      "spawn2_id": 10082,
+      "spawn_group_id": 1783
     },
     {
       "candidates": [
@@ -4912,6 +5581,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10083,
+      "spawn_group_id": 1782,
       "unavailable_grid_id": 12
     },
     {
@@ -4932,6 +5602,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10084,
+      "spawn_group_id": 1781,
       "unavailable_grid_id": 13
     },
     {
@@ -4952,6 +5623,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10085,
+      "spawn_group_id": 1780,
       "unavailable_grid_id": 14
     },
     {
@@ -4971,7 +5643,8 @@
         30.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10086
+      "spawn2_id": 10086,
+      "spawn_group_id": 1779
     },
     {
       "candidates": [
@@ -4990,7 +5663,8 @@
         9.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10088
+      "spawn2_id": 10088,
+      "spawn_group_id": 1777
     },
     {
       "candidates": [
@@ -5010,6 +5684,7 @@
       ],
       "respawn_seconds": 640,
       "spawn2_id": 10089,
+      "spawn_group_id": 1776,
       "unavailable_grid_id": 15
     },
     {
@@ -5029,7 +5704,8 @@
         30.379999
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10090
+      "spawn2_id": 10090,
+      "spawn_group_id": 1775
     },
     {
       "candidates": [
@@ -5048,7 +5724,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10091
+      "spawn2_id": 10091,
+      "spawn_group_id": 1774
     },
     {
       "candidates": [
@@ -5067,7 +5744,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10092
+      "spawn2_id": 10092,
+      "spawn_group_id": 1773
     },
     {
       "candidates": [
@@ -5086,7 +5764,8 @@
         4.38
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10093
+      "spawn2_id": 10093,
+      "spawn_group_id": 1772
     },
     {
       "candidates": [
@@ -5105,7 +5784,8 @@
         7.75
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10096
+      "spawn2_id": 10096,
+      "spawn_group_id": 7427
     },
     {
       "candidates": [
@@ -5124,7 +5804,8 @@
         3.75
       ],
       "respawn_seconds": 640,
-      "spawn2_id": 10104
+      "spawn2_id": 10104,
+      "spawn_group_id": 7435
     },
     {
       "candidates": [
@@ -5143,7 +5824,8 @@
         2.289498
       ],
       "respawn_seconds": 1200,
-      "spawn2_id": 58618
+      "spawn2_id": 58618,
+      "spawn_group_id": 48192
     }
   ]
 }
