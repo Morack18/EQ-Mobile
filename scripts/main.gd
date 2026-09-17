@@ -1356,7 +1356,7 @@ func _load_save() -> void:
 	if not saved is Dictionary or saved.get("zone_id") != zone.id:
 		return
 	if int(saved.get("player_spawn_revision", -1)) == int(zone.get("player_spawn_revision", 0)):
-		player.global_position = _array_to_vector3(saved.get("player_position", zone.player_spawn))
+		player.global_position = _saved_position_or_default(saved.get("player_position"), zone.player_spawn)
 	player_health = clampf(float(saved.get("player_health", PLAYER_MAX_HEALTH)), 1.0, PLAYER_MAX_HEALTH)
 	player_xp_total = clampi(int(saved.get("player_xp_total", 0)), 0, _xp_cap_total())
 	player_level = _level_for_xp(player_xp_total)
@@ -1382,7 +1382,7 @@ func _load_save() -> void:
 	npc_loot_awarded = bool(saved.get("npc_loot_awarded", not npc_alive))
 	npc.visible = npc_alive
 	if npc_alive:
-		npc.global_position = _array_to_vector3(saved.get("npc_position", _spawn_data().position))
+		npc.global_position = _saved_position_or_default(saved.get("npc_position"), _spawn_data().position)
 
 func _save_game() -> void:
 	if player_dead:
@@ -1598,6 +1598,14 @@ func _spawn_data() -> Dictionary:
 
 func _array_to_vector3(values: Array) -> Vector3:
 	return Vector3(float(values[0]), float(values[1]), float(values[2]))
+
+func _saved_position_or_default(saved_position: Variant, fallback: Array) -> Vector3:
+	if saved_position is Array and saved_position.size() == 3:
+		for component in saved_position:
+			if not (component is int or component is float):
+				return _array_to_vector3(fallback)
+		return _array_to_vector3(saved_position)
+	return _array_to_vector3(fallback)
 
 func _material(color: Color, emission := false) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
