@@ -41,6 +41,8 @@
   "spawns": [
     {
       "id": "training_spark",
+      "key": "fixture:spawn:training_spark",
+      "definition_ref": "fixture:npc:training_spark",
       "archetype": "training_spark",
       "position": [3.0, 1.0, -4.0],
       "respawn_seconds": 12.0
@@ -48,15 +50,30 @@
   ],
   "npc_archetypes": {
     "training_spark": {
+      "key": "fixture:npc:training_spark",
+      "evidence": "temporary_fixture_default",
       "name": "Training Spark",
       "max_health": 35.0,
-      "damage": 5.0,
-      "move_speed": 2.3,
-      "aggro_range": 8.0,
-      "attack_range": 1.7,
-      "attack_cooldown": 1.4,
-      "loot": [{ "item_id": "fixture:item:training_spark_fragment", "quantity": 1 }],
-      "xp_reward": 1000
+      "combat_size": 1.3,
+      "death_delay_seconds": 0.0,
+      "behavior": {
+        "move_speed": 2.3,
+        "aggro_range": 8.0
+      },
+      "combat": {
+        "id": "fixture:attack:training_spark_primary",
+        "damage_min": 5.0,
+        "damage_max": 5.0,
+        "range": 1.7,
+        "cooldown_group": "primary_attack",
+        "cooldown_seconds": 1.4,
+        "requires_facing": false,
+        "requires_los": true
+      },
+      "rewards": {
+        "items": [{ "item_key": "fixture:item:training_spark_fragment", "quantity": 1 }],
+        "xp": 1000
+      }
     }
   }
 }

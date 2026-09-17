@@ -1,28 +1,25 @@
 extends Node3D
 
-const SAVE_PATH := "user://offline_slice_save.json"
-const ZONE_PATH := "res://data/halas.json"
-const ITEM_PATH := "res://data/items.json"
-const PEQ_ITEM_PATH := "res://data/halas_items_source.json"
-const PLAYER_CLASS_PATH := "res://data/player_classes.json"
-const MERCHANT_PATH := "res://data/halas_merchants_source.json"
-const FACTION_PATH := "res://data/halas_factions_source.json"
-# EQEmu's 0.7 × 40 = 28 is the client-update animation/wire value, not a
-# physical world-speed authority. eqoxide's centralized controller uses 44
-# u/s, but its direct manual-drive path uses 35 u/s. EQ Mobile's two-stick
-# controller is the latter interaction model, and device feel confirms 44 is
-# too fast for this project; use 35 u/s while retaining the discrepancy below.
+const ZONE_KEY := "eqm:zone:halas"
+const PLAYER_ENTITY_ID := "player:local"
+const TRAINING_ENTITY_ID := "fixture:spawn:training_spark"
+const CONTENT_PATHS := {
+	"zone": "res://data/halas.json",
+	"items": "res://data/items.json",
+	"peq_items": "res://data/halas_items_source.json",
+	"player_classes": "res://data/player_classes.json",
+	"player_fixture": "res://data/player_fixture.json",
+	"merchants": "res://data/halas_merchants_source.json",
+	"factions": "res://data/halas_factions_source.json",
+	"npcs": "res://data/halas_npcs.json",
+}
+
+# Presentation/world constants. Gameplay health, damage, cooldown, progression,
+# inventory, faction, death, respawn, and reward rules live in the domain layer.
 const PLAYER_RUN_SPEED := EqWorldSpace.EQ_MANUAL_RUN_SPEED
 const PLAYER_WALK_SPEED := PLAYER_RUN_SPEED * (0.3 / 0.7)
 const WALK_RUN_THRESHOLD := 20.0
-# EQEmu's GetRaceGenderDefaultHeight defines HLM as a seven-foot actor in the
-# same coordinate system as the Halas zone.  The raw Lantern GLB is only an
-# authored rig; it must be normalized to this height before rendering.
-const PLAYER_SERVER_SIZE := 7.0
-# eqoxide's reference-client collision radius is one EQ world unit.  Keep the
-# collision body's standing span equal to the HLM's native rendered height.
 const PLAYER_COLLISION_RADIUS := EqWorldSpace.EQ_COLLISION_RADIUS
-const PLAYER_COLLISION_HEIGHT := PLAYER_SERVER_SIZE
 const COLLISION_LAYER_TERRAIN := EqWorldSpace.COLLISION_LAYER_TERRAIN
 const COLLISION_LAYER_WORLD_OBJECTS := EqWorldSpace.COLLISION_LAYER_WORLD_OBJECTS
 const COLLISION_LAYER_TARGET_PICK := EqWorldSpace.COLLISION_LAYER_TARGET_PICK
@@ -30,13 +27,7 @@ const PLAYER_WORLD_COLLISION_MASK := EqWorldSpace.WORLD_COLLISION_MASK
 const PLAYER_MAX_SLOPE_ANGLE := deg_to_rad(60.0)
 const PLAYER_FLOOR_SNAP_DISTANCE := 0.5
 const PLAYER_SAFE_MARGIN := 0.05
-# eqoxide's native-parity CharacterController uses STEP_UP = 2 EQ units for
-# both free movement and navigation. It is a bounded stair/low-lip rule, not
-# permission to climb arbitrary vertical walls.
 const PLAYER_STEP_UP_HEIGHT := 2.0
-# eqoxide's reference client uses these native EQ world-unit values.  Do not
-# substitute Godot's project gravity: this zone is already normalized to EQ
-# world units.
 const EQ_GRAVITY := EqWorldSpace.EQ_GRAVITY
 const EQ_MAX_FALL_SPEED := EqWorldSpace.EQ_MAX_FALL_SPEED
 const EQ_JUMP_VELOCITY := EqWorldSpace.EQ_JUMP_VELOCITY
@@ -44,24 +35,23 @@ const EQ_SWIM_SPEED := 35.0
 const EQ_SWIM_BUOYANCY_RATE := 30.0
 const EQ_SWIM_FLOAT_DEPTH := 2.0
 const WATER_SURFACE_MARGIN := 0.05
-const PLAYER_MAX_HEALTH := 100.0
-# EQEmu CombatRange's ordinary-body branch floors small actor size at 8 and
-# uses range_squared = size² × 4. That produces this horizontal 16-unit reach.
-const ORDINARY_MELEE_EFFECTIVE_SIZE := 8.0
-const ORDINARY_MELEE_RANGE := ORDINARY_MELEE_EFFECTIVE_SIZE * 2.0
-const MELEE_FACING_DOT_MIN := 0.556
 const CAMERA_TURN_SPEED := 2.45
 const CAMERA_PITCH_SPEED := 1.55
 const CAMERA_OFFSET := Vector3(0.0, 4.7, 10.5)
 const CAMERA_COLLISION_MARGIN := 0.35
 const PLAYER_ATTACK_ANIMATION_SECONDS := 0.45
-const GENERAL_INVENTORY_CAPACITY := 8
 const NPC_LONG_PRESS_SECONDS := 0.55
 const NPC_LONG_PRESS_CANCEL_DISTANCE := 28.0
-# eqoxide's renderer establishes that the exported glTF character meshes face
-# local +X. Godot's Node3D.look_at() faces local -Z, so character visuals need
-# this fixed model-space correction below their movement node.
 const CHARACTER_MODEL_FACING_OFFSET := PI * 0.5
+
+var content_service: ContentService
+var persistence_service: PersistenceService
+var simulation_clock: SimulationClock
+var simulation_rng: SimulationRng
+var simulation: Simulation
+var view_registry := EntityViewRegistry.new()
+var npc_behavior_system := SimpleNpcBehaviorSystem.new()
+var autonomous_entity_ids: Array[String] = []
 
 var zone: Dictionary
 var player: CharacterBody3D
@@ -72,85 +62,134 @@ var camera_pivot: Node3D
 var camera: Camera3D
 var hud: Control
 var ui_layer: CanvasLayer
-var player_health := PLAYER_MAX_HEALTH
-var player_xp_total := 0
-var player_level := 1
-var player_dead := false
-var player_respawn_remaining := 0.0
-var player_action_animation_remaining := 0.0
-var player_class_definitions: Dictionary = {}
-var player_class_id := 1
-var player_race_id := 2 # Barbarian fixture identity; source-valid Halas start, not mesh-derived.
-var player_deity_id := 396 # Agnostic fixture identity.
-var faction_values: Dictionary = {}
-var faction_definitions: Dictionary = {}
 var merchant_panel: MerchantBrowsePanel
 var merchant_interaction_popup: MerchantInteractionPopup
+var halas_population: HalasNpcPopulation
+
+var selected_halas_target: Dictionary = {}
+var selected_entity_id := ""
 var npc_press_touch := -1
 var npc_press_position := Vector2.ZERO
 var npc_press_target: Dictionary = {}
 var npc_press_elapsed := 0.0
-var ability_cooldowns: Dictionary = {}
 var auto_attack_enabled := false
-var primary_attack_remaining := 0.0
-var npc_health := 0.0
-var npc_alive := false
-var npc_attack_timer := 0.0
-var respawn_remaining := 0.0
-var npc_loot_awarded := false
+var player_action_animation_remaining := 0.0
 var joystick_vector := Vector2.ZERO
 var look_stick := Vector2.ZERO
 var jump_held := false
 var jump_pressed := false
 var status_text := "Explore classic Halas."
 var autosave_elapsed := 0.0
-var save_write_failed := false
+
 var object_scenes: Dictionary[String, PackedScene] = {}
 var normalized_prop_meshes: Dictionary[Mesh, ArrayMesh] = {}
 var two_sided_prop_materials: Dictionary[Material, BaseMaterial3D] = {}
-# Prop GLBs are immutable after the one-time reflection bake.  Many placement
-# rows share those same mesh resources, so their exact trimesh shape can be
-# safely reused instead of cooking duplicate physics data per placement.
 var prop_collision_shapes: Dictionary[Mesh, Shape3D] = {}
 var zone_prop_instance_count := 0
 var zone_prop_mesh_count := 0
 var zone_prop_collision_count := 0
 var zone_prop_collision_shape_count := 0
 var zone_prop_load_failures: Array[String] = []
-var halas_population: HalasNpcPopulation
-var selected_halas_target: Dictionary = {}
-var item_definitions: Dictionary = {}
-var merchant_definitions: Dictionary = {}
-var inventory: Array[Dictionary] = []
-var wallet := {"platinum": 0, "gold": 0, "silver": 0, "copper": 0}
-# Halas's client .wtr region file is not present in the supplied resources.
-# This is therefore an authored-surface fallback, populated from the zone's
-# explicit halaswater material triangles rather than a guessed rectangular pool.
 var authored_water_triangles: Array[PackedVector3Array] = []
+
 
 func _ready() -> void:
 	EqWorldSpace.run_contract_tests()
-	zone = _load_zone()
-	item_definitions = _load_item_definitions()
-	merchant_definitions = _load_merchant_definitions()
-	faction_definitions = _load_faction_definitions()
-	player_class_definitions = _load_player_class_definitions()
+	_configure_services()
+	_configure_simulation()
 	_build_world()
 	_build_zone_objects()
 	_build_npc_population()
 	_build_player()
-	if bool(zone.get("enable_training_npc", false)):
+	if simulation.entity(TRAINING_ENTITY_ID) != null:
 		_build_npc()
 	_build_camera()
 	_build_hud()
 	_load_save()
+	_apply_domain_state_to_views()
 	_update_hud()
+
+
+func _configure_services() -> void:
+	content_service = ContentService.new()
+	content_service.configure(CONTENT_PATHS)
+	assert(content_service.load_all(), content_service.last_error)
+	zone = content_service.zone_definition(ZONE_KEY)
+	simulation_clock = SimulationClock.new()
+	var runtime_seed := int(simulation_clock.real_world_unix_ms() & 0x7fffffff)
+	simulation_rng = SimulationRng.new(runtime_seed)
+	persistence_service = PersistenceService.new(PersistenceService.DEFAULT_SAVE_PATH, simulation_clock)
+
+
+func _configure_simulation() -> void:
+	var player_fixture := content_service.player_fixture_definition()
+	simulation = Simulation.new(simulation_clock, simulation_rng)
+	simulation.configure_player_state(
+		PLAYER_ENTITY_ID,
+		content_service.item_definitions(),
+		int(player_fixture.get("inventory_capacity", 8)),
+		zone.get("progression", {}),
+		content_service.faction_catalog(),
+		player_fixture.get("identity", {}),
+		player_fixture.get("inventory_item_aliases", {})
+	)
+	var player_entity := EntityFactory.create({
+		"entity_id": PLAYER_ENTITY_ID,
+		"definition_id": str(player_fixture.get("key", "fixture:player:local")),
+		"kind": "player",
+		"display_name": "Player",
+		"spawn_position": _array_to_vector3(zone.get("player_spawn", [0.0, 0.0, 0.0])),
+		"combat_size": float(player_fixture.get("combat_size", 7.0)),
+		"max_health": float(player_fixture.get("max_health", 100.0)),
+		"combat_enabled": true,
+		"hostile": false,
+		"death_delay_seconds": float(zone.get("player_respawn_seconds", 2.5)),
+		"respawn_seconds": 0.0,
+		"metadata": {
+			"identity": player_fixture.get("identity", {}).duplicate(true),
+			"evidence": str(player_fixture.get("evidence", "temporary_fixture_default")),
+		},
+	})
+	simulation.add_entity(player_entity, true, false)
+	if bool(zone.get("enable_training_npc", false)):
+		simulation.add_entity(EntityFactory.create(_training_entity_definition()), true, false)
+		autonomous_entity_ids.append(TRAINING_ENTITY_ID)
+	simulation.drain_events()
+
+
+func _training_entity_definition() -> Dictionary:
+	var spawn := _spawn_data()
+	var archetype: Dictionary = zone.get("npc_archetypes", {}).get(str(spawn.get("archetype", "")), {})
+	return {
+		"entity_id": TRAINING_ENTITY_ID,
+		"definition_id": str(archetype.get("key", "fixture:npc:training_spark")),
+		"kind": "npc",
+		"display_name": str(archetype.get("name", "Training Spark")),
+		"spawn_position": _array_to_vector3(spawn.get("position", [0.0, 0.0, 0.0])),
+		"combat_size": float(archetype.get("combat_size", 1.0)),
+		"max_health": float(archetype.get("max_health", 1.0)),
+		"combat_enabled": true,
+		"hostile": true,
+		"death_delay_seconds": float(archetype.get("death_delay_seconds", 0.0)),
+		"respawn_seconds": float(spawn.get("respawn_seconds", -1.0)),
+		"rewards": archetype.get("rewards", {}).duplicate(true),
+		"metadata": {
+			"behavior": archetype.get("behavior", {}).duplicate(true),
+			"combat_profile": archetype.get("combat", {}).duplicate(true),
+			"evidence": str(archetype.get("evidence", "temporary_fixture_default")),
+		},
+	}
+
 
 func _process(delta: float) -> void:
 	player_action_animation_remaining = maxf(0.0, player_action_animation_remaining - delta)
-	_update_player_respawn(delta)
-	_update_auto_attack(delta)
-	_update_npc(delta)
+	_sync_domain_from_views()
+	simulation.advance(delta)
+	_consume_simulation_events()
+	_update_auto_attack()
+	_update_simulation_npcs(delta)
+	_consume_simulation_events()
+	_update_lifecycle_status()
 	_update_camera(delta)
 	_update_npc_long_press(delta)
 	_update_hud()
@@ -161,14 +200,14 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if player_dead:
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity == null or not player_entity.is_active():
 		player.velocity = Vector3.ZERO
 		return
 	_move_player(delta)
 
+
 func _unhandled_input(event: InputEvent) -> void:
-	# Space is the EQ client jump key.  It was previously part of the prototype
-	# attack action, so consume it before that action is checked.
 	if event is InputEventKey and event.keycode == KEY_SPACE:
 		_set_jump_held(event.pressed and not event.echo)
 		return
@@ -199,180 +238,185 @@ func _unhandled_input(event: InputEvent) -> void:
 		clear_save()
 		get_tree().reload_current_scene()
 
+
 func toggle_auto_attack() -> void:
-	if player_dead:
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity == null or not player_entity.is_active():
 		return
 	auto_attack_enabled = not auto_attack_enabled
-	if auto_attack_enabled:
-		status_text = "Auto-attack enabled."
-	else:
-		status_text = "Auto-attack disabled."
+	status_text = "Auto-attack enabled." if auto_attack_enabled else "Auto-attack disabled."
 
-func _update_auto_attack(delta: float) -> void:
-	if player_dead or not auto_attack_enabled:
-		return
-	primary_attack_remaining = maxf(0.0, primary_attack_remaining - delta)
-	if primary_attack_remaining > 0.0:
-		return
-	if _perform_primary_attack():
-		primary_attack_remaining = _primary_attack_interval_seconds()
 
-func _perform_primary_attack() -> bool:
-	var validation := _validate_fixture_melee_target(_attack_profile())
-	if not validation.is_empty():
-		status_text = validation
-		return false
-	_play_player_animation("attack")
-	player_action_animation_remaining = PLAYER_ATTACK_ANIMATION_SECONDS
-	npc_health = maxf(0.0, npc_health - _resolve_fixture_melee_damage(str(_attack_profile().get("damage_profile", "")), 10.0))
-	status_text = "You strike the Training Spark."
-	_finish_training_spark_if_defeated()
-	_save_game()
-	return true
+func _update_auto_attack() -> void:
+	if not auto_attack_enabled:
+		return
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity == null or not player_entity.is_active():
+		return
+	var profile := _attack_profile()
+	if simulation.cooldown_remaining(PLAYER_ENTITY_ID, str(profile.get("cooldown_group", ""))) > 0.0:
+		return
+	var result := _request_player_attack(profile)
+	if not bool(result.get("success", false)) and str(result.get("reason", "")) != "cooldown":
+		status_text = _attack_failure_text(str(result.get("reason", "")), _current_target_entity_id())
+
+
+func _request_player_attack(profile: Dictionary) -> Dictionary:
+	var target_id := _current_target_entity_id()
+	if target_id.is_empty():
+		return {"success": false, "reason": "target_missing"}
+	var target := simulation.entity(target_id)
+	if target == null:
+		return {"success": false, "reason": "target_missing"}
+	var context := {
+		"line_of_sight": _has_melee_line_of_sight(target.position) if bool(profile.get("requires_los", false)) else true,
+	}
+	return simulation.request_attack(PLAYER_ENTITY_ID, target_id, profile, context)
+
 
 func try_training_strike() -> void:
-	if player_dead:
-		return
 	var ability := _ability_definition("training_strike")
-	if ability.is_empty() or not _ability_is_learned(ability):
-		status_text = "Training Strike is unavailable to this class."
+	if ability.is_empty():
+		status_text = "Training Strike is unavailable."
 		return
-	var group := str(ability.get("cooldown_group", ""))
-	if _ability_cooldown_remaining(group) > 0.0:
-		status_text = "Training Strike is recovering."
-		return
-	var validation := _validate_fixture_melee_target(ability)
-	if not validation.is_empty():
-		status_text = validation
-		return
-	# A valid use starts its persistent shared timer independently of normal
-	# melee timing, matching the useful pTimerCombatAbility behavior.
-	ability_cooldowns[group] = _unix_time_ms() + int(float(ability.get("cooldown_seconds", 0.0)) * 1000.0)
-	_play_player_animation(str(ability.get("animation", "attack")))
-	player_action_animation_remaining = PLAYER_ATTACK_ANIMATION_SECONDS
-	npc_health = maxf(0.0, npc_health - _resolve_fixture_melee_damage(str(ability.get("damage_profile", "")), float(ability.get("damage", 0.0))))
-	status_text = "You use Training Strike."
-	_finish_training_spark_if_defeated()
-	_save_game()
+	var result := _request_player_attack(ability)
+	if not bool(result.get("success", false)):
+		status_text = _attack_failure_text(str(result.get("reason", "")), _current_target_entity_id())
 
-func _finish_training_spark_if_defeated() -> void:
-	if npc_health > 0.0:
-		return
-	_award_training_loot()
-	_award_training_xp()
-	npc_alive = false
-	respawn_remaining = float(_spawn_data().get("respawn_seconds", 12.0))
-	npc.visible = false
-	status_text = "Training Spark defeated — respawning soon."
+
+func _attack_failure_text(reason: String, target_id: String) -> String:
+	var target := simulation.entity(target_id)
+	var target_name := target.display_name if target != null else "target"
+	match reason:
+		"target_missing", "target_inactive":
+			return "No hostile target."
+		"attacker_inactive":
+			return "You cannot attack right now."
+		"target_combat_disabled":
+			return "%s is targeted. Source combat data is disabled pending review." % target_name
+		"target_not_hostile":
+			return "%s is not a hostile target." % target_name
+		"ability_unavailable":
+			return "That ability is unavailable to your class or level."
+		"cooldown":
+			return "That attack is recovering."
+		"out_of_range":
+			return "Move closer to attack."
+		"not_facing":
+			return "Face %s to attack." % target_name
+		"line_of_sight":
+			return "Your line of sight is blocked."
+	return "The attack cannot be performed."
+
 
 func _class_definition() -> Dictionary:
-	return player_class_definitions.get("classes", {}).get(str(player_class_id), {})
+	var class_id := int(simulation.player_identity.get("class_id", 1))
+	return content_service.player_class_catalog().get("classes", {}).get(str(class_id), {})
+
 
 func _class_display_name() -> String:
 	return str(_class_definition().get("display_name", "Unknown"))
 
+
 func _attack_profile() -> Dictionary:
-	return _class_definition().get("attack_profile", {})
+	return _class_definition().get("attack_profile", {}).duplicate(true)
+
 
 func _ability_definition(ability_id: String) -> Dictionary:
-	return player_class_definitions.get("abilities", {}).get(ability_id, {})
+	return content_service.player_class_catalog().get("abilities", {}).get(ability_id, {}).duplicate(true)
 
-func _ability_is_learned(ability: Dictionary) -> bool:
-	if player_level < int(ability.get("required_level", 1)):
-		return false
-	var allowed_classes: Array = ability.get("allowed_class_ids", [])
-	return player_class_id in allowed_classes
-
-func _primary_attack_interval_seconds() -> float:
-	# Item delay is expressed in EQ tenths; no haste exists in this vertical
-	# slice, while EQEmu's default minimum-hasted delay remains 400 ms.
-	var delay_tenths := maxi(1, int(_attack_profile().get("delay_tenths", 35)))
-	return maxf(0.4, delay_tenths * 0.1)
-
-func _ordinary_melee_range_squared(attacker_size: float, defender_size: float) -> float:
-	# Bounded ordinary-actor adaptation of EQEmu Mob::CombatRange: effective
-	# size is floored at 8 and range² is largest_size² × 4 for sizes <= 19.
-	var effective_size := maxf(ORDINARY_MELEE_EFFECTIVE_SIZE, maxf(attacker_size, defender_size))
-	return effective_size * effective_size * 4.0
-
-func _validate_fixture_melee_target(profile: Dictionary) -> String:
-	if npc == null and not selected_halas_target.is_empty():
-		return "%s is targeted. Source combat data has not been imported yet." % str(selected_halas_target.name)
-	if npc == null or not npc_alive:
-		return "No hostile target."
-	var horizontal_offset := npc.global_position - player.global_position
-	horizontal_offset.y = 0.0
-	if horizontal_offset.length_squared() > _ordinary_melee_range_squared(ORDINARY_MELEE_EFFECTIVE_SIZE, ORDINARY_MELEE_EFFECTIVE_SIZE):
-		return "Move closer to attack."
-	if bool(profile.get("requires_facing", true)) and not _player_is_facing(npc.global_position):
-		return "Face the Training Spark to attack."
-	if bool(profile.get("requires_los", true)) and not _has_melee_line_of_sight(npc.global_position):
-		return "Your line of sight is blocked."
-	return ""
-
-func _player_is_facing(target_position: Vector3) -> bool:
-	var forward := -player.global_transform.basis.z
-	forward.y = 0.0
-	var toward_target := target_position - player.global_position
-	toward_target.y = 0.0
-	if toward_target.length_squared() <= 0.000001:
-		return true
-	return forward.normalized().dot(toward_target.normalized()) >= MELEE_FACING_DOT_MIN
 
 func _has_melee_line_of_sight(target_position: Vector3) -> bool:
-	var origin := player.global_position + Vector3.UP * (PLAYER_SERVER_SIZE * 0.5)
-	var destination := target_position + Vector3.UP * 0.7
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity == null:
+		return false
+	return _has_world_line_of_sight(
+		player_entity.position + Vector3.UP * (player_entity.combat_size * 0.5),
+		target_position + Vector3.UP * 0.7
+	)
+
+
+func _has_world_line_of_sight(origin: Vector3, destination: Vector3) -> bool:
 	var query := PhysicsRayQueryParameters3D.create(origin, destination, PLAYER_WORLD_COLLISION_MASK, [player.get_rid()])
 	query.collide_with_areas = false
 	query.collide_with_bodies = true
 	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
-func _resolve_fixture_melee_damage(damage_profile: String, fallback_damage: float) -> float:
-	# The fixture has no sourced STR/skills/AC/hit data. Keep current deterministic
-	# tuning behind this explicit seam so source-appropriate resolution can replace
-	# it without changing attack cadence or ability scheduling.
-	if damage_profile == "training_fixture":
-		return fallback_damage
-	push_warning("Unknown fixture damage profile: %s" % damage_profile)
-	return 0.0
 
-func _unix_time_ms() -> int:
-	return int(Time.get_unix_time_from_system() * 1000.0)
+func _sync_domain_from_views() -> void:
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity != null and player_entity.lifecycle in [GameplayEntity.Lifecycle.ACTIVE, GameplayEntity.Lifecycle.DYING]:
+		view_registry.sync_to_domain(player_entity)
+	var training_entity := simulation.entity(TRAINING_ENTITY_ID)
+	if training_entity != null and training_entity.is_active():
+		view_registry.sync_to_domain(training_entity)
+	if not selected_entity_id.is_empty() and selected_entity_id != TRAINING_ENTITY_ID:
+		var selected_entity := simulation.entity(selected_entity_id)
+		if selected_entity != null and selected_entity.is_active():
+			view_registry.sync_to_domain(selected_entity)
 
-func _ability_cooldown_remaining(group: String) -> float:
-	if group.is_empty():
-		return 0.0
-	return maxf(0.0, (int(ability_cooldowns.get(group, 0)) - _unix_time_ms()) / 1000.0)
 
-func _sanitized_ability_cooldowns(saved_cooldowns: Variant) -> Dictionary:
-	var restored: Dictionary = {}
-	if not saved_cooldowns is Dictionary:
-		return restored
-	var now := _unix_time_ms()
-	for group_variant in saved_cooldowns:
-		var group := str(group_variant)
-		var ready_at := int(saved_cooldowns[group_variant])
-		if not group.is_empty() and ready_at > now:
-			restored[group] = ready_at
-	return restored
-
-func _sanitized_faction_values(saved_values: Variant) -> Dictionary:
-	var restored: Dictionary = {}
-	if not saved_values is Dictionary:
-		return restored
-	for faction_id_variant in saved_values:
-		var faction_ref := _normalize_faction_ref(str(faction_id_variant))
-		var definition: Dictionary = faction_definitions.get("factions_by_key", {}).get(faction_ref, {})
-		if definition.is_empty():
+func _consume_simulation_events() -> void:
+	for event_variant in simulation.drain_events():
+		var event := event_variant as GameplayEvent
+		if event == null:
 			continue
-		var value := int(saved_values[faction_id_variant])
-		restored[faction_ref] = clampi(value, int(definition.get("personal_min", -2000)), int(definition.get("personal_max", 2000)))
-	return restored
+		match event.type:
+			GameplayEvent.Type.ATTACK_PERFORMED:
+				if event.source_entity_id == PLAYER_ENTITY_ID:
+					_play_player_animation("attack")
+					player_action_animation_remaining = PLAYER_ATTACK_ANIMATION_SECONDS
+					status_text = "You attack %s." % _entity_display_name(event.target_entity_id)
+				else:
+					status_text = "%s hits you." % _entity_display_name(event.source_entity_id)
+			GameplayEvent.Type.DEATH:
+				if event.target_entity_id == PLAYER_ENTITY_ID:
+					auto_attack_enabled = false
+					player.velocity = Vector3.ZERO
+					_play_player_animation("death")
+					status_text = "You were defeated."
+				else:
+					status_text = "%s defeated." % _entity_display_name(event.target_entity_id)
+			GameplayEvent.Type.ITEM_GAINED:
+				var item_key := str(event.data.get("item_key", ""))
+				var item := content_service.item_definition(item_key)
+				status_text = "Looted %s ×%d." % [str(item.get("name", item_key)), int(event.data.get("quantity", 0))]
+			GameplayEvent.Type.XP_AWARDED:
+				status_text = "Gained %d XP." % int(event.data.get("amount", 0))
+			GameplayEvent.Type.LEVEL_CHANGED:
+				status_text = "Level %d reached!" % int(event.data.get("level", simulation.progression.level))
+			GameplayEvent.Type.SPAWN:
+				var spawned := simulation.entity(event.source_entity_id)
+				if spawned != null:
+					view_registry.apply_from_domain(spawned)
+				if event.source_entity_id == PLAYER_ENTITY_ID:
+					player.velocity = Vector3.ZERO
+					player.reset_physics_interpolation()
+					_play_player_animation("idle")
+					status_text = "You recover at the clearing entrance."
+				elif event.source_entity_id == TRAINING_ENTITY_ID:
+					status_text = "The Training Spark has returned."
+			GameplayEvent.Type.DESPAWN:
+				view_registry.set_visible(event.source_entity_id, false)
 
-func _normalize_faction_ref(value: String) -> String:
-	if value.begins_with("peq:faction:"):
-		return value
-	return "peq:faction:%d" % int(value)
+
+func _update_lifecycle_status() -> void:
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity != null and player_entity.lifecycle == GameplayEntity.Lifecycle.DYING:
+		status_text = "You were defeated — respawning in %.0f." % ceil(player_entity.time_until_death_completion(simulation_clock.now_seconds()))
+
+
+func _entity_display_name(entity_id: String) -> String:
+	var target := simulation.entity(entity_id)
+	return target.display_name if target != null else "Unknown"
+
+
+func _current_target_entity_id() -> String:
+	if not selected_entity_id.is_empty():
+		return selected_entity_id
+	var training := simulation.entity(TRAINING_ENTITY_ID)
+	return TRAINING_ENTITY_ID if training != null else ""
+
 
 func _move_player(delta: float) -> void:
 	var keyboard := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -382,17 +426,12 @@ func _move_player(delta: float) -> void:
 	var direction := Vector3.ZERO
 	if input.length() > 0.05:
 		var forward := -camera_pivot.global_transform.basis.z
-		# The EQ client's camera-drive keeps horizontal steering normalized but
-		# derives a separate vertical swim wish from camera pitch. Mobile's left
-		# stick is that forward/back drive; the right stick remains camera orbit.
 		forward.y = 0.0
 		forward = forward.normalized()
 		var right := camera_pivot.global_transform.basis.x
 		right.y = 0.0
 		right = right.normalized()
 		direction = (right * input.x + forward * input.y).normalized()
-	# Heading is camera-driven state, separate from horizontal displacement: left
-	# stick lateral input strafes and must not rotate the body toward its wish.
 	player.rotation.y = camera_pivot.rotation.y
 
 	var movement_speed := EQ_SWIM_SPEED if swimming else PLAYER_RUN_SPEED
@@ -401,25 +440,20 @@ func _move_player(delta: float) -> void:
 	if swimming:
 		_apply_swim_vertical_motion(delta, float(water_surface), input)
 	elif jump_pressed and player.is_on_floor():
-		# eqoxide applies a 31 u/s upward impulse only from a grounded state.
 		player.velocity.y = EQ_JUMP_VELOCITY
 	elif player.is_on_floor():
-		# A small downward velocity keeps floor contact stable over triangle seams.
 		player.velocity.y = -1.0
 	else:
 		player.velocity.y = maxf(player.velocity.y - EQ_GRAVITY * delta, -EQ_MAX_FALL_SPEED)
 	var horizontal_motion := Vector3(direction.x, 0.0, direction.z) * movement_speed * delta
-	# The reference controller grants a swimmer the same bounded step-up as a
-	# grounded walker, allowing a player to haul out over a legitimate shore lip.
-	# An explicit upward swim wish stays in the water column instead.
 	var may_swim_step := swimming and player.velocity.y <= 0.0
 	var stepped_up := direction != Vector3.ZERO and (player.is_on_floor() or may_swim_step) and _try_step_up(horizontal_motion)
 	if not stepped_up:
 		player.move_and_slide()
 	_update_locomotion_animation(swimming)
-
 	_clamp_player_to_zone_bounds()
 	jump_pressed = false
+
 
 func _update_locomotion_animation(swimming: bool) -> void:
 	if player_action_animation_remaining > 0.0:
@@ -436,8 +470,6 @@ func _update_locomotion_animation(swimming: bool) -> void:
 	elif player_animator != null and player_animator.has_animation("run"):
 		_play_player_animation("run")
 	else:
-		# The HLM export currently contains no run clip. Do not fake it by speeding
-		# up walk; this is a visible asset dependency, not source-faithful running.
 		_play_player_animation("walk")
 
 
@@ -448,9 +480,6 @@ func _set_jump_held(pressed: bool) -> void:
 
 
 func _apply_swim_vertical_motion(delta: float, surface: float, input: Vector2) -> void:
-	# eqoxide suspends gravity underwater. Forward/back follows camera pitch,
-	# while the jump key is an explicit swim-up control and idle actors rise at
-	# the native 30 u/s buoyancy rate toward two units below the surface.
 	var requested_vertical := 0.0
 	if jump_held:
 		requested_vertical = EQ_SWIM_SPEED
@@ -469,9 +498,6 @@ func _apply_swim_vertical_motion(delta: float, surface: float, input: Vector2) -
 
 
 func _try_step_up(horizontal_motion: Vector3) -> bool:
-	# Equivalent in intent to eqoxide's try_step_up: only attempt a step after
-	# low movement is obstructed, require room above the character, clear travel
-	# over the lip, then require a walkable landing within the bounded step band.
 	if horizontal_motion.length_squared() <= 0.000001:
 		return false
 	var start := player.global_transform
@@ -483,12 +509,9 @@ func _try_step_up(horizontal_motion: Vector3) -> bool:
 	raised.origin += Vector3.UP * PLAYER_STEP_UP_HEIGHT
 	if player.test_move(raised, horizontal_motion):
 		return false
-
 	player.global_transform = raised
 	player.move_and_collide(horizontal_motion)
-	var landing := player.move_and_collide(
-		Vector3.DOWN * (PLAYER_STEP_UP_HEIGHT + PLAYER_FLOOR_SNAP_DISTANCE)
-	)
+	var landing := player.move_and_collide(Vector3.DOWN * (PLAYER_STEP_UP_HEIGHT + PLAYER_FLOOR_SNAP_DISTANCE))
 	if landing == null or landing.get_normal().dot(Vector3.UP) < cos(PLAYER_MAX_SLOPE_ANGLE):
 		player.global_transform = start
 		return false
@@ -501,66 +524,31 @@ func _clamp_player_to_zone_bounds() -> void:
 	player.global_position.x = clampf(player.global_position.x, -limit, limit)
 	player.global_position.z = clampf(player.global_position.z, -limit, limit)
 
-func _update_npc(delta: float) -> void:
-	if npc == null or player_dead:
-		return
-	if not npc_alive:
-		respawn_remaining -= delta
-		if respawn_remaining <= 0.0:
-			_respawn_npc()
-		return
-	var archetype: Dictionary = zone.npc_archetypes[_spawn_data().archetype]
-	var distance := npc.global_position.distance_to(player.global_position)
-	var aggro_range := float(archetype.aggro_range)
-	if distance > aggro_range:
-		return
-	var attack_range := float(archetype.attack_range)
-	if distance > attack_range:
-		var direction := (player.global_position - npc.global_position).normalized()
-		npc.global_position += direction * float(archetype.move_speed) * delta
-		npc.look_at(player.global_position, Vector3.UP)
-		return
-	npc_attack_timer = maxf(0.0, npc_attack_timer - delta)
-	if npc_attack_timer <= 0.0:
-		npc_attack_timer = float(archetype.attack_cooldown)
-		player_health = maxf(0.0, player_health - float(archetype.damage))
-		status_text = "The Training Spark hits you."
-		if player_health <= 0.0:
-			player_dead = true
-			auto_attack_enabled = false
-			primary_attack_remaining = 0.0
-			player_respawn_remaining = float(zone.get("player_respawn_seconds", 2.5))
-			player.velocity = Vector3.ZERO
-			_play_player_animation("death")
-			status_text = "You were defeated — respawning in %.0f." % ceil(player_respawn_remaining)
-			return
-		_save_game()
 
-func _update_player_respawn(delta: float) -> void:
-	if not player_dead:
+func _update_simulation_npcs(delta: float) -> void:
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity == null:
 		return
-	player_respawn_remaining = maxf(0.0, player_respawn_remaining - delta)
-	status_text = "You were defeated — respawning in %.0f." % ceil(player_respawn_remaining)
-	if player_respawn_remaining > 0.0:
-		return
-	player_dead = false
-	auto_attack_enabled = false
-	primary_attack_remaining = 0.0
-	player_health = PLAYER_MAX_HEALTH
-	player.global_position = _array_to_vector3(zone.player_spawn)
-	player.velocity = Vector3.ZERO
-	player.reset_physics_interpolation()
-	_play_player_animation("idle")
-	status_text = "You recover at the clearing entrance."
-	_save_game()
+	for entity_id in autonomous_entity_ids:
+		var actor := simulation.entity(entity_id)
+		if actor == null:
+			continue
+		var profile: Dictionary = actor.metadata.get("combat_profile", {})
+		var context := {"line_of_sight": true}
+		if actor.is_active() and player_entity.is_active() and bool(profile.get("requires_los", false)):
+			context["line_of_sight"] = _has_world_line_of_sight(
+				actor.position + Vector3.UP * (actor.combat_size * 0.5),
+				player_entity.position + Vector3.UP * (player_entity.combat_size * 0.5)
+			)
+		npc_behavior_system.update_entity(simulation, entity_id, PLAYER_ENTITY_ID, delta, context)
+		view_registry.apply_from_domain(actor)
+		var actor_view := view_registry.view_for(entity_id)
+		if actor_view != null and actor.facing.length_squared() > 0.000001:
+			actor_view.look_at(actor_view.global_position + actor.facing, Vector3.UP)
+
 
 func _update_camera(delta: float) -> void:
-	# Camera follow has no positional lag: the orbit pivot is always the player,
-	# keeping the character centered while physics interpolation smooths rendered
-	# movement between fixed ticks.
 	camera_pivot.global_position = player.global_position
-	# The right mobile stick continuously controls yaw and pitch. Movement stays
-	# camera-relative, so the left stick naturally follows the new heading.
 	camera_pivot.rotation.y -= look_stick.x * CAMERA_TURN_SPEED * delta
 	camera_pivot.rotation.x = clampf(
 		camera_pivot.rotation.x + look_stick.y * CAMERA_PITCH_SPEED * delta,
@@ -571,9 +559,6 @@ func _update_camera(delta: float) -> void:
 
 
 func _update_camera_collision() -> void:
-	# Match the useful classic-client behavior documented by eqoxide: the camera
-	# line is tested against the same authored zone collision used by the player,
-	# then pulled forward before a wall instead of looking through it.
 	var origin := camera_pivot.global_position + Vector3.UP * 1.35
 	var desired := camera_pivot.to_global(CAMERA_OFFSET)
 	var query := PhysicsRayQueryParameters3D.create(origin, desired, PLAYER_WORLD_COLLISION_MASK, [player.get_rid()])
@@ -589,22 +574,12 @@ func _update_camera_collision() -> void:
 	camera.global_position = origin.lerp(desired, clear_distance / total_distance)
 	camera.look_at(_camera_focus_position(), Vector3.UP)
 
-func _camera_focus_position() -> Vector3:
-	# Aim at the visual center rather than the CharacterBody's ground origin so
-	# the whole player, not its feet, remains centered on screen.
-	return player.global_position + Vector3.UP * (PLAYER_SERVER_SIZE * 0.5)
 
-func _respawn_npc() -> void:
-	if npc == null:
-		return
-	npc_alive = true
-	npc.visible = true
-	npc.global_position = _array_to_vector3(_spawn_data().position)
-	npc_health = float(zone.npc_archetypes[_spawn_data().archetype].max_health)
-	npc_attack_timer = 0.0
-	npc_loot_awarded = false
-	status_text = "The Training Spark has returned."
-	_save_game()
+func _camera_focus_position() -> Vector3:
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	var height := player_entity.combat_size if player_entity != null else 7.0
+	return player.global_position + Vector3.UP * (height * 0.5)
+
 
 func _build_world() -> void:
 	var geometry_path := str(zone.get("geometry_scene", ""))
@@ -613,15 +588,9 @@ func _build_world() -> void:
 		assert(geometry_scene != null, "Unable to import zone geometry: %s" % geometry_path)
 		var geometry := geometry_scene.instantiate()
 		geometry.name = "ZoneGeometry"
-		# Lantern's zone GLBs apply a 0.1 root transform, while its character
-		# GLBs retain native game-scale units. geometry_scale normalizes the
-		# two asset classes without modifying either extracted source file.
 		geometry.scale = Vector3.ONE * float(zone.get("geometry_scale", 1.0))
 		add_child(geometry)
 		_build_zone_collision(geometry)
-		# Lantern's source Halas GLB has a visible t75_agua1 water primitive.
-		# Failing to find it would turn that surface back into a solid floor, so
-		# fail visibly instead of silently shipping broken swim.
 		assert(not authored_water_triangles.is_empty(), "Halas water surface was not found in the imported zone mesh")
 	else:
 		_build_placeholder_ground()
@@ -639,10 +608,8 @@ func _build_world() -> void:
 	environment.environment = env
 	add_child(environment)
 
+
 func _build_zone_collision(node: Node) -> void:
-	# The authored zone shell is the terrain authority used for NPC elevation
-	# validation. Props use a separate layer below: they block movement/cameras
-	# but must not turn a table or crate into a terrain spawn surface.
 	if node is MeshInstance3D and node.mesh != null:
 		_add_zone_terrain_collision(node)
 	for child in node.get_children():
@@ -650,9 +617,6 @@ func _build_zone_collision(node: Node) -> void:
 
 
 func _add_zone_terrain_collision(mesh_instance: MeshInstance3D) -> void:
-	# Client water has its own region/surface logic; including the visible water
-	# triangles in terrain collision would make a character stand on the water.
-	# Keep all non-water triangle surfaces exactly as authored for land collision.
 	var terrain_faces := PackedVector3Array()
 	for surface_index in mesh_instance.mesh.get_surface_count():
 		if mesh_instance.mesh.surface_get_primitive_type(surface_index) != Mesh.PRIMITIVE_TRIANGLES:
@@ -678,17 +642,10 @@ func _surface_is_halas_water(mesh_instance: MeshInstance3D, surface_index: int) 
 		var identifier := (material.resource_name + " " + material.resource_path).to_lower()
 		if identifier.contains("halaswater"):
 			return true
-	# The supplied Lantern source GLB has two water-textured primitives:
-	# t75_agua1 (58), its visible surface, and d_halaswater1 (61), the deeper
-	# water geometry. Godot can clear embedded material resource names, so retain
-	# these precise source-export fallbacks instead of treating water as land.
 	return mesh_instance.mesh.get_surface_count() == 62 and surface_index in [58, 61]
 
 
 func _surface_defines_halas_water_surface(mesh_instance: MeshInstance3D, surface_index: int) -> bool:
-	# Source GLB inspection: primitive 58 / t75_agua1 occupies Y -3 through -1;
-	# primitive 61 / d_halaswater1 extends down to Y -131.9375 and is not a
-	# surface for buoyancy. Both must be non-solid; only 58 defines the surface.
 	return mesh_instance.mesh.get_surface_count() == 62 and surface_index == 58
 
 
@@ -718,8 +675,6 @@ func _append_triangle_faces(destination: PackedVector3Array, vertices: PackedVec
 
 
 func _water_surface_at(world_position: Vector3) -> Variant:
-	# Resolve the Y coordinate by barycentric interpolation of the authored
-	# horizontal projection. The highest overlapping water triangle wins.
 	var highest_surface: Variant = null
 	for triangle in authored_water_triangles:
 		var a := triangle[0]
@@ -737,6 +692,7 @@ func _water_surface_at(world_position: Vector3) -> Variant:
 		if highest_surface == null or surface > float(highest_surface):
 			highest_surface = surface
 	return highest_surface
+
 
 func _add_static_mesh_collision(mesh_instance: MeshInstance3D, layer: int, body_name: String) -> void:
 	var mesh := mesh_instance.mesh
@@ -764,6 +720,7 @@ func _add_collision_shape(mesh_instance: MeshInstance3D, shape: Shape3D, layer: 
 	body.add_child(collision_shape)
 	mesh_instance.add_child(body)
 
+
 func _build_placeholder_ground() -> void:
 	var extent := float(zone.get("bounds", {}).get("half_extent", 18.0))
 	var ground := MeshInstance3D.new()
@@ -775,11 +732,14 @@ func _build_placeholder_ground() -> void:
 	for coordinate in [Vector3(-extent, 0.1, -extent), Vector3(extent, 0.1, -extent), Vector3(-extent, 0.1, extent), Vector3(extent, 0.1, extent)]:
 		_add_marker(coordinate)
 
+
 func _build_zone_objects() -> void:
 	var instances_path := str(zone.get("object_instances", ""))
 	var models_path := str(zone.get("object_model_directory", ""))
 	if instances_path.is_empty() or models_path.is_empty():
 		return
+	# This file is a presentation-space placement manifest rather than gameplay
+	# content. Gameplay JSON is loaded exclusively through ContentService.
 	var file := FileAccess.open(instances_path, FileAccess.READ)
 	if file == null:
 		push_error("Unable to read zone object instances: %s" % instances_path)
@@ -799,26 +759,14 @@ func _build_zone_objects() -> void:
 		if scene == null:
 			zone_prop_load_failures.append(model_name)
 			continue
-		# Keep an imported prop's transform separate from its placement transform.
-		# Every Lantern prop root has a -X reflection. Assigning placement scale to
-		# that root overwrites the reflection before it can be baked into the mesh,
-		# leaving the source faces backwards on Android.
 		var placement := Node3D.new()
 		placement.name = "%s_%d" % [model_name, line_number]
-		# Lantern writes raw EQ placement data. The Halas zone's root transform
-		# mirrors X, so instance positions and headings must be mirrored too.
 		placement.position = EqWorldSpace.halas_lantern_prop_position(float(values[1]), float(values[2]), float(values[3]))
 		placement.rotation.y = EqWorldSpace.halas_lantern_prop_yaw(float(values[5]))
 		placement.scale = Vector3(float(values[7]), float(values[8]), float(values[9]))
 		var object := scene.instantiate() as Node3D
 		object.name = "Visual"
 		placement.add_child(object)
-		# Lantern's static-prop exporter mirrors each model root on X. Keeping that
-		# negative transform works incidentally in the desktop renderer, but Android
-		# drivers can cull it and physics receives a reflected trimesh hierarchy.
-		# Bake the mirror into a private runtime mesh instead. This preserves the
-		# visible model and its winding while leaving a normal transform for both
-		# rendering and the collision body. NPC exports do not use this transform.
 		_bake_reflected_prop_meshes(object)
 		_force_prop_materials_two_sided(object)
 		container.add_child(placement)
@@ -833,15 +781,14 @@ func _build_zone_objects() -> void:
 	]
 	print(status_text)
 
+
 func _build_object_collision(node: Node) -> void:
-	# eqoxide's Collision::build expands every placed object into world-space
-	# triangles alongside zone terrain. Use the imported prop triangles directly
-	# here; manifest position/rotation/scale already live on their ancestor.
 	if node is MeshInstance3D and node.mesh != null:
 		zone_prop_mesh_count += 1
 		_add_static_mesh_collision(node, COLLISION_LAYER_WORLD_OBJECTS, "ObjectCollision")
 	for child in node.get_children():
 		_build_object_collision(child)
+
 
 func _load_object_scene(models_path: String, model_name: String) -> PackedScene:
 	if object_scenes.has(model_name):
@@ -853,6 +800,7 @@ func _load_object_scene(models_path: String, model_name: String) -> PackedScene:
 		return null
 	object_scenes[model_name] = scene
 	return scene
+
 
 func _bake_reflected_prop_meshes(node: Node) -> void:
 	if node is MeshInstance3D and node.mesh != null and node.transform.basis.determinant() < 0.0:
@@ -866,10 +814,6 @@ func _bake_reflected_prop_meshes(node: Node) -> void:
 
 
 func _force_prop_materials_two_sided(node: Node) -> void:
-	# This is intentionally applied after baking. The source assets originate in
-	# a different handedness and Android Vulkan/OpenGL drivers have disagreed on
-	# front-face state for those imported materials. Culling must never make a
-	# solid world prop disappear; triangle collision remains the authority.
 	if node is MeshInstance3D and node.mesh != null:
 		for surface_index in node.mesh.get_surface_count():
 			var source_material: Material = node.get_active_material(surface_index)
@@ -884,24 +828,21 @@ func _force_prop_materials_two_sided(node: Node) -> void:
 
 
 func _bake_mesh_transform(source_mesh: Mesh, mesh_transform: Transform3D) -> ArrayMesh:
-	# GLB props are static triangle meshes. Applying the reflected local
-	# transform to their vertices and reversing each face restores normal winding
-	# without asking a renderer or physics backend to support negative scale.
 	var baked_mesh := ArrayMesh.new()
 	var normal_transform := mesh_transform.basis.inverse().transposed()
 	var reverses_winding := mesh_transform.basis.determinant() < 0.0
 	for surface_index in source_mesh.get_surface_count():
 		var arrays := source_mesh.surface_get_arrays(surface_index)
-		var vertices := arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		for vertex_index in vertices.size():
 			vertices[vertex_index] = mesh_transform * vertices[vertex_index]
 		arrays[Mesh.ARRAY_VERTEX] = vertices
-		var normals := arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 		for normal_index in normals.size():
 			normals[normal_index] = (normal_transform * normals[normal_index]).normalized()
 		arrays[Mesh.ARRAY_NORMAL] = normals
 		if source_mesh.surface_get_primitive_type(surface_index) == Mesh.PRIMITIVE_TRIANGLES and reverses_winding:
-			var indices := arrays[Mesh.ARRAY_INDEX] as PackedInt32Array
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
 			if indices.is_empty():
 				for vertex_index in vertices.size():
 					indices.append(vertex_index)
@@ -914,20 +855,18 @@ func _bake_mesh_transform(source_mesh: Mesh, mesh_transform: Transform3D) -> Arr
 		baked_mesh.surface_set_material(surface_index, source_mesh.surface_get_material(surface_index))
 	return baked_mesh
 
+
 func _build_player() -> void:
+	var entity := simulation.entity(PLAYER_ENTITY_ID)
+	assert(entity != null, "Player domain entity is required before presentation is built")
 	player = CharacterBody3D.new()
 	player.name = "Player"
-	player.position = _array_to_vector3(zone.player_spawn)
-	# Keep walkable terrain as floor instead of interpreting an incline's next
-	# triangle as a wall. Very steep faces still remain collision walls.
+	player.position = entity.position
 	player.motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
 	player.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	player.floor_max_angle = PLAYER_MAX_SLOPE_ANGLE
 	player.floor_snap_length = PLAYER_FLOOR_SNAP_DISTANCE
 	player.floor_constant_speed = true
-	# A stationary grounded player must not creep downhill on walkable terrain.
-	# This is a Godot/Jolt stability adaptation; the project has no sourced
-	# classic-client slope-angle/slide rule to claim here.
 	player.floor_stop_on_slope = true
 	player.max_slides = 6
 	player.safe_margin = PLAYER_SAFE_MARGIN
@@ -938,18 +877,14 @@ func _build_player() -> void:
 	collision_shape.name = "PlayerCollision"
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = PLAYER_COLLISION_RADIUS
-	capsule.height = PLAYER_COLLISION_HEIGHT
+	capsule.height = entity.combat_size
 	collision_shape.shape = capsule
-	# The CharacterBody origin is the server's ground elevation. Put the capsule
-	# bottom at that origin to match the grounded HLM visual.
-	collision_shape.position.y = PLAYER_COLLISION_HEIGHT * 0.5
+	collision_shape.position.y = entity.combat_size * 0.5
 	player.add_child(collision_shape)
 	var player_scene := load("res://assets/imported/halas/characters/hlm_s0_h0.glb") as PackedScene
 	assert(player_scene != null, "Missing animated HLM placeholder player model")
 	player_visual = player_scene.instantiate() as Node3D
 	player_visual.name = "HLMPlaceholder"
-	# Keep the CharacterBody's conventional -Z forward axis aligned to movement,
-	# while the extracted EQ model's local +X face points along it.
 	player_visual.rotation.y = CHARACTER_MODEL_FACING_OFFSET
 	player.add_child(player_visual)
 	player_animator = _animation_player_below(player_visual)
@@ -958,8 +893,9 @@ func _build_player() -> void:
 		assert(player_animator.has_animation(clip), "HLM placeholder is missing %s animation" % clip)
 	player_animator.play("idle")
 	player_animator.advance(0.0)
-	_normalize_player_model_to_height(player_visual, PLAYER_SERVER_SIZE)
+	_normalize_player_model_to_height(player_visual, entity.combat_size)
 	_play_player_animation("idle")
+	view_registry.bind(PLAYER_ENTITY_ID, player)
 
 
 func _play_player_animation(clip: String) -> void:
@@ -970,9 +906,6 @@ func _play_player_animation(clip: String) -> void:
 
 
 func _play_water_animation(moving: bool) -> void:
-	# eqoxide selects L06/P06-family swim while moving and L08/P07-family tread
-	# while still. These clips are required on the player export; the fallback
-	# keeps custom/replacement player art usable during development.
 	var clip := "swimming" if moving else "treading"
 	if player_animator != null and player_animator.has_animation(clip):
 		_play_player_animation(clip)
@@ -981,8 +914,6 @@ func _play_water_animation(moving: bool) -> void:
 
 
 func _normalize_player_model_to_height(visual: Node3D, target_height: float) -> void:
-	# Match the NPC normalization exactly: a player HLM must render as a 7-foot
-	# Halas citizen even when the imported rig's raw bounding box differs.
 	var lowest_point := INF
 	var highest_point := -INF
 	for mesh_instance in _mesh_instances_below(visual):
@@ -1019,10 +950,14 @@ func _animation_player_below(node: Node) -> AnimationPlayer:
 			return found
 	return null
 
+
 func _build_npc() -> void:
+	var entity := simulation.entity(TRAINING_ENTITY_ID)
+	if entity == null:
+		return
 	npc = Node3D.new()
 	npc.name = "TrainingSpark"
-	npc.position = _array_to_vector3(_spawn_data().position)
+	npc.position = entity.position
 	add_child(npc)
 	var body := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
@@ -1032,18 +967,20 @@ func _build_npc() -> void:
 	body.material_override = _material(Color("ff9f43"), true)
 	body.position.y = 0.7
 	npc.add_child(body)
-	npc_health = float(zone.npc_archetypes[_spawn_data().archetype].max_health)
-	npc_alive = true
+	view_registry.bind(TRAINING_ENTITY_ID, npc)
+	view_registry.apply_from_domain(entity)
+
 
 func _build_npc_population() -> void:
-	var source_path := str(zone.get("npc_source", ""))
 	var models_path := str(zone.get("npc_model_directory", ""))
-	if source_path.is_empty() or models_path.is_empty():
+	var npc_content := content_service.npc_dataset()
+	if npc_content.is_empty() or models_path.is_empty():
 		return
 	halas_population = HalasNpcPopulation.new()
 	halas_population.name = "ClassicHalasPopulation"
-	halas_population.configure(source_path, models_path)
+	halas_population.configure(npc_content, models_path)
 	add_child(halas_population)
+
 
 func _build_camera() -> void:
 	camera_pivot = Node3D.new()
@@ -1055,6 +992,7 @@ func _build_camera() -> void:
 	camera.position = CAMERA_OFFSET
 	camera.current = true
 	camera_pivot.add_child(camera)
+
 
 func _build_hud() -> void:
 	hud = preload("res://scripts/mobile_hud.gd").new()
@@ -1069,42 +1007,70 @@ func _build_hud() -> void:
 	add_child(ui_layer)
 	ui_layer.add_child(hud)
 
+
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and simulation != null:
 		_save_game()
 
+
 func _update_hud() -> void:
-	if hud == null:
+	if hud == null or simulation == null:
+		return
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity == null:
 		return
 	var inventory_line := _inventory_summary()
 	var progression_line := _progression_summary()
 	hud.set_auto_attack(auto_attack_enabled)
 	var training_strike := _ability_definition("training_strike")
-	var ability_available := not training_strike.is_empty() and _ability_is_learned(training_strike)
-	hud.set_ability(str(training_strike.get("display_name", "TRAINING\nSTRIKE")), ability_available, _ability_cooldown_remaining(str(training_strike.get("cooldown_group", ""))))
+	var ability_available := not training_strike.is_empty() and simulation.profile_is_learned(PLAYER_ENTITY_ID, training_strike)
+	hud.set_ability(
+		str(training_strike.get("display_name", "TRAINING\nSTRIKE")),
+		ability_available,
+		simulation.cooldown_remaining(PLAYER_ENTITY_ID, str(training_strike.get("cooldown_group", "")))
+	)
 	var class_line := "Class: %s    Auto: %s" % [_class_display_name(), "ON" if auto_attack_enabled else "OFF"]
 	hud.set_interaction_available(_selected_merchant_is_browseable())
-	if npc == null:
-		var target_line := "No target"
-		if not selected_halas_target.is_empty():
-			target_line = "Target: %s (Lv %d)" % [str(selected_halas_target.name), int(selected_halas_target.level)]
-		hud.set_status("%s\nLevel %d    HP %.0f / %.0f    %s\n%s\n%s\n%s" % [status_text, player_level, player_health, PLAYER_MAX_HEALTH, target_line, class_line, progression_line, inventory_line])
-		return
-	var npc_name := str(zone.npc_archetypes[_spawn_data().archetype].name)
-	var npc_line := "%s: %.0f / %.0f" % [npc_name, npc_health, float(zone.npc_archetypes[_spawn_data().archetype].max_health)] if npc_alive else "%s: respawns in %.0fs" % [npc_name, maxf(0.0, respawn_remaining)]
-	hud.set_status("%s\nLevel %d    HP %.0f / %.0f    %s\n%s\n%s\n%s" % [status_text, player_level, player_health, PLAYER_MAX_HEALTH, npc_line, class_line, progression_line, inventory_line])
+	var target_line := _target_status_line()
+	hud.set_status("%s\nLevel %d    HP %.0f / %.0f    %s\n%s\n%s\n%s" % [
+		status_text,
+		simulation.progression.level,
+		player_entity.health,
+		player_entity.max_health,
+		target_line,
+		class_line,
+		progression_line,
+		inventory_line,
+	])
+
+
+func _target_status_line() -> String:
+	var target_id := _current_target_entity_id()
+	if target_id.is_empty():
+		return "No target"
+	var entity := simulation.entity(target_id)
+	if entity == null:
+		return "No target"
+	if target_id == TRAINING_ENTITY_ID:
+		if entity.is_active():
+			return "%s: %.0f / %.0f" % [entity.display_name, entity.health, entity.max_health]
+		if entity.lifecycle == GameplayEntity.Lifecycle.DEAD:
+			return "%s: respawns in %.0fs" % [entity.display_name, entity.time_until_respawn(simulation_clock.now_seconds())]
+		return "%s: %s" % [entity.display_name, GameplayEntity.lifecycle_name(entity.lifecycle)]
+	var level := int(selected_halas_target.get("level", 1))
+	return "Target: %s (Lv %d)" % [entity.display_name, level]
 
 
 func _target_nearest_halas_npc() -> void:
 	if halas_population == null:
 		return
 	var forward := -camera_pivot.global_transform.basis.z
-	selected_halas_target = halas_population.nearest_target(player.global_position, forward)
-	if selected_halas_target.is_empty():
+	var target := halas_population.nearest_target(player.global_position, forward)
+	if target.is_empty():
+		_clear_halas_selection()
 		status_text = "No Halas NPC is in target range."
 		return
-	halas_population.set_selected_spawn(int(selected_halas_target.spawn2_id))
-	status_text = _selected_npc_interaction_summary(selected_halas_target)
+	_select_halas_target(target)
 
 
 func _target_halas_npc_at_screen(screen_position: Vector2) -> Dictionary:
@@ -1128,10 +1094,31 @@ func _target_halas_npc_at_screen(screen_position: Vector2) -> Dictionary:
 	var target := halas_population.target_for_pick_area(collider)
 	if target.is_empty():
 		return {}
-	selected_halas_target = target
-	halas_population.set_selected_spawn(int(selected_halas_target.spawn2_id))
-	status_text = _selected_npc_interaction_summary(selected_halas_target)
+	_select_halas_target(target)
 	return target
+
+
+func _select_halas_target(target: Dictionary) -> void:
+	selected_halas_target = target
+	selected_entity_id = HalasEntityAdapter.runtime_entity_id(int(target.get("spawn2_id", 0)))
+	var entity := simulation.entity(selected_entity_id)
+	if entity == null:
+		entity = EntityFactory.create(HalasEntityAdapter.neutral_definition_from_target(target))
+		simulation.add_entity(entity, true, false)
+	var node_variant: Variant = target.get("node")
+	if node_variant is Node3D:
+		view_registry.bind(selected_entity_id, node_variant)
+		view_registry.sync_to_domain(entity)
+	halas_population.set_selected_spawn(int(target.get("spawn2_id", 0)))
+	status_text = _selected_npc_interaction_summary(target)
+
+
+func _clear_halas_selection() -> void:
+	selected_halas_target = {}
+	selected_entity_id = ""
+	if halas_population != null:
+		halas_population.set_selected_spawn(-1)
+
 
 func _update_npc_long_press(delta: float) -> void:
 	if npc_press_touch < 0 or npc_press_target.is_empty():
@@ -1143,6 +1130,7 @@ func _update_npc_long_press(delta: float) -> void:
 	_cancel_npc_long_press(npc_press_touch)
 	_open_merchant_interaction(target)
 
+
 func _cancel_npc_long_press(touch_index: int) -> void:
 	if touch_index != npc_press_touch:
 		return
@@ -1150,11 +1138,13 @@ func _cancel_npc_long_press(touch_index: int) -> void:
 	npc_press_target = {}
 	npc_press_elapsed = 0.0
 
+
 func _open_merchant_interaction(target: Dictionary) -> void:
 	if int(target.get("merchant_id", 0)) <= 0:
 		return
-	if not _merchant_browse_allowed(str(_resolve_npc_faction(target).get("standing", "Unresolved"))):
-		status_text = "%s will not trade with you." % str(target.name)
+	var standing := str(_resolve_npc_faction(target).get("standing", "Unresolved"))
+	if not MerchantPolicy.can_browse(standing):
+		status_text = "%s will not trade with you." % str(target.get("name", "This merchant"))
 		return
 	if merchant_interaction_popup != null:
 		merchant_interaction_popup.queue_free()
@@ -1166,12 +1156,10 @@ func _open_merchant_interaction(target: Dictionary) -> void:
 	)
 	merchant_interaction_popup.closed.connect(func(): merchant_interaction_popup = null)
 	ui_layer.add_child(merchant_interaction_popup)
-	merchant_interaction_popup.show_for_merchant(str(target.name))
+	merchant_interaction_popup.show_for_merchant(str(target.get("name", "Merchant")))
+
 
 func _selected_npc_interaction_summary(target: Dictionary) -> String:
-	# Imported PEQ data is useful for inspection, but the current overlay has no
-	# reviewed classic stat/faction corrections. Keep that provenance visible and
-	# prevent a selected actor from looking silently combat-ready.
 	var details: Array[String] = []
 	if str(target.get("merchant_state", "none")) == "candidate":
 		details.append("merchant candidate")
@@ -1185,7 +1173,9 @@ func _selected_npc_interaction_summary(target: Dictionary) -> String:
 	if details.is_empty():
 		details.append("faction indifferent")
 	var summary := "You target %s (Lv %d) — %s; combat disabled pending review." % [
-		str(target.name), int(target.level), ", ".join(details)
+		str(target.get("name", "Unknown")),
+		int(target.get("level", 1)),
+		", ".join(details),
 	]
 	if str(target.get("merchant_state", "none")) == "candidate":
 		var preview := _merchant_preview(target)
@@ -1193,57 +1183,20 @@ func _selected_npc_interaction_summary(target: Dictionary) -> String:
 			summary += "\n%s" % preview
 	return summary
 
+
 func _resolve_npc_faction(target: Dictionary) -> Dictionary:
 	var bundle_ref := str(target.get("npc_faction_ref", ""))
 	if bundle_ref.is_empty() and int(target.get("npc_faction_id", 0)) > 0:
-		bundle_ref = "peq:npc_faction:%d" % int(target.npc_faction_id)
-	if bundle_ref.is_empty():
-		return {"standing": "Indifferently", "score": 0}
-	var bundle: Dictionary = faction_definitions.get("npc_faction_bundles_by_key", {}).get(bundle_ref, {})
-	var primary_ref := str(bundle.get("primary_faction_ref", ""))
-	if primary_ref.is_empty():
-		return {"standing": "Indifferently", "score": 0}
-	var faction: Dictionary = faction_definitions.get("factions_by_key", {}).get(primary_ref, {})
-	if faction.is_empty():
-		return {"standing": "Unresolved", "score": null}
-	var score := int(faction_values.get(primary_ref, 0)) + int(faction.get("base", 0))
-	for modifier in faction.get("modifiers", []):
-		var identity_id := player_class_id if modifier.get("kind") == "class" else player_race_id if modifier.get("kind") == "race" else player_deity_id
-		if int(modifier.get("identity_id", -1)) == identity_id:
-			score += int(modifier.get("value", 0))
-	return {"standing": _faction_standing(score), "score": score, "primary_faction_ref": primary_ref}
+		bundle_ref = "peq:npc_faction:%d" % int(target.get("npc_faction_id", 0))
+	return simulation.faction_reaction(bundle_ref)
 
-func _faction_standing(score: int) -> String:
-	var thresholds: Dictionary = faction_definitions.get("thresholds", {})
-	if score >= int(thresholds.get("ally", 1100)): return "Ally"
-	if score >= int(thresholds.get("warmly", 750)): return "Warmly"
-	if score >= int(thresholds.get("kindly", 500)): return "Kindly"
-	if score >= int(thresholds.get("amiably", 100)): return "Amiably"
-	if score >= int(thresholds.get("indifferently", 0)): return "Indifferently"
-	if score >= int(thresholds.get("apprehensively", -100)): return "Apprehensively"
-	if score >= int(thresholds.get("dubiously", -500)): return "Dubiously"
-	if score >= int(thresholds.get("threateningly", -750)): return "Threateningly"
-	return "Scowls"
 
 func _merchant_listings_for(target: Dictionary) -> Array:
-	var merchant_ref := str(target.get("merchant_ref", ""))
-	var listings: Array = []
-	if not merchant_ref.is_empty():
-		listings = merchant_definitions.get("by_key", {}).get(merchant_ref, [])
-	else:
-		listings = merchant_definitions.get("by_id", {}).get(str(target.get("merchant_id", 0)), [])
-	var resolved: Array = []
-	for listing in listings:
-		var item_ref := str(listing.get("item_ref", ""))
-		var item_definition: Dictionary = item_definitions.get(item_ref, {})
-		if item_definition.is_empty():
-			push_warning("Merchant listing has unresolved item ref: %s" % item_ref)
-			continue
-		var entry: Dictionary = listing.duplicate()
-		entry["item_name"] = item_definition.get("name", entry.get("item_name", "Unknown item"))
-		entry["base_price"] = int(item_definition.get("price_copper", entry.get("base_price", 0)))
-		resolved.append(entry)
-	return resolved
+	return content_service.merchant_listings(
+		str(target.get("merchant_ref", "")),
+		int(target.get("merchant_id", 0))
+	)
+
 
 func _merchant_preview(target: Dictionary) -> String:
 	var listings := _merchant_listings_for(target)
@@ -1253,27 +1206,30 @@ func _merchant_preview(target: Dictionary) -> String:
 	for listing in listings.slice(0, 3):
 		names.append(str(listing.get("item_name", "Unknown item")))
 	return "Shop stock (%d): %s%s — browsing only." % [
-		listings.size(), ", ".join(names), "…" if listings.size() > names.size() else ""
+		listings.size(),
+		", ".join(names),
+		"…" if listings.size() > names.size() else "",
 	]
+
 
 func _selected_merchant_is_browseable() -> bool:
 	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
 		return false
 	var reaction := _resolve_npc_faction(selected_halas_target)
-	return _merchant_browse_allowed(str(reaction.get("standing", "Unresolved")))
+	return MerchantPolicy.can_browse(str(reaction.get("standing", "Unresolved")))
 
-func _merchant_browse_allowed(standing: String) -> bool:
-	# EQEmu rejects merchant opening at Dubious or worse. Reaction calculation
-	# remains separate from this authorization decision.
-	return standing in ["Ally", "Warmly", "Kindly", "Amiably", "Indifferently", "Apprehensively"]
 
 func open_selected_merchant() -> void:
 	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
 		status_text = "Select a merchant to browse their stock."
 		return
 	var reaction := _resolve_npc_faction(selected_halas_target)
-	if not _merchant_browse_allowed(str(reaction.get("standing", "Unresolved"))):
-		status_text = "%s will not trade with you (%s)." % [str(selected_halas_target.name), str(reaction.get("standing", "Unresolved"))]
+	var standing := str(reaction.get("standing", "Unresolved"))
+	if not MerchantPolicy.can_browse(standing):
+		status_text = "%s will not trade with you (%s)." % [
+			str(selected_halas_target.get("name", "Merchant")),
+			standing,
+		]
 		return
 	var listings := _merchant_listings_for(selected_halas_target)
 	if listings.is_empty():
@@ -1284,328 +1240,113 @@ func open_selected_merchant() -> void:
 	merchant_panel = preload("res://scripts/merchant_browse_panel.gd").new()
 	merchant_panel.closed.connect(func(): merchant_panel = null)
 	ui_layer.add_child(merchant_panel)
-	merchant_panel.show_merchant(str(selected_halas_target.name), listings)
+	merchant_panel.show_merchant(str(selected_halas_target.get("name", "Merchant")), listings)
 
-func _load_zone() -> Dictionary:
-	var file := FileAccess.open(ZONE_PATH, FileAccess.READ)
-	var parsed = JSON.parse_string(file.get_as_text())
-	assert(parsed is Dictionary, "Invalid test-zone data")
-	return parsed
-
-func _load_item_definitions() -> Dictionary:
-	var file := FileAccess.open(ITEM_PATH, FileAccess.READ)
-	assert(file != null, "Unable to read item definitions: %s" % ITEM_PATH)
-	var parsed = JSON.parse_string(file.get_as_text())
-	assert(parsed is Dictionary and parsed.get("items") is Dictionary, "Invalid item definitions")
-	var definitions: Dictionary = parsed.items.duplicate(true)
-	var peq_file := FileAccess.open(PEQ_ITEM_PATH, FileAccess.READ)
-	assert(peq_file != null, "Unable to read generated PEQ item definitions: %s" % PEQ_ITEM_PATH)
-	var peq_parsed = JSON.parse_string(peq_file.get_as_text())
-	assert(peq_parsed is Dictionary and peq_parsed.get("items") is Dictionary, "Invalid generated PEQ item definitions")
-	for source_id in peq_parsed.items:
-		var definition: Dictionary = peq_parsed.items[source_id]
-		var item_ref := str(definition.get("key", ""))
-		assert(not item_ref.is_empty() and not definitions.has(item_ref), "Duplicate item definition key: %s" % item_ref)
-		definitions[item_ref] = definition
-	return definitions
-
-func _load_merchant_definitions() -> Dictionary:
-	var file := FileAccess.open(MERCHANT_PATH, FileAccess.READ)
-	assert(file != null, "Unable to read merchant definitions: %s" % MERCHANT_PATH)
-	var parsed = JSON.parse_string(file.get_as_text())
-	assert(parsed is Dictionary and parsed.get("merchants") is Dictionary, "Invalid merchant definitions")
-	var by_key: Dictionary = {}
-	for merchant_id in parsed.merchants:
-		var listings: Array = parsed.merchants[merchant_id]
-		if not listings.is_empty():
-			by_key[str(listings[0].get("merchant_ref", "peq:merchant:%s" % merchant_id))] = listings
-	return {"by_id": parsed.merchants, "by_key": by_key}
-
-func _load_faction_definitions() -> Dictionary:
-	var file := FileAccess.open(FACTION_PATH, FileAccess.READ)
-	assert(file != null, "Unable to read faction definitions: %s" % FACTION_PATH)
-	var parsed = JSON.parse_string(file.get_as_text())
-	assert(parsed is Dictionary and parsed.get("factions") is Dictionary and parsed.get("npc_faction_bundles") is Dictionary, "Invalid faction definitions")
-	var factions_by_key: Dictionary = {}
-	for faction_id in parsed.factions:
-		var definition: Dictionary = parsed.factions[faction_id]
-		factions_by_key[str(definition.get("key", "peq:faction:%s" % faction_id))] = definition
-	var bundles_by_key: Dictionary = {}
-	for bundle_id in parsed.npc_faction_bundles:
-		var bundle: Dictionary = parsed.npc_faction_bundles[bundle_id]
-		bundles_by_key[str(bundle.get("key", "peq:npc_faction:%s" % bundle_id))] = bundle
-	parsed["factions_by_key"] = factions_by_key
-	parsed["npc_faction_bundles_by_key"] = bundles_by_key
-	return parsed
-
-func _load_player_class_definitions() -> Dictionary:
-	var file := FileAccess.open(PLAYER_CLASS_PATH, FileAccess.READ)
-	assert(file != null, "Unable to read player class definitions: %s" % PLAYER_CLASS_PATH)
-	var parsed = JSON.parse_string(file.get_as_text())
-	assert(parsed is Dictionary and parsed.get("classes") is Dictionary and parsed.get("abilities") is Dictionary, "Invalid player class definitions")
-	return parsed
 
 func _load_save() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		push_warning("Unable to open offline save for reading: %s" % SAVE_PATH)
-		return
-	var saved = JSON.parse_string(file.get_as_text())
-	if not saved is Dictionary or saved.get("zone_id") != zone.id:
-		return
-	if int(saved.get("player_spawn_revision", -1)) == int(zone.get("player_spawn_revision", 0)):
-		player.global_position = _saved_position_or_default(saved.get("player_position"), zone.player_spawn)
-	player_health = clampf(float(saved.get("player_health", PLAYER_MAX_HEALTH)), 1.0, PLAYER_MAX_HEALTH)
-	player_xp_total = clampi(int(saved.get("player_xp_total", 0)), 0, _xp_cap_total())
-	player_level = _level_for_xp(player_xp_total)
-	player_class_id = int(saved.get("class_id", 1))
-	if _class_definition().is_empty():
-		push_warning("Saved player class is unavailable; using Warrior fixture class.")
-		player_class_id = 1
-	player_race_id = int(saved.get("race_id", 2))
-	player_deity_id = int(saved.get("deity_id", 396))
-	faction_values = _sanitized_faction_values(saved.get("faction_values", {}))
-	ability_cooldowns = _sanitized_ability_cooldowns(saved.get("ability_cooldowns", {}))
-	# Toggle/target state is intentionally transient, so a reload never resumes
-	# unattended combat.
-	auto_attack_enabled = false
-	primary_attack_remaining = 0.0
-	inventory = _sanitized_inventory(saved.get("inventory", {}))
-	wallet = _sanitized_wallet(saved.get("wallet", {}))
-	if npc == null:
-		return
-	npc_alive = bool(saved.get("npc_alive", true))
-	npc_health = float(saved.get("npc_health", npc_health))
-	respawn_remaining = maxf(0.0, float(saved.get("respawn_remaining", 0.0)))
-	npc_loot_awarded = bool(saved.get("npc_loot_awarded", not npc_alive))
-	npc.visible = npc_alive
-	if npc_alive:
-		npc.global_position = _saved_position_or_default(saved.get("npc_position"), _spawn_data().position)
+	var player_fixture := content_service.player_fixture_definition()
+	var result := persistence_service.load_simulation(zone, simulation, {
+		"player_entity_id": PLAYER_ENTITY_ID,
+		"legacy_npc_entity_id": TRAINING_ENTITY_ID,
+		"rng_seed": simulation_rng.initial_seed(),
+		"class_id": int(player_fixture.get("identity", {}).get("class_id", 1)),
+		"race_id": int(player_fixture.get("identity", {}).get("race_id", 2)),
+		"deity_id": int(player_fixture.get("identity", {}).get("deity_id", 396)),
+	})
+	if not bool(result.get("ok", true)):
+		status_text = "Save data was ignored: %s" % str(result.get("error", "invalid save"))
+
 
 func _save_game() -> void:
-	if player_dead:
+	if simulation == null or player == null:
 		return
-	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory, "wallet": wallet, "progression_version": int(_progression().get("formula_version", 1)), "player_xp_total": player_xp_total, "player_level": player_level, "class_id": player_class_id, "race_id": player_race_id, "deity_id": player_deity_id, "faction_values": _sanitized_faction_values(faction_values), "ability_cooldowns": _sanitized_ability_cooldowns(ability_cooldowns)}
-	if npc != null:
-		saved.merge({"npc_alive": npc_alive, "npc_health": npc_health, "npc_position": [npc.global_position.x, npc.global_position.y, npc.global_position.z], "respawn_remaining": respawn_remaining, "npc_loot_awarded": npc_loot_awarded})
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
-		# Storage can be unavailable (full, revoked, or temporarily unmounted).
-		# Keep the offline loop playable and avoid emitting the same error every
-		# autosave interval; a later successful write clears this state.
-		if not save_write_failed:
-			push_warning("Unable to write offline save: %s" % SAVE_PATH)
-			save_write_failed = true
-		return
-	file.store_string(JSON.stringify(saved))
-	save_write_failed = false
+	_sync_domain_from_views()
+	var result := persistence_service.save_simulation(zone, simulation)
+	if not bool(result.get("ok", false)):
+		status_text = "Unable to save local progress."
 
-func _award_training_loot() -> void:
-	if npc_loot_awarded:
-		return
-	var rewards: Array = zone.npc_archetypes[_spawn_data().archetype].get("loot", [])
-	var awarded: Array[String] = []
-	for reward in rewards:
-		if not reward is Dictionary:
-			continue
-		var item_id := str(reward.get("item_id", ""))
-		var quantity := int(reward.get("quantity", 0))
-		if item_id.is_empty() or quantity <= 0 or not item_definitions.has(item_id):
-			push_warning("Ignoring invalid Training Spark loot entry: %s" % reward)
-			continue
-		if not _add_item(item_id, quantity):
-			status_text = "Inventory is full; Training Spark loot remains unclaimed."
-			return
-		awarded.append("%s ×%d" % [str(item_definitions[item_id].get("name", item_id)), quantity])
-	npc_loot_awarded = true
-	if not awarded.is_empty():
-		status_text = "Training Spark defeated — looted %s." % ", ".join(awarded)
 
-func _award_training_xp() -> void:
-	var reward := int(zone.npc_archetypes[_spawn_data().archetype].get("xp_reward", 0))
-	if reward <= 0:
-		return
-	var previous_level := player_level
-	player_xp_total = mini(_xp_cap_total(), player_xp_total + reward)
-	player_level = _level_for_xp(player_xp_total)
-	if player_level > previous_level:
-		status_text = "Training Spark defeated — level %d reached!" % player_level
-	else:
-		status_text = "Training Spark defeated — gained %d XP." % reward
+func _apply_domain_state_to_views() -> void:
+	for entity_id in [PLAYER_ENTITY_ID, TRAINING_ENTITY_ID]:
+		var entity := simulation.entity(entity_id)
+		if entity != null:
+			view_registry.apply_from_domain(entity)
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity != null:
+		player.reset_physics_interpolation()
+		if player_entity.lifecycle == GameplayEntity.Lifecycle.DYING:
+			_play_player_animation("death")
+		elif player_entity.is_active():
+			_play_player_animation("idle")
 
-func _progression() -> Dictionary:
-	return zone.get("progression", {})
-
-func _xp_threshold(level: int) -> int:
-	# EQEmu GetEXPForLevel's classic cubic threshold shape, without the
-	# timeline-sensitive race/class modifiers. Thresholds are cumulative.
-	var hell_modifier := 1.0
-	if level >= 31 and level <= 35:
-		hell_modifier = 1.1
-	elif level >= 36 and level <= 40:
-		hell_modifier = 1.2
-	elif level >= 41 and level <= 45:
-		hell_modifier = 1.3
-	elif level >= 46 and level <= 51:
-		hell_modifier = 1.4
-	elif level == 52:
-		hell_modifier = 1.5
-	elif level == 53:
-		hell_modifier = 1.6
-	elif level == 54:
-		hell_modifier = 1.7
-	elif level == 55:
-		hell_modifier = 1.9
-	elif level == 56:
-		hell_modifier = 2.1
-	elif level == 57:
-		hell_modifier = 2.3
-	elif level == 58:
-		hell_modifier = 2.5
-	elif level == 59:
-		hell_modifier = 2.7
-	elif level == 60:
-		hell_modifier = 3.0
-	elif level >= 61:
-		hell_modifier = 3.1
-	return int(pow(maxi(0, level - 1), 3) * 1000.0 * hell_modifier)
-
-func _max_level() -> int:
-	return maxi(1, int(_progression().get("max_level", 50)))
-
-func _xp_cap_total() -> int:
-	return _xp_threshold(_max_level() + 1)
-
-func _level_for_xp(total_xp: int) -> int:
-	var level := 1
-	while level < _max_level() and total_xp >= _xp_threshold(level + 1):
-		level += 1
-	return level
 
 func _progression_summary() -> String:
-	if player_level >= _max_level():
-		return "XP: %d (level cap)" % player_xp_total
-	var threshold := _xp_threshold(player_level)
-	var next_threshold := _xp_threshold(player_level + 1)
-	return "XP: %d / %d" % [player_xp_total - threshold, next_threshold - threshold]
+	if simulation.progression.level >= simulation.progression.max_level:
+		return "XP: %d (level cap)" % simulation.progression.xp_total
+	return "XP: %d / %d" % [
+		simulation.progression.xp_into_level(),
+		simulation.progression.xp_needed_for_next_level(),
+	]
 
-func _sanitized_inventory(saved_inventory: Variant) -> Array[Dictionary]:
-	var restored: Array[Dictionary] = []
-	# Migrate the former fixture item_id → quantity map without dropping rewards.
-	if saved_inventory is Dictionary:
-		for legacy_key in saved_inventory:
-			var item_key := _normalize_saved_item_key(str(legacy_key))
-			_append_loaded_item(restored, item_key, int(saved_inventory[legacy_key]), null)
-	elif saved_inventory is Array:
-		for instance in saved_inventory:
-			if instance is Dictionary:
-				_append_loaded_item(restored, _normalize_saved_item_key(str(instance.get("item_key", ""))), int(instance.get("quantity", 0)), instance.get("charges_remaining"))
-	return restored
-
-func _normalize_saved_item_key(item_key: String) -> String:
-	if item_key in ["training_spark_fragment", "fixture:training_spark_fragment"]:
-		return "fixture:item:training_spark_fragment"
-	return item_key
-
-func _append_loaded_item(destination: Array[Dictionary], item_key: String, quantity: int, charges: Variant) -> void:
-	if not item_definitions.has(item_key) or quantity <= 0:
-		return
-	var definition: Dictionary = item_definitions[item_key]
-	var remaining := quantity
-	var stack_size := maxi(1, int(definition.get("stack_size", 1))) if bool(definition.get("stackable", false)) else 1
-	while remaining > 0:
-		destination.append({"item_key": item_key, "quantity": mini(remaining, stack_size), "charges_remaining": charges})
-		remaining -= stack_size
-
-func _add_item(item_key: String, amount: int) -> bool:
-	if not item_definitions.has(item_key) or amount <= 0:
-		return false
-	var candidate: Array[Dictionary] = []
-	for instance in inventory:
-		candidate.append(instance.duplicate())
-	var definition: Dictionary = item_definitions[item_key]
-	var remaining := amount
-	if bool(definition.get("stackable", false)):
-		var stack_size := maxi(1, int(definition.get("stack_size", 1)))
-		for instance in candidate:
-			if str(instance.item_key) != item_key or int(instance.quantity) >= stack_size:
-				continue
-			var moved := mini(remaining, stack_size - int(instance.quantity))
-			instance.quantity = int(instance.quantity) + moved
-			remaining -= moved
-			if remaining <= 0:
-				break
-	while remaining > 0:
-		if candidate.size() >= GENERAL_INVENTORY_CAPACITY:
-			return false
-		var quantity := mini(remaining, maxi(1, int(definition.get("stack_size", 1)))) if bool(definition.get("stackable", false)) else 1
-		var charges: Variant = null
-		if not bool(definition.get("stackable", false)) and int(definition.get("max_charges", 0)) > 0:
-			charges = int(definition.get("max_charges", 0))
-		candidate.append({"item_key": item_key, "quantity": quantity, "charges_remaining": charges})
-		remaining -= quantity
-	inventory = candidate
-	return true
-
-func _sanitized_wallet(saved_wallet: Variant) -> Dictionary:
-	var restored := {"platinum": 0, "gold": 0, "silver": 0, "copper": 0}
-	if saved_wallet is Dictionary:
-		for denomination in restored:
-			restored[denomination] = maxi(0, int(saved_wallet.get(denomination, 0)))
-	return restored
-
-func wallet_total_copper() -> int:
-	return int(wallet.copper) + int(wallet.silver) * 10 + int(wallet.gold) * 100 + int(wallet.platinum) * 1000
-
-func credit_copper(amount: int) -> void:
-	_set_wallet_total_copper(wallet_total_copper() + maxi(0, amount))
-
-func debit_copper(amount: int) -> bool:
-	if amount < 0 or wallet_total_copper() < amount:
-		return false
-	_set_wallet_total_copper(wallet_total_copper() - amount)
-	return true
-
-func _set_wallet_total_copper(total: int) -> void:
-	var remaining := maxi(0, total)
-	wallet.platinum = remaining / 1000
-	remaining %= 1000
-	wallet.gold = remaining / 100
-	remaining %= 100
-	wallet.silver = remaining / 10
-	wallet.copper = remaining % 10
 
 func _inventory_summary() -> String:
-	if inventory.is_empty():
+	var entries := simulation.inventory.entries()
+	if entries.is_empty():
 		return "Inventory: empty    Wallet: %s" % _format_wallet()
-	var entries: Array[String] = []
-	for instance in inventory:
-		var item_key := str(instance.item_key)
-		entries.append("%s ×%d" % [str(item_definitions[item_key].get("name", item_key)), int(instance.quantity)])
-	return "Inventory (%d/%d): %s    Wallet: %s" % [inventory.size(), GENERAL_INVENTORY_CAPACITY, ", ".join(entries), _format_wallet()]
+	var labels: Array[String] = []
+	for instance in entries:
+		var item_key := str(instance.get("item_key", ""))
+		var definition := content_service.item_definition(item_key)
+		labels.append("%s ×%d" % [
+			str(definition.get("name", item_key)),
+			int(instance.get("quantity", 0)),
+		])
+	return "Inventory (%d/%d): %s    Wallet: %s" % [
+		entries.size(),
+		simulation.inventory.capacity,
+		", ".join(labels),
+		_format_wallet(),
+	]
+
+
+func wallet_total_copper() -> int:
+	return simulation.wallet_total_copper()
+
+
+func credit_copper(amount: int) -> void:
+	simulation.credit_copper(amount)
+
+
+func debit_copper(amount: int) -> bool:
+	return simulation.debit_copper(amount)
+
 
 func _format_wallet() -> String:
-	return "%dpp %dgp %dsp %dcp" % [int(wallet.platinum), int(wallet.gold), int(wallet.silver), int(wallet.copper)]
+	var wallet := simulation.wallet
+	return "%dpp %dgp %dsp %dcp" % [
+		int(wallet.get("platinum", 0)),
+		int(wallet.get("gold", 0)),
+		int(wallet.get("silver", 0)),
+		int(wallet.get("copper", 0)),
+	]
+
 
 func clear_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	persistence_service.clear()
+
 
 func _spawn_data() -> Dictionary:
-	return zone.spawns[0]
+	var spawns: Array = zone.get("spawns", [])
+	return spawns[0] if not spawns.is_empty() else {}
 
-func _array_to_vector3(values: Array) -> Vector3:
-	return Vector3(float(values[0]), float(values[1]), float(values[2]))
 
-func _saved_position_or_default(saved_position: Variant, fallback: Array) -> Vector3:
-	if saved_position is Array and saved_position.size() == 3:
-		for component in saved_position:
-			if not (component is int or component is float):
-				return _array_to_vector3(fallback)
-		return _array_to_vector3(saved_position)
-	return _array_to_vector3(fallback)
+func _array_to_vector3(values: Variant) -> Vector3:
+	if values is Vector3:
+		return values
+	if values is Array and values.size() >= 3:
+		return Vector3(float(values[0]), float(values[1]), float(values[2]))
+	return Vector3.ZERO
+
 
 func _material(color: Color, emission := false) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -1616,6 +1357,7 @@ func _material(color: Color, emission := false) -> StandardMaterial3D:
 		material.emission = color
 		material.emission_energy_multiplier = 1.3
 	return material
+
 
 func _add_marker(location: Vector3) -> void:
 	var marker := MeshInstance3D.new()

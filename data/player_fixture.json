@@ -1,0 +1,19 @@
+{
+  "schema_id": "eqm.player_fixture_definition",
+  "schema_version": 1,
+  "key": "fixture:player:local",
+  "evidence": "temporary_fixture_default",
+  "note": "Project-owned offline-slice player state. Replace health/inventory tuning when reviewed character-stat rules are implemented.",
+  "max_health": 100.0,
+  "combat_size": 7.0,
+  "inventory_capacity": 8,
+  "identity": {
+    "class_id": 1,
+    "race_id": 2,
+    "deity_id": 396
+  },
+  "inventory_item_aliases": {
+    "training_spark_fragment": "fixture:item:training_spark_fragment",
+    "fixture:training_spark_fragment": "fixture:item:training_spark_fragment"
+  }
+}
