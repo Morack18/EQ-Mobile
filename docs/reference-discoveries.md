@@ -187,3 +187,20 @@ question.
   `_resolve_fixture_melee_damage()`. The current sources' complete hit,
   avoidance, mitigation, skills, and item stack is not treated as a safe
   classic-era formula until corresponding player/NPC data is imported.
+
+## Imported NPC interaction safety
+
+- ProjectEQ's source relationship is `spawn2 → spawngroup → spawnentry →
+  npc_types`; imported Halas actors retain their stable `spawn2_id` and now
+  carry their raw NPC type references for faction, merchant, loot, HP, AC,
+  damage, and attack delay. `npc_types.attack_delay` is an EQ tenths-style raw
+  value (EQEmu `zone/zonedb.cpp:1897` converts it to milliseconds by ×100),
+  but remains non-operative until reviewed combat is deliberately enabled.
+- `npc_types.npc_faction_id` joins through `npc_faction.primaryfaction`; it is
+  not itself an answer to player hostility. EQEmu reaction also needs player
+  race/class/deity and personal faction. The Halas overlay has no reviewed
+  classic gameplay corrections, so faction zero is shown as indifferent and
+  nonzero factions as unresolved; imported combat stays disabled.
+- `merchant_id` and `loottable_id` are displayed as candidate/reference-only
+  interaction states. They do not authorize merchant transactions or random
+  loot rolls until their item data and classic correctness are reviewed.

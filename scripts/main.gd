@@ -1049,7 +1049,7 @@ func _target_nearest_halas_npc() -> void:
 		status_text = "No Halas NPC is in target range."
 		return
 	halas_population.set_selected_spawn(int(selected_halas_target.spawn2_id))
-	status_text = "You target %s." % str(selected_halas_target.name)
+	status_text = _selected_npc_interaction_summary(selected_halas_target)
 
 
 func _target_halas_npc_at_screen(screen_position: Vector2) -> void:
@@ -1075,7 +1075,24 @@ func _target_halas_npc_at_screen(screen_position: Vector2) -> void:
 		return
 	selected_halas_target = target
 	halas_population.set_selected_spawn(int(selected_halas_target.spawn2_id))
-	status_text = "You target %s." % str(selected_halas_target.name)
+	status_text = _selected_npc_interaction_summary(selected_halas_target)
+
+func _selected_npc_interaction_summary(target: Dictionary) -> String:
+	# Imported PEQ data is useful for inspection, but the current overlay has no
+	# reviewed classic stat/faction corrections. Keep that provenance visible and
+	# prevent a selected actor from looking silently combat-ready.
+	var details: Array[String] = []
+	if str(target.get("merchant_state", "none")) == "candidate":
+		details.append("merchant candidate")
+	if str(target.get("loot_state", "none")) == "reference_only":
+		details.append("loot reference")
+	if str(target.get("faction_reaction", "unresolved")) == "unresolved":
+		details.append("faction unresolved")
+	if details.is_empty():
+		details.append("faction indifferent")
+	return "You target %s (Lv %d) — %s; combat disabled pending review." % [
+		str(target.name), int(target.level), ", ".join(details)
+	]
 
 func _load_zone() -> Dictionary:
 	var file := FileAccess.open(ZONE_PATH, FileAccess.READ)

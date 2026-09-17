@@ -45,6 +45,14 @@ class NpcActor:
 	var display_name := ""
 	var level := 1
 	var class_id := 0
+	var merchant_id := 0
+	var npc_faction_id := 0
+	var loottable_id := 0
+	var hp := 1
+	var armor_class := 0
+	var min_damage := 0
+	var max_damage := 0
+	var attack_delay_raw := 0
 	var nameplate: Label3D
 
 
@@ -122,6 +130,16 @@ func _build_population(content: Dictionary) -> void:
 		actor.display_name = str(npc_type.name).replace("_", " ")
 		actor.level = int(npc_type.get("level", 1))
 		actor.class_id = int(npc_type.get("class", 0))
+		# Keep raw source values on the stable spawn actor. They are inspectable
+		# provenance, not authorization to enable unreviewed PEQ combat globally.
+		actor.merchant_id = int(npc_type.get("merchant_id", 0))
+		actor.npc_faction_id = int(npc_type.get("npc_faction_id", 0))
+		actor.loottable_id = int(npc_type.get("loottable_id", 0))
+		actor.hp = int(npc_type.get("hp", 1))
+		actor.armor_class = int(npc_type.get("armor_class", 0))
+		actor.min_damage = int(npc_type.get("mindmg", 0))
+		actor.max_damage = int(npc_type.get("maxdmg", 0))
+		actor.attack_delay_raw = int(npc_type.get("attack_delay", 0))
 		actor.nameplate = nameplate
 		actor.spawn_heading_eq = float(spawn.heading_eq)
 		actor.visual_ground_y = visual.position.y
@@ -170,6 +188,18 @@ func nearest_target(origin: Vector3, view_forward: Vector3, max_distance: float 
 		"name": best.display_name,
 		"level": best.level,
 		"class": best.class_id,
+		"merchant_id": best.merchant_id,
+		"npc_faction_id": best.npc_faction_id,
+		"loottable_id": best.loottable_id,
+		"source_hp": best.hp,
+		"source_armor_class": best.armor_class,
+		"source_min_damage": best.min_damage,
+		"source_max_damage": best.max_damage,
+		"attack_delay_raw": best.attack_delay_raw,
+		"combat_state": "disabled_unreviewed",
+		"faction_reaction": "indifferent" if best.npc_faction_id == 0 else "unresolved",
+		"merchant_state": "candidate" if best.merchant_id > 0 else "none",
+		"loot_state": "reference_only" if best.loottable_id > 0 else "none",
 		"node": best.node,
 	}
 
@@ -186,6 +216,18 @@ func target_for_pick_area(area: Area3D) -> Dictionary:
 				"name": actor.display_name,
 				"level": actor.level,
 				"class": actor.class_id,
+				"merchant_id": actor.merchant_id,
+				"npc_faction_id": actor.npc_faction_id,
+				"loottable_id": actor.loottable_id,
+				"source_hp": actor.hp,
+				"source_armor_class": actor.armor_class,
+				"source_min_damage": actor.min_damage,
+				"source_max_damage": actor.max_damage,
+				"attack_delay_raw": actor.attack_delay_raw,
+				"combat_state": "disabled_unreviewed",
+				"faction_reaction": "indifferent" if actor.npc_faction_id == 0 else "unresolved",
+				"merchant_state": "candidate" if actor.merchant_id > 0 else "none",
+				"loot_state": "reference_only" if actor.loottable_id > 0 else "none",
 				"node": actor.node,
 			}
 	return {}
