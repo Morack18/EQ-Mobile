@@ -1,0 +1,3222 @@
+{
+  "factions": {
+    "1159": {
+      "base": -500,
+      "id": 1159,
+      "modifiers": [],
+      "name": "Nature Animal - Beetle",
+      "personal_max": 2500,
+      "personal_min": -1500
+    },
+    "223": {
+      "base": 0,
+      "id": 223,
+      "modifiers": [
+        {
+          "identity_id": 10,
+          "kind": "class",
+          "mod_name": "c10",
+          "value": -100
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -50
+        },
+        {
+          "identity_id": 12,
+          "kind": "class",
+          "mod_name": "c12",
+          "value": -100
+        },
+        {
+          "identity_id": 13,
+          "kind": "class",
+          "mod_name": "c13",
+          "value": -100
+        },
+        {
+          "identity_id": 14,
+          "kind": "class",
+          "mod_name": "c14",
+          "value": -100
+        },
+        {
+          "identity_id": 15,
+          "kind": "class",
+          "mod_name": "c15",
+          "value": -100
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": -100
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": -100
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -50
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": -100
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": -100
+        },
+        {
+          "identity_id": 8,
+          "kind": "class",
+          "mod_name": "c8",
+          "value": -25
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": 50
+        },
+        {
+          "identity_id": 202,
+          "kind": "deity",
+          "mod_name": "d202",
+          "value": -100
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -300
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": -100
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": 50
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -200
+        },
+        {
+          "identity_id": 208,
+          "kind": "deity",
+          "mod_name": "d208",
+          "value": -100
+        },
+        {
+          "identity_id": 209,
+          "kind": "deity",
+          "mod_name": "d209",
+          "value": -100
+        },
+        {
+          "identity_id": 210,
+          "kind": "deity",
+          "mod_name": "d210",
+          "value": -100
+        },
+        {
+          "identity_id": 211,
+          "kind": "deity",
+          "mod_name": "d211",
+          "value": -100
+        },
+        {
+          "identity_id": 213,
+          "kind": "deity",
+          "mod_name": "d213",
+          "value": -100
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": -200
+        },
+        {
+          "identity_id": 215,
+          "kind": "deity",
+          "mod_name": "d215",
+          "value": -100
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": -200
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": 50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -500
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -50
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -75
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -750
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -25
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -25
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -75
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": 50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -50
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -300
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": 50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -50
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": 50
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -150
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -750
+        }
+      ],
+      "name": "Circle of Unseen Hands",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "230": {
+      "base": 0,
+      "id": 230,
+      "modifiers": [
+        {
+          "identity_id": 10,
+          "kind": "class",
+          "mod_name": "c10",
+          "value": -100
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -50
+        },
+        {
+          "identity_id": 15,
+          "kind": "class",
+          "mod_name": "c15",
+          "value": -100
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": -100
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": -100
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": -100
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": -100
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -10
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": 50
+        },
+        {
+          "identity_id": 202,
+          "kind": "deity",
+          "mod_name": "d202",
+          "value": -25
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -25
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": -25
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": -25
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": -25
+        },
+        {
+          "identity_id": 208,
+          "kind": "deity",
+          "mod_name": "d208",
+          "value": -25
+        },
+        {
+          "identity_id": 209,
+          "kind": "deity",
+          "mod_name": "d209",
+          "value": -25
+        },
+        {
+          "identity_id": 210,
+          "kind": "deity",
+          "mod_name": "d210",
+          "value": -25
+        },
+        {
+          "identity_id": 211,
+          "kind": "deity",
+          "mod_name": "d211",
+          "value": -25
+        },
+        {
+          "identity_id": 212,
+          "kind": "deity",
+          "mod_name": "d212",
+          "value": -25
+        },
+        {
+          "identity_id": 213,
+          "kind": "deity",
+          "mod_name": "d213",
+          "value": -25
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": -100
+        },
+        {
+          "identity_id": 215,
+          "kind": "deity",
+          "mod_name": "d215",
+          "value": -25
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": 50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -750
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -150
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -50
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -50
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -50
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -150
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": 50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -200
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -200
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": 50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -150
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -200
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -850
+        }
+      ],
+      "name": "Corrupt Qeynos Guards",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "244": {
+      "base": 0,
+      "id": 244,
+      "modifiers": [
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": 50
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": -500
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": -200
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": -200
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": -200
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": 50
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": 25
+        },
+        {
+          "identity_id": 202,
+          "kind": "deity",
+          "mod_name": "d202",
+          "value": -150
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": 25
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": -600
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": 25
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": 50
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": -600
+        },
+        {
+          "identity_id": 208,
+          "kind": "deity",
+          "mod_name": "d208",
+          "value": -600
+        },
+        {
+          "identity_id": 209,
+          "kind": "deity",
+          "mod_name": "d209",
+          "value": -600
+        },
+        {
+          "identity_id": 210,
+          "kind": "deity",
+          "mod_name": "d210",
+          "value": -600
+        },
+        {
+          "identity_id": 212,
+          "kind": "deity",
+          "mod_name": "d212",
+          "value": -300
+        },
+        {
+          "identity_id": 213,
+          "kind": "deity",
+          "mod_name": "d213",
+          "value": -25
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": -600
+        },
+        {
+          "identity_id": 215,
+          "kind": "deity",
+          "mod_name": "d215",
+          "value": -600
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": -25
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -200
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -150
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -600
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -150
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -600
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -300
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -300
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -300
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -200
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -600
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -600
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -200
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": 50
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -600
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -600
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -100
+        }
+      ],
+      "name": "Ebon Mask",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "262": {
+      "base": 0,
+      "id": 262,
+      "modifiers": [
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -200
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": 25
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": 10
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": 10
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": 10
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -50
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -200
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -300
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": -100
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -200
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": 50
+        },
+        {
+          "identity_id": 212,
+          "kind": "deity",
+          "mod_name": "d212",
+          "value": 50
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": 50
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": -150
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -750
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -25
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -50
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -75
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -75
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -100
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -50
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -300
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -25
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -75
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -1000
+        }
+      ],
+      "name": "Guards of Qeynos",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "273": {
+      "base": 0,
+      "id": 273,
+      "modifiers": [
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -375
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -275
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -200
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -375
+        }
+      ],
+      "name": "Kane Bayle",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "281": {
+      "base": 0,
+      "id": 281,
+      "modifiers": [
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -200
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": 50
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": 25
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": 25
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": 10
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -100
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -200
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -200
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": 50
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -200
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": 10
+        },
+        {
+          "identity_id": 208,
+          "kind": "deity",
+          "mod_name": "d208",
+          "value": 100
+        },
+        {
+          "identity_id": 212,
+          "kind": "deity",
+          "mod_name": "d212",
+          "value": 25
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": 50
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": -100
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -750
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -10
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -10
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -350
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -10
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -750
+        }
+      ],
+      "name": "Knights of Truth",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "284": {
+      "base": 0,
+      "id": 284,
+      "modifiers": [
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -25
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -25
+        },
+        {
+          "identity_id": 8,
+          "kind": "class",
+          "mod_name": "c8",
+          "value": 100
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": 25
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -200
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -200
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": 50
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": 50
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -200
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": 50
+        },
+        {
+          "identity_id": 209,
+          "kind": "deity",
+          "mod_name": "d209",
+          "value": 50
+        },
+        {
+          "identity_id": 211,
+          "kind": "deity",
+          "mod_name": "d211",
+          "value": -25
+        },
+        {
+          "identity_id": 215,
+          "kind": "deity",
+          "mod_name": "d215",
+          "value": 50
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": -50
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": 50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -550
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -600
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -25
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -25
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": 50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": 25
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": 50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -50
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": 50
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -25
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -600
+        }
+      ],
+      "name": "League of Antonican Bards",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "285": {
+      "base": 0,
+      "id": 285,
+      "modifiers": [
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -2000
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -2000
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -2000
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -2000
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -2000
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -2000
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -2000
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -2000
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -2000
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -2000
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -2000
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -2000
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -2000
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -2000
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -2000
+        }
+      ],
+      "name": "Mayong Mistmoore",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "291": {
+      "base": 0,
+      "id": 291,
+      "modifiers": [
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -25
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": 50
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -25
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -25
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -50
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -50
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -50
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": 50
+        },
+        {
+          "identity_id": 212,
+          "kind": "deity",
+          "mod_name": "d212",
+          "value": 50
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": -50
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": 50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -500
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -10
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -10
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -750
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -25
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -25
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -25
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": 50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -50
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -50
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": 50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -250
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": 50
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -50
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -750
+        }
+      ],
+      "name": "Merchants of Qeynos",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "304": {
+      "base": 0,
+      "id": 304,
+      "modifiers": [
+        {
+          "identity_id": 202,
+          "kind": "deity",
+          "mod_name": "d202",
+          "value": -25
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": -10
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": -10
+        },
+        {
+          "identity_id": 216,
+          "kind": "deity",
+          "mod_name": "d216",
+          "value": 25
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -75
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -75
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -75
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -75
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -75
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -75
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -75
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -50
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -75
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -75
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -25
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -75
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -25
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -75
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -75
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -75
+        }
+      ],
+      "name": "Ring of Scale",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "305": {
+      "base": 0,
+      "id": 305,
+      "modifiers": [
+        {
+          "identity_id": 10,
+          "kind": "class",
+          "mod_name": "c10",
+          "value": -1
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -200
+        },
+        {
+          "identity_id": 12,
+          "kind": "class",
+          "mod_name": "c12",
+          "value": -1
+        },
+        {
+          "identity_id": 13,
+          "kind": "class",
+          "mod_name": "c13",
+          "value": -1
+        },
+        {
+          "identity_id": 14,
+          "kind": "class",
+          "mod_name": "c14",
+          "value": -1
+        },
+        {
+          "identity_id": 15,
+          "kind": "class",
+          "mod_name": "c15",
+          "value": -1
+        },
+        {
+          "identity_id": 16,
+          "kind": "class",
+          "mod_name": "c16",
+          "value": -1
+        },
+        {
+          "identity_id": 2,
+          "kind": "class",
+          "mod_name": "c2",
+          "value": -1
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": -1
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": -1
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": -1
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": -1
+        },
+        {
+          "identity_id": 8,
+          "kind": "class",
+          "mod_name": "c8",
+          "value": -1
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": 50
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -350
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -750
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": 50
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -350
+        },
+        {
+          "identity_id": 207,
+          "kind": "deity",
+          "mod_name": "d207",
+          "value": 25
+        },
+        {
+          "identity_id": 209,
+          "kind": "deity",
+          "mod_name": "d209",
+          "value": 25
+        },
+        {
+          "identity_id": 211,
+          "kind": "deity",
+          "mod_name": "d211",
+          "value": 25
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": 50
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -99
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -750
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -99
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -99
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -750
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": 50
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": 50
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -99
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -99
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -99
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -99
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -750
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -99
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -750
+        }
+      ],
+      "name": "Rogues of the White Rose",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "306": {
+      "base": 0,
+      "id": 306,
+      "modifiers": [
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -1000
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -1000
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -1000
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -1000
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -1000
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -1000
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -1000
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -1000
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -1000
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -1000
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -1000
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -1000
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -1000
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -1000
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -1000
+        }
+      ],
+      "name": "Sabertooths of Blackburrow",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "311": {
+      "base": 0,
+      "id": 311,
+      "modifiers": [
+        {
+          "identity_id": 1,
+          "kind": "class",
+          "mod_name": "c1",
+          "value": 50
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -200
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -50
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -200
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -50
+        },
+        {
+          "identity_id": 211,
+          "kind": "deity",
+          "mod_name": "d211",
+          "value": 50
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": 50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -200
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -50
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -50
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -400
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -50
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": 50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -50
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -50
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": 50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -200
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": 50
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -25
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -300
+        }
+      ],
+      "name": "Steel Warriors",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "319": {
+      "base": 0,
+      "id": 319,
+      "modifiers": [
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -1000
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -1000
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -1000
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -1000
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": -1000
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": -1000
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -1000
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -1000
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -1000
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -1000
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -1000
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -1000
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -1000
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -1000
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -1000
+        }
+      ],
+      "name": "Vox",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "320": {
+      "base": 0,
+      "id": 320,
+      "modifiers": [
+        {
+          "identity_id": 1,
+          "kind": "class",
+          "mod_name": "c1",
+          "value": 50
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -400
+        },
+        {
+          "identity_id": 12,
+          "kind": "class",
+          "mod_name": "c12",
+          "value": -50
+        },
+        {
+          "identity_id": 13,
+          "kind": "class",
+          "mod_name": "c13",
+          "value": -50
+        },
+        {
+          "identity_id": 14,
+          "kind": "class",
+          "mod_name": "c14",
+          "value": -50
+        },
+        {
+          "identity_id": 16,
+          "kind": "class",
+          "mod_name": "c16",
+          "value": 50
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 8,
+          "kind": "class",
+          "mod_name": "c8",
+          "value": 25
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -10
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -500
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -500
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": 25
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -500
+        },
+        {
+          "identity_id": 208,
+          "kind": "deity",
+          "mod_name": "d208",
+          "value": 25
+        },
+        {
+          "identity_id": 211,
+          "kind": "deity",
+          "mod_name": "d211",
+          "value": 50
+        },
+        {
+          "identity_id": 213,
+          "kind": "deity",
+          "mod_name": "d213",
+          "value": -25
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": 75
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -600
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -25
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -25
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": 50
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": 50
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -100
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -100
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -150
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -750
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -75
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": 25
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -900
+        }
+      ],
+      "name": "Wolves of the North",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "327": {
+      "base": 0,
+      "id": 327,
+      "modifiers": [
+        {
+          "identity_id": 10,
+          "kind": "class",
+          "mod_name": "c10",
+          "value": 50
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -200
+        },
+        {
+          "identity_id": 15,
+          "kind": "class",
+          "mod_name": "c15",
+          "value": 50
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -200
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -200
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -200
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": -100
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": -200
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": 100
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -25
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -750
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -25
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -25
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -1000
+        },
+        {
+          "identity_id": 130,
+          "kind": "race",
+          "mod_name": "r130",
+          "value": 50
+        },
+        {
+          "identity_id": 2,
+          "kind": "race",
+          "mod_name": "r2",
+          "value": 50
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -100
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -25
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -100
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -100
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -25
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -750
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -25
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -900
+        }
+      ],
+      "name": "Shamen of Justice",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "328": {
+      "base": 0,
+      "id": 328,
+      "modifiers": [
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -200
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -200
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -10
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": -50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -750
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -20
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -30
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -750
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": -50
+        },
+        {
+          "identity_id": 4,
+          "kind": "race",
+          "mod_name": "r4",
+          "value": -99
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -99
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": -50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -750
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": -99
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -750
+        }
+      ],
+      "name": "Merchants of Halas",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "336": {
+      "base": 0,
+      "id": 336,
+      "modifiers": [
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": -50
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": -25
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": 50
+        },
+        {
+          "identity_id": 201,
+          "kind": "deity",
+          "mod_name": "d201",
+          "value": -25
+        },
+        {
+          "identity_id": 203,
+          "kind": "deity",
+          "mod_name": "d203",
+          "value": -50
+        },
+        {
+          "identity_id": 204,
+          "kind": "deity",
+          "mod_name": "d204",
+          "value": -5
+        },
+        {
+          "identity_id": 205,
+          "kind": "deity",
+          "mod_name": "d205",
+          "value": 50
+        },
+        {
+          "identity_id": 206,
+          "kind": "deity",
+          "mod_name": "d206",
+          "value": 25
+        },
+        {
+          "identity_id": 208,
+          "kind": "deity",
+          "mod_name": "d208",
+          "value": -10
+        },
+        {
+          "identity_id": 214,
+          "kind": "deity",
+          "mod_name": "d214",
+          "value": -25
+        },
+        {
+          "identity_id": 1,
+          "kind": "race",
+          "mod_name": "r1",
+          "value": 50
+        },
+        {
+          "identity_id": 10,
+          "kind": "race",
+          "mod_name": "r10",
+          "value": -200
+        },
+        {
+          "identity_id": 11,
+          "kind": "race",
+          "mod_name": "r11",
+          "value": -50
+        },
+        {
+          "identity_id": 12,
+          "kind": "race",
+          "mod_name": "r12",
+          "value": -50
+        },
+        {
+          "identity_id": 128,
+          "kind": "race",
+          "mod_name": "r128",
+          "value": -400
+        },
+        {
+          "identity_id": 3,
+          "kind": "race",
+          "mod_name": "r3",
+          "value": -50
+        },
+        {
+          "identity_id": 330,
+          "kind": "race",
+          "mod_name": "r330",
+          "value": 50
+        },
+        {
+          "identity_id": 5,
+          "kind": "race",
+          "mod_name": "r5",
+          "value": -50
+        },
+        {
+          "identity_id": 522,
+          "kind": "race",
+          "mod_name": "r522",
+          "value": 50
+        },
+        {
+          "identity_id": 6,
+          "kind": "race",
+          "mod_name": "r6",
+          "value": -75
+        },
+        {
+          "identity_id": 7,
+          "kind": "race",
+          "mod_name": "r7",
+          "value": 50
+        },
+        {
+          "identity_id": 8,
+          "kind": "race",
+          "mod_name": "r8",
+          "value": -50
+        },
+        {
+          "identity_id": 9,
+          "kind": "race",
+          "mod_name": "r9",
+          "value": -300
+        }
+      ],
+      "name": "Coalition of Tradefolk Underground",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "404": {
+      "base": 0,
+      "id": 404,
+      "modifiers": [
+        {
+          "identity_id": 1,
+          "kind": "class",
+          "mod_name": "c1",
+          "value": -100
+        },
+        {
+          "identity_id": 11,
+          "kind": "class",
+          "mod_name": "c11",
+          "value": -100
+        },
+        {
+          "identity_id": 12,
+          "kind": "class",
+          "mod_name": "c12",
+          "value": -100
+        },
+        {
+          "identity_id": 13,
+          "kind": "class",
+          "mod_name": "c13",
+          "value": -100
+        },
+        {
+          "identity_id": 14,
+          "kind": "class",
+          "mod_name": "c14",
+          "value": -100
+        },
+        {
+          "identity_id": 16,
+          "kind": "class",
+          "mod_name": "c16",
+          "value": -100
+        },
+        {
+          "identity_id": 2,
+          "kind": "class",
+          "mod_name": "c2",
+          "value": -100
+        },
+        {
+          "identity_id": 3,
+          "kind": "class",
+          "mod_name": "c3",
+          "value": -100
+        },
+        {
+          "identity_id": 4,
+          "kind": "class",
+          "mod_name": "c4",
+          "value": -100
+        },
+        {
+          "identity_id": 5,
+          "kind": "class",
+          "mod_name": "c5",
+          "value": -100
+        },
+        {
+          "identity_id": 6,
+          "kind": "class",
+          "mod_name": "c6",
+          "value": -100
+        },
+        {
+          "identity_id": 7,
+          "kind": "class",
+          "mod_name": "c7",
+          "value": -100
+        },
+        {
+          "identity_id": 8,
+          "kind": "class",
+          "mod_name": "c8",
+          "value": -100
+        },
+        {
+          "identity_id": 9,
+          "kind": "class",
+          "mod_name": "c9",
+          "value": -100
+        }
+      ],
+      "name": "Truespirit",
+      "personal_max": 2000,
+      "personal_min": 0
+    },
+    "5013": {
+      "base": -1000,
+      "id": 5013,
+      "modifiers": [],
+      "name": "KOS",
+      "personal_max": 3000,
+      "personal_min": -1000
+    },
+    "5014": {
+      "base": 0,
+      "id": 5014,
+      "modifiers": [],
+      "name": "KOS_animal",
+      "personal_max": 2000,
+      "personal_min": -2000
+    },
+    "5023": {
+      "base": 0,
+      "id": 5023,
+      "modifiers": [],
+      "name": "Noobie Monsters KOS to Guards",
+      "personal_max": 2000,
+      "personal_min": -2000
+    }
+  },
+  "npc_faction_bundles": {
+    "1202": {
+      "entries": [
+        {
+          "faction_id": 262,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -1
+        },
+        {
+          "faction_id": 281,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -1
+        },
+        {
+          "faction_id": 284,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -3
+        },
+        {
+          "faction_id": 285,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 1
+        },
+        {
+          "faction_id": 304,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 1
+        }
+      ],
+      "id": 1202,
+      "ignore_primary_assist": 0,
+      "name": "LeagueofAntonicanBards3",
+      "primary_faction_id": 284
+    },
+    "122": {
+      "entries": [
+        {
+          "faction_id": 223,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 150
+        },
+        {
+          "faction_id": 244,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 200
+        },
+        {
+          "faction_id": 327,
+          "npc_value": 0,
+          "temp": 0,
+          "value": -1000
+        },
+        {
+          "faction_id": 328,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -150
+        },
+        {
+          "faction_id": 336,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 150
+        }
+      ],
+      "id": 122,
+      "ignore_primary_assist": 0,
+      "name": "Halas_Shamen_of_Justice",
+      "primary_faction_id": 327
+    },
+    "1337": {
+      "entries": [],
+      "id": 1337,
+      "ignore_primary_assist": 0,
+      "name": "Dargon",
+      "primary_faction_id": 404
+    },
+    "164": {
+      "entries": [
+        {
+          "faction_id": 305,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -1000
+        }
+      ],
+      "id": 164,
+      "ignore_primary_assist": 0,
+      "name": "Halas_Rogues_of_the_White_Rose",
+      "primary_faction_id": 305
+    },
+    "74": {
+      "entries": [
+        {
+          "faction_id": 306,
+          "npc_value": -1,
+          "temp": 0,
+          "value": 0
+        },
+        {
+          "faction_id": 311,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -1
+        },
+        {
+          "faction_id": 319,
+          "npc_value": -1,
+          "temp": 0,
+          "value": 0
+        },
+        {
+          "faction_id": 320,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -15
+        },
+        {
+          "faction_id": 327,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -3
+        },
+        {
+          "faction_id": 328,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -3
+        },
+        {
+          "faction_id": 1159,
+          "npc_value": -1,
+          "temp": 0,
+          "value": 0
+        },
+        {
+          "faction_id": 5013,
+          "npc_value": -1,
+          "temp": 0,
+          "value": 0
+        },
+        {
+          "faction_id": 5014,
+          "npc_value": -1,
+          "temp": 0,
+          "value": 0
+        },
+        {
+          "faction_id": 5023,
+          "npc_value": -1,
+          "temp": 0,
+          "value": 0
+        }
+      ],
+      "id": 74,
+      "ignore_primary_assist": 0,
+      "name": "Wolves_of_the_North",
+      "primary_faction_id": 320
+    },
+    "885": {
+      "entries": [
+        {
+          "faction_id": 223,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -100
+        },
+        {
+          "faction_id": 230,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -15
+        },
+        {
+          "faction_id": 262,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 15
+        },
+        {
+          "faction_id": 273,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -10
+        },
+        {
+          "faction_id": 291,
+          "npc_value": 0,
+          "temp": 0,
+          "value": 15
+        }
+      ],
+      "id": 885,
+      "ignore_primary_assist": 0,
+      "name": "Timvu",
+      "primary_faction_id": 223
+    },
+    "94": {
+      "entries": [
+        {
+          "faction_id": 305,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -30
+        },
+        {
+          "faction_id": 311,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -30
+        },
+        {
+          "faction_id": 320,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -30
+        },
+        {
+          "faction_id": 327,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -30
+        },
+        {
+          "faction_id": 328,
+          "npc_value": 1,
+          "temp": 0,
+          "value": -30
+        }
+      ],
+      "id": 94,
+      "ignore_primary_assist": 0,
+      "name": "Merchants_of_Halas",
+      "primary_faction_id": 328
+    }
+  },
+  "source": {
+    "archive": "peq-1789171214.zip",
+    "npc_source": "data/halas_npcs_source.json",
+    "review_state": "current_unreviewed_peq",
+    "schema": "ProjectEQ content SQL",
+    "target_era": "classic_p1999",
+    "threshold_basis": "current_eqemu_defaults"
+  },
+  "thresholds": {
+    "ally": 1100,
+    "amiably": 100,
+    "apprehensively": -100,
+    "dubiously": -500,
+    "indifferently": 0,
+    "kindly": 500,
+    "threateningly": -750,
+    "warmly": 750
+  }
+}

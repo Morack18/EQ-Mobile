@@ -209,3 +209,20 @@ question.
   a selected merchant's stock, but no purchase is enabled: final EQEmu prices
   also depend on faction, charisma, and rules not yet represented by the
   offline player profile.
+
+## Faction and reaction foundation
+
+- EQEmu `common/faction.cpp:57-87` calculates player reaction as personal
+  standing plus faction base plus class, race, and deity modifiers. The
+  generated `data/halas_factions_source.json` preserves those source tables
+  for Halas and records the current EQEmu-default standing thresholds as data.
+  NPC faction-bundle entry values are deliberately not added to player con.
+- The fixture character now persists the source-valid project identity Warrior
+  / Barbarian / Agnostic (`class_id` 1, `race_id` 2, `deity_id` 396) and a
+  sparse personal faction map. This is an explicit current-PEQ fixture choice,
+  not an inference from the HLM presentation model nor a claim of verified
+  P1999 starting standings.
+- Imported NPC reaction display is derived from that data. Faction zero is
+  indifferent; missing/negative special definitions remain unresolved. A
+  reaction is information only: imported NPC auto-hostility and commerce remain
+  disabled until individual classic review and their dependent systems exist.

@@ -5,6 +5,7 @@ const ZONE_PATH := "res://data/halas.json"
 const ITEM_PATH := "res://data/items.json"
 const PLAYER_CLASS_PATH := "res://data/player_classes.json"
 const MERCHANT_PATH := "res://data/halas_merchants_source.json"
+const FACTION_PATH := "res://data/halas_factions_source.json"
 # EQEmu's 0.7 × 40 = 28 is the client-update animation/wire value, not a
 # physical world-speed authority. eqoxide's centralized controller uses 44
 # u/s, but its direct manual-drive path uses 35 u/s. EQ Mobile's two-stick
@@ -74,6 +75,10 @@ var player_respawn_remaining := 0.0
 var player_action_animation_remaining := 0.0
 var player_class_definitions: Dictionary = {}
 var player_class_id := 1
+var player_race_id := 2 # Barbarian fixture identity; source-valid Halas start, not mesh-derived.
+var player_deity_id := 396 # Agnostic fixture identity.
+var faction_values: Dictionary = {}
+var faction_definitions: Dictionary = {}
 var ability_cooldowns: Dictionary = {}
 var auto_attack_enabled := false
 var primary_attack_remaining := 0.0
@@ -115,6 +120,7 @@ func _ready() -> void:
 	zone = _load_zone()
 	item_definitions = _load_item_definitions()
 	merchant_definitions = _load_merchant_definitions()
+	faction_definitions = _load_faction_definitions()
 	player_class_definitions = _load_player_class_definitions()
 	_build_world()
 	_build_zone_objects()
@@ -322,6 +328,19 @@ func _sanitized_ability_cooldowns(saved_cooldowns: Variant) -> Dictionary:
 		var ready_at := int(saved_cooldowns[group_variant])
 		if not group.is_empty() and ready_at > now:
 			restored[group] = ready_at
+	return restored
+
+func _sanitized_faction_values(saved_values: Variant) -> Dictionary:
+	var restored: Dictionary = {}
+	if not saved_values is Dictionary:
+		return restored
+	for faction_id_variant in saved_values:
+		var faction_id := str(faction_id_variant)
+		var definition: Dictionary = faction_definitions.get("factions", {}).get(faction_id, {})
+		if definition.is_empty():
+			continue
+		var value := int(saved_values[faction_id_variant])
+		restored[faction_id] = clampi(value, int(definition.get("personal_min", -2000)), int(definition.get("personal_max", 2000)))
 	return restored
 
 func _move_player(delta: float) -> void:
@@ -1089,8 +1108,11 @@ func _selected_npc_interaction_summary(target: Dictionary) -> String:
 		details.append("merchant candidate")
 	if str(target.get("loot_state", "none")) == "reference_only":
 		details.append("loot reference")
-	if str(target.get("faction_reaction", "unresolved")) == "unresolved":
+	var reaction := _resolve_npc_faction(target)
+	if str(reaction.get("standing", "Unresolved")) == "Unresolved":
 		details.append("faction unresolved")
+	else:
+		details.append(str(reaction.get("standing", "Indifferently")))
 	if details.is_empty():
 		details.append("faction indifferent")
 	var summary := "You target %s (Lv %d) — %s; combat disabled pending review." % [
@@ -1101,6 +1123,38 @@ func _selected_npc_interaction_summary(target: Dictionary) -> String:
 		if not preview.is_empty():
 			summary += "\n%s" % preview
 	return summary
+
+func _resolve_npc_faction(target: Dictionary) -> Dictionary:
+	var bundle_id := int(target.get("npc_faction_id", 0))
+	if bundle_id == 0:
+		return {"standing": "Indifferently", "score": 0}
+	var bundle: Dictionary = faction_definitions.get("npc_faction_bundles", {}).get(str(bundle_id), {})
+	var primary_id := int(bundle.get("primary_faction_id", 0))
+	if primary_id == 0:
+		return {"standing": "Indifferently", "score": 0}
+	if primary_id < 0:
+		return {"standing": "Unresolved", "score": null}
+	var faction: Dictionary = faction_definitions.get("factions", {}).get(str(primary_id), {})
+	if faction.is_empty():
+		return {"standing": "Unresolved", "score": null}
+	var score := int(faction_values.get(str(primary_id), 0)) + int(faction.get("base", 0))
+	for modifier in faction.get("modifiers", []):
+		var identity_id := player_class_id if modifier.get("kind") == "class" else player_race_id if modifier.get("kind") == "race" else player_deity_id
+		if int(modifier.get("identity_id", -1)) == identity_id:
+			score += int(modifier.get("value", 0))
+	return {"standing": _faction_standing(score), "score": score, "primary_faction_id": primary_id}
+
+func _faction_standing(score: int) -> String:
+	var thresholds: Dictionary = faction_definitions.get("thresholds", {})
+	if score >= int(thresholds.get("ally", 1100)): return "Ally"
+	if score >= int(thresholds.get("warmly", 750)): return "Warmly"
+	if score >= int(thresholds.get("kindly", 500)): return "Kindly"
+	if score >= int(thresholds.get("amiably", 100)): return "Amiably"
+	if score >= int(thresholds.get("indifferently", 0)): return "Indifferently"
+	if score >= int(thresholds.get("apprehensively", -100)): return "Apprehensively"
+	if score >= int(thresholds.get("dubiously", -500)): return "Dubiously"
+	if score >= int(thresholds.get("threateningly", -750)): return "Threateningly"
+	return "Scowls"
 
 func _merchant_preview(merchant_id: int) -> String:
 	var listings: Array = merchant_definitions.get(str(merchant_id), [])
@@ -1133,6 +1187,13 @@ func _load_merchant_definitions() -> Dictionary:
 	assert(parsed is Dictionary and parsed.get("merchants") is Dictionary, "Invalid merchant definitions")
 	return parsed.merchants
 
+func _load_faction_definitions() -> Dictionary:
+	var file := FileAccess.open(FACTION_PATH, FileAccess.READ)
+	assert(file != null, "Unable to read faction definitions: %s" % FACTION_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Dictionary and parsed.get("factions") is Dictionary and parsed.get("npc_faction_bundles") is Dictionary, "Invalid faction definitions")
+	return parsed
+
 func _load_player_class_definitions() -> Dictionary:
 	var file := FileAccess.open(PLAYER_CLASS_PATH, FileAccess.READ)
 	assert(file != null, "Unable to read player class definitions: %s" % PLAYER_CLASS_PATH)
@@ -1159,6 +1220,9 @@ func _load_save() -> void:
 	if _class_definition().is_empty():
 		push_warning("Saved player class is unavailable; using Warrior fixture class.")
 		player_class_id = 1
+	player_race_id = int(saved.get("race_id", 2))
+	player_deity_id = int(saved.get("deity_id", 396))
+	faction_values = _sanitized_faction_values(saved.get("faction_values", {}))
 	ability_cooldowns = _sanitized_ability_cooldowns(saved.get("ability_cooldowns", {}))
 	# Toggle/target state is intentionally transient, so a reload never resumes
 	# unattended combat.
@@ -1178,7 +1242,7 @@ func _load_save() -> void:
 func _save_game() -> void:
 	if player_dead:
 		return
-	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory, "progression_version": int(_progression().get("formula_version", 1)), "player_xp_total": player_xp_total, "player_level": player_level, "class_id": player_class_id, "ability_cooldowns": _sanitized_ability_cooldowns(ability_cooldowns)}
+	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory, "progression_version": int(_progression().get("formula_version", 1)), "player_xp_total": player_xp_total, "player_level": player_level, "class_id": player_class_id, "race_id": player_race_id, "deity_id": player_deity_id, "faction_values": _sanitized_faction_values(faction_values), "ability_cooldowns": _sanitized_ability_cooldowns(ability_cooldowns)}
 	if npc != null:
 		saved.merge({"npc_alive": npc_alive, "npc_health": npc_health, "npc_position": [npc.global_position.x, npc.global_position.y, npc.global_position.z], "respawn_remaining": respawn_remaining, "npc_loot_awarded": npc_loot_awarded})
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
