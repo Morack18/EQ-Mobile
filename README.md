@@ -11,7 +11,7 @@ Desktop controls are WASD/arrow keys to move, Space to jump, Tab to target the
 nearest Halas NPC, toggle auto-attack with the attack action, and press `M` to browse an eligible merchant. On a device, use the lower-left
 joystick to move, drag the right side to orbit the camera, hold **JUMP** to
 jump or swim upward, tap an NPC to target it, tap **ATTACK** to toggle auto-attack,
-tap **INTERACT** when it appears for an eligible merchant, and tap **TRAINING STRIKE** for its separate melee ability.
+hold an eligible merchant to open a **Trade** popup (or tap **INTERACT**), and tap **TRAINING STRIKE** for its separate melee ability.
 
 The prototype currently starts in [Halas](data/halas.json), rendering the GLB
 and all 445 static object placements from Lantern's manifest. It includes a

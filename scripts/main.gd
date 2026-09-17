@@ -54,6 +54,8 @@ const CAMERA_PITCH_SPEED := 1.55
 const CAMERA_OFFSET := Vector3(0.0, 4.7, 10.5)
 const CAMERA_COLLISION_MARGIN := 0.35
 const PLAYER_ATTACK_ANIMATION_SECONDS := 0.45
+const NPC_LONG_PRESS_SECONDS := 0.55
+const NPC_LONG_PRESS_CANCEL_DISTANCE := 28.0
 # eqoxide's renderer establishes that the exported glTF character meshes face
 # local +X. Godot's Node3D.look_at() faces local -Z, so character visuals need
 # this fixed model-space correction below their movement node.
@@ -67,6 +69,7 @@ var npc: Node3D
 var camera_pivot: Node3D
 var camera: Camera3D
 var hud: Control
+var ui_layer: CanvasLayer
 var player_health := PLAYER_MAX_HEALTH
 var player_xp_total := 0
 var player_level := 1
@@ -80,6 +83,11 @@ var player_deity_id := 396 # Agnostic fixture identity.
 var faction_values: Dictionary = {}
 var faction_definitions: Dictionary = {}
 var merchant_panel: MerchantBrowsePanel
+var merchant_interaction_popup: MerchantInteractionPopup
+var npc_press_touch := -1
+var npc_press_position := Vector2.ZERO
+var npc_press_target: Dictionary = {}
+var npc_press_elapsed := 0.0
 var ability_cooldowns: Dictionary = {}
 var auto_attack_enabled := false
 var primary_attack_remaining := 0.0
@@ -140,6 +148,7 @@ func _process(delta: float) -> void:
 	_update_auto_attack(delta)
 	_update_npc(delta)
 	_update_camera(delta)
+	_update_npc_long_press(delta)
 	_update_hud()
 	autosave_elapsed += delta
 	if autosave_elapsed >= 2.0:
@@ -170,9 +179,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		hud.handle_touch(event.index, event.position, event.pressed)
 		if event.pressed:
-			_target_halas_npc_at_screen(event.position)
+			var touch_target := _target_halas_npc_at_screen(event.position)
+			if not touch_target.is_empty() and int(touch_target.get("merchant_id", 0)) > 0:
+				npc_press_touch = event.index
+				npc_press_position = event.position
+				npc_press_target = touch_target
+				npc_press_elapsed = 0.0
+		else:
+			_cancel_npc_long_press(event.index)
 	if event is InputEventScreenDrag:
 		hud.handle_drag(event.index, event.position, event.relative)
+		if event.index == npc_press_touch and event.position.distance_to(npc_press_position) > NPC_LONG_PRESS_CANCEL_DISTANCE:
+			_cancel_npc_long_press(event.index)
 	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
 		clear_save()
 		get_tree().reload_current_scene()
@@ -1037,10 +1055,10 @@ func _build_hud() -> void:
 	hud.jump_changed.connect(_set_jump_held)
 	hud.joystick_changed.connect(func(value: Vector2): joystick_vector = value)
 	hud.look_changed.connect(func(value: Vector2): look_stick = value)
-	var canvas_layer := CanvasLayer.new()
-	canvas_layer.name = "MobileHUD"
-	add_child(canvas_layer)
-	canvas_layer.add_child(hud)
+	ui_layer = CanvasLayer.new()
+	ui_layer.name = "MobileHUD"
+	add_child(ui_layer)
+	ui_layer.add_child(hud)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
@@ -1080,9 +1098,9 @@ func _target_nearest_halas_npc() -> void:
 	status_text = _selected_npc_interaction_summary(selected_halas_target)
 
 
-func _target_halas_npc_at_screen(screen_position: Vector2) -> void:
+func _target_halas_npc_at_screen(screen_position: Vector2) -> Dictionary:
 	if halas_population == null or camera == null:
-		return
+		return {}
 	var origin := camera.project_ray_origin(screen_position)
 	var direction := camera.project_ray_normal(screen_position)
 	var query := PhysicsRayQueryParameters3D.create(
@@ -1094,16 +1112,52 @@ func _target_halas_npc_at_screen(screen_position: Vector2) -> void:
 	query.collide_with_areas = true
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
-		return
+		return {}
 	var collider: Variant = hit.get("collider")
 	if not collider is Area3D:
-		return
+		return {}
 	var target := halas_population.target_for_pick_area(collider)
 	if target.is_empty():
-		return
+		return {}
 	selected_halas_target = target
 	halas_population.set_selected_spawn(int(selected_halas_target.spawn2_id))
 	status_text = _selected_npc_interaction_summary(selected_halas_target)
+	return target
+
+func _update_npc_long_press(delta: float) -> void:
+	if npc_press_touch < 0 or npc_press_target.is_empty():
+		return
+	npc_press_elapsed += delta
+	if npc_press_elapsed < NPC_LONG_PRESS_SECONDS:
+		return
+	var target := npc_press_target
+	_cancel_npc_long_press(npc_press_touch)
+	_open_merchant_interaction(target)
+
+func _cancel_npc_long_press(touch_index: int) -> void:
+	if touch_index != npc_press_touch:
+		return
+	npc_press_touch = -1
+	npc_press_target = {}
+	npc_press_elapsed = 0.0
+
+func _open_merchant_interaction(target: Dictionary) -> void:
+	if int(target.get("merchant_id", 0)) <= 0:
+		return
+	if not _merchant_browse_allowed(str(_resolve_npc_faction(target).get("standing", "Unresolved"))):
+		status_text = "%s will not trade with you." % str(target.name)
+		return
+	if merchant_interaction_popup != null:
+		merchant_interaction_popup.queue_free()
+	merchant_interaction_popup = preload("res://scripts/merchant_interaction_popup.gd").new()
+	merchant_interaction_popup.trade_requested.connect(func():
+		merchant_interaction_popup.queue_free()
+		merchant_interaction_popup = null
+		open_selected_merchant()
+	)
+	merchant_interaction_popup.closed.connect(func(): merchant_interaction_popup = null)
+	ui_layer.add_child(merchant_interaction_popup)
+	merchant_interaction_popup.show_for_merchant(str(target.name))
 
 func _selected_npc_interaction_summary(target: Dictionary) -> String:
 	# Imported PEQ data is useful for inspection, but the current overlay has no
@@ -1201,7 +1255,7 @@ func open_selected_merchant() -> void:
 		merchant_panel.queue_free()
 	merchant_panel = preload("res://scripts/merchant_browse_panel.gd").new()
 	merchant_panel.closed.connect(func(): merchant_panel = null)
-	add_child(merchant_panel)
+	ui_layer.add_child(merchant_panel)
 	merchant_panel.show_merchant(str(selected_halas_target.name), listings)
 
 func _load_zone() -> Dictionary:

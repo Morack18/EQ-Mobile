@@ -239,3 +239,7 @@ question.
   EQ Mobile authorizes browsing only at Apprehensive or better, before the
   panel is created. The panel is intentionally browse-only: buy/sell, currency,
   quantity, price modifiers, and inventory mutation remain deferred.
+- EQ Mobile adds a mobile-specific contextual interaction adaptation: holding a
+  targetable merchant for 0.55 seconds opens a compact action popup with an
+  explicit Trade choice. Motion beyond 28 logical pixels cancels the hold. This
+  is an original touch affordance, not a claim about the desktop EverQuest UI.
