@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the classic merchant snapshot referenced by the Halas NPC roster.
-
-The snapshot deliberately contains listings only, not item names or prices: those
-belong to the future neutral item-definition import.  This gate keeps the
-merchant IDs, listing order, and access fields safe to consume when that system
-arrives.
-"""
+"""Validate the classic merchant snapshot referenced by the Halas NPC roster."""
 
 from __future__ import annotations
 
@@ -30,6 +24,8 @@ LISTING_FIELDS = {
     "alt_currency_cost",
     "classes_required",
     "probability",
+    "merchant_ref",
+    "item_ref",
 }
 
 
@@ -81,8 +77,12 @@ def main() -> None:
             label = f"merchant {merchant_id} listing {index}"
             if not isinstance(listing, dict) or set(listing) != LISTING_FIELDS:
                 fail(f"{label} must contain exactly the supported listing fields")
-            numeric_fields = LISTING_FIELDS - {"item_name"}
+            numeric_fields = LISTING_FIELDS - {"item_name", "merchant_ref", "item_ref"}
             values = {field: integer(listing[field], f"{label}.{field}") for field in numeric_fields}
+            if listing["merchant_ref"] != f"peq:merchant:{merchant_id}":
+                fail(f"{label}.merchant_ref does not match its merchant ID")
+            if listing["item_ref"] != f"peq:item:{values['item_id']}":
+                fail(f"{label}.item_ref does not match its item ID")
             slot = values["slot"]
             if slot <= 0 or slot in slots or slot <= previous_slot:
                 fail(f"{label}.slot must be positive, unique, and ascending")

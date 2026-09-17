@@ -47,7 +47,9 @@ def rows_for_table(archive: Path, table: str):
             if not line.startswith("("):
                 reading = False
                 continue
-            payload = line[1:-2] if line.endswith(",") else line[1:-1]
+            # Rows end in either `),` or `);`; both suffixes contain the
+            # closing parenthesis plus one delimiter byte.
+            payload = line[1:-2]
             yield next(csv.reader(
                 io.StringIO(payload),
                 delimiter=",",

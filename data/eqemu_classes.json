@@ -1,0 +1,408 @@
+{
+  "classes": {
+    "1": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:1",
+      "name": "Warrior",
+      "player_class": true,
+      "source_id": 1,
+      "source_symbol": "Warrior"
+    },
+    "10": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:10",
+      "name": "Shaman",
+      "player_class": true,
+      "source_id": 10,
+      "source_symbol": "Shaman"
+    },
+    "11": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:11",
+      "name": "Necromancer",
+      "player_class": true,
+      "source_id": 11,
+      "source_symbol": "Necromancer"
+    },
+    "12": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:12",
+      "name": "Wizard",
+      "player_class": true,
+      "source_id": 12,
+      "source_symbol": "Wizard"
+    },
+    "13": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:13",
+      "name": "Magician",
+      "player_class": true,
+      "source_id": 13,
+      "source_symbol": "Magician"
+    },
+    "14": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:14",
+      "name": "Enchanter",
+      "player_class": true,
+      "source_id": 14,
+      "source_symbol": "Enchanter"
+    },
+    "15": {
+      "key": "eqemu:class:15",
+      "name": "Beastlord",
+      "player_class": true,
+      "source_id": 15,
+      "source_symbol": "Beastlord"
+    },
+    "16": {
+      "key": "eqemu:class:16",
+      "name": "Berserker",
+      "player_class": true,
+      "source_id": 16,
+      "source_symbol": "Berserker"
+    },
+    "2": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:2",
+      "name": "Cleric",
+      "player_class": true,
+      "source_id": 2,
+      "source_symbol": "Cleric"
+    },
+    "20": {
+      "key": "eqemu:class:20",
+      "name": "Warrior Guildmaster",
+      "player_class": false,
+      "source_id": 20,
+      "source_symbol": "WarriorGM"
+    },
+    "21": {
+      "key": "eqemu:class:21",
+      "name": "Cleric Guildmaster",
+      "player_class": false,
+      "source_id": 21,
+      "source_symbol": "ClericGM"
+    },
+    "22": {
+      "key": "eqemu:class:22",
+      "name": "Paladin Guildmaster",
+      "player_class": false,
+      "source_id": 22,
+      "source_symbol": "PaladinGM"
+    },
+    "23": {
+      "key": "eqemu:class:23",
+      "name": "Ranger Guildmaster",
+      "player_class": false,
+      "source_id": 23,
+      "source_symbol": "RangerGM"
+    },
+    "24": {
+      "key": "eqemu:class:24",
+      "name": "Druid Guildmaster",
+      "player_class": false,
+      "source_id": 24,
+      "source_symbol": "ShadowKnightGM"
+    },
+    "25": {
+      "key": "eqemu:class:25",
+      "name": "Druid Guildmaster",
+      "player_class": false,
+      "source_id": 25,
+      "source_symbol": "DruidGM"
+    },
+    "26": {
+      "key": "eqemu:class:26",
+      "name": "Monk Guildmaster",
+      "player_class": false,
+      "source_id": 26,
+      "source_symbol": "MonkGM"
+    },
+    "27": {
+      "key": "eqemu:class:27",
+      "name": "Bard Guildmaster",
+      "player_class": false,
+      "source_id": 27,
+      "source_symbol": "BardGM"
+    },
+    "28": {
+      "key": "eqemu:class:28",
+      "name": "Rogue Guildmaster",
+      "player_class": false,
+      "source_id": 28,
+      "source_symbol": "RogueGM"
+    },
+    "29": {
+      "key": "eqemu:class:29",
+      "name": "Shaman Guildmaster",
+      "player_class": false,
+      "source_id": 29,
+      "source_symbol": "ShamanGM"
+    },
+    "3": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:3",
+      "name": "Paladin",
+      "player_class": true,
+      "source_id": 3,
+      "source_symbol": "Paladin"
+    },
+    "30": {
+      "key": "eqemu:class:30",
+      "name": "Necromancer Guildmaster",
+      "player_class": false,
+      "source_id": 30,
+      "source_symbol": "NecromancerGM"
+    },
+    "31": {
+      "key": "eqemu:class:31",
+      "name": "Wizard Guildmaster",
+      "player_class": false,
+      "source_id": 31,
+      "source_symbol": "WizardGM"
+    },
+    "32": {
+      "key": "eqemu:class:32",
+      "name": "Magician Guildmaster",
+      "player_class": false,
+      "source_id": 32,
+      "source_symbol": "MagicianGM"
+    },
+    "33": {
+      "key": "eqemu:class:33",
+      "name": "Enchanter Guildmaster",
+      "player_class": false,
+      "source_id": 33,
+      "source_symbol": "EnchanterGM"
+    },
+    "34": {
+      "key": "eqemu:class:34",
+      "name": "Beastlord Guildmaster",
+      "player_class": false,
+      "source_id": 34,
+      "source_symbol": "BeastlordGM"
+    },
+    "35": {
+      "key": "eqemu:class:35",
+      "name": "Berserker Guildmaster",
+      "player_class": false,
+      "source_id": 35,
+      "source_symbol": "BerserkerGM"
+    },
+    "4": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:4",
+      "name": "Ranger",
+      "player_class": true,
+      "source_id": 4,
+      "source_symbol": "Ranger"
+    },
+    "40": {
+      "key": "eqemu:class:40",
+      "name": "Banker",
+      "player_class": false,
+      "source_id": 40,
+      "source_symbol": "Banker"
+    },
+    "41": {
+      "key": "eqemu:class:41",
+      "name": "Merchant",
+      "player_class": false,
+      "source_id": 41,
+      "source_symbol": "Merchant"
+    },
+    "5": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:5",
+      "name": "Shadow Knight",
+      "player_class": true,
+      "source_id": 5,
+      "source_symbol": "ShadowKnight"
+    },
+    "59": {
+      "key": "eqemu:class:59",
+      "name": "Discord Merchant",
+      "player_class": false,
+      "source_id": 59,
+      "source_symbol": "DiscordMerchant"
+    },
+    "6": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:6",
+      "name": "Druid",
+      "player_class": true,
+      "source_id": 6,
+      "source_symbol": "Druid"
+    },
+    "60": {
+      "key": "eqemu:class:60",
+      "name": "Adventure Recruiter",
+      "player_class": false,
+      "source_id": 60,
+      "source_symbol": "AdventureRecruiter"
+    },
+    "61": {
+      "key": "eqemu:class:61",
+      "name": "Adventure Merchant",
+      "player_class": false,
+      "source_id": 61,
+      "source_symbol": "AdventureMerchant"
+    },
+    "62": {
+      "key": "eqemu:class:62",
+      "name": "LDoN Treasure",
+      "player_class": false,
+      "source_id": 62,
+      "source_symbol": "LDoNTreasure"
+    },
+    "63": {
+      "key": "eqemu:class:63",
+      "name": "Tribute Master",
+      "player_class": false,
+      "source_id": 63,
+      "source_symbol": "TributeMaster"
+    },
+    "64": {
+      "key": "eqemu:class:64",
+      "name": "Guild Tribute Master",
+      "player_class": false,
+      "source_id": 64,
+      "source_symbol": "GuildTributeMaster"
+    },
+    "66": {
+      "key": "eqemu:class:66",
+      "name": "Guild Banker",
+      "player_class": false,
+      "source_id": 66,
+      "source_symbol": "GuildBanker"
+    },
+    "67": {
+      "key": "eqemu:class:67",
+      "name": "Radiant Crystal Merchant",
+      "player_class": false,
+      "source_id": 67,
+      "source_symbol": "NorrathsKeepersMerchant"
+    },
+    "68": {
+      "key": "eqemu:class:68",
+      "name": "Ebon Crystal Merchant",
+      "player_class": false,
+      "source_id": 68,
+      "source_symbol": "DarkReignMerchant"
+    },
+    "69": {
+      "key": "eqemu:class:69",
+      "name": "Fellowship Master",
+      "player_class": false,
+      "source_id": 69,
+      "source_symbol": "FellowshipMaster"
+    },
+    "7": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:7",
+      "name": "Monk",
+      "player_class": true,
+      "source_id": 7,
+      "source_symbol": "Monk"
+    },
+    "70": {
+      "key": "eqemu:class:70",
+      "name": "Alternate Currency Merchant",
+      "player_class": false,
+      "source_id": 70,
+      "source_symbol": "AlternateCurrencyMerchant"
+    },
+    "71": {
+      "key": "eqemu:class:71",
+      "name": "Mercenary Liaison",
+      "player_class": false,
+      "source_id": 71,
+      "source_symbol": "MercenaryLiaison"
+    },
+    "8": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:8",
+      "name": "Bard",
+      "player_class": true,
+      "source_id": 8,
+      "source_symbol": "Bard"
+    },
+    "9": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:class:9",
+      "name": "Rogue",
+      "player_class": true,
+      "source_id": 9,
+      "source_symbol": "Rogue"
+    }
+  },
+  "dataset_id": "eqm:dataset:eqemu-classes",
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "Source identity and relationship registry",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "all_nonzero_eqemu_class_constants": true,
+      "classic_player_evidence": "char_create_combinations.expansions_req=0"
+    },
+    "generator": {
+      "tool": "tools/import_phase2_identity.py"
+    },
+    "overlay": null,
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "resources/EQEmu-master/common/classes.h",
+        "namespace": "eqemu",
+        "sha256": "f8f32d509111adcc80bd4fe242112e9d4db88a51b82b79c352828440d2a1216d"
+      },
+      {
+        "artifact": "resources/EQEmu-master/common/classes.cpp",
+        "namespace": "eqemu",
+        "sha256": "d659ddc1a112da27bd0bc191cff144aa40359eb2ab07287ed759af36726990d2"
+      },
+      {
+        "artifact": "peq-1789171214.zip",
+        "member": "peq-dump/create_tables_content.sql",
+        "namespace": "peq",
+        "sha256": "96a13e1e601f782a2997c8ae8342bcd849631614203de3fd823dc40d4850cd4d"
+      }
+    ]
+  },
+  "schema_id": "eqm.identity_registry",
+  "schema_version": 1
+}

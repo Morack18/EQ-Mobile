@@ -1,0 +1,663 @@
+{
+  "dataset_id": "eqm:dataset:eqemu-skills",
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "Source identity and relationship registry",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "active_get_skill_type_map": true
+    },
+    "generator": {
+      "tool": "tools/import_phase2_identity.py"
+    },
+    "overlay": null,
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "resources/EQEmu-master/common/skills.h",
+        "namespace": "eqemu",
+        "sha256": "ed6fac191c69b72194bfbc34b09349591b6ca61bfd006beb4006bcde16f869b0"
+      },
+      {
+        "artifact": "resources/EQEmu-master/common/skills.cpp",
+        "namespace": "eqemu",
+        "sha256": "3944bd9e501eb641ed8977fa294a4d7a5db51f6ae160fb6646fa24023d75b5b0"
+      }
+    ]
+  },
+  "schema_id": "eqm.identity_registry",
+  "schema_version": 1,
+  "skills": {
+    "0": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:0",
+      "name": "1H Blunt",
+      "source_id": 0,
+      "source_symbol": "Skill1HBlunt"
+    },
+    "1": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:1",
+      "name": "1H Slashing",
+      "source_id": 1,
+      "source_symbol": "Skill1HSlashing"
+    },
+    "10": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:10",
+      "name": "Bash",
+      "source_id": 10,
+      "source_symbol": "SkillBash"
+    },
+    "11": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:11",
+      "name": "Block",
+      "source_id": 11,
+      "source_symbol": "SkillBlock"
+    },
+    "12": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:12",
+      "name": "Brass Instruments",
+      "source_id": 12,
+      "source_symbol": "SkillBrassInstruments"
+    },
+    "13": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:13",
+      "name": "Channeling",
+      "source_id": 13,
+      "source_symbol": "SkillChanneling"
+    },
+    "14": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:14",
+      "name": "Conjuration",
+      "source_id": 14,
+      "source_symbol": "SkillConjuration"
+    },
+    "15": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:15",
+      "name": "Defense",
+      "source_id": 15,
+      "source_symbol": "SkillDefense"
+    },
+    "16": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:16",
+      "name": "Disarm",
+      "source_id": 16,
+      "source_symbol": "SkillDisarm"
+    },
+    "17": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:17",
+      "name": "Disarm Traps",
+      "source_id": 17,
+      "source_symbol": "SkillDisarmTraps"
+    },
+    "18": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:18",
+      "name": "Divination",
+      "source_id": 18,
+      "source_symbol": "SkillDivination"
+    },
+    "19": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:19",
+      "name": "Dodge",
+      "source_id": 19,
+      "source_symbol": "SkillDodge"
+    },
+    "2": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:2",
+      "name": "2H Blunt",
+      "source_id": 2,
+      "source_symbol": "Skill2HBlunt"
+    },
+    "20": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:20",
+      "name": "Double Attack",
+      "source_id": 20,
+      "source_symbol": "SkillDoubleAttack"
+    },
+    "21": {
+      "aliases": [
+        "SkillTailRake"
+      ],
+      "era_hint": null,
+      "key": "eqemu:skill:21",
+      "name": "Dragon Punch",
+      "source_id": 21,
+      "source_symbol": "SkillDragonPunch"
+    },
+    "22": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:22",
+      "name": "Dual Wield",
+      "source_id": 22,
+      "source_symbol": "SkillDualWield"
+    },
+    "23": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:23",
+      "name": "Eagle Strike",
+      "source_id": 23,
+      "source_symbol": "SkillEagleStrike"
+    },
+    "24": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:24",
+      "name": "Evocation",
+      "source_id": 24,
+      "source_symbol": "SkillEvocation"
+    },
+    "25": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:25",
+      "name": "Feign Death",
+      "source_id": 25,
+      "source_symbol": "SkillFeignDeath"
+    },
+    "26": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:26",
+      "name": "Flying Kick",
+      "source_id": 26,
+      "source_symbol": "SkillFlyingKick"
+    },
+    "27": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:27",
+      "name": "Forage",
+      "source_id": 27,
+      "source_symbol": "SkillForage"
+    },
+    "28": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:28",
+      "name": "Hand to Hand",
+      "source_id": 28,
+      "source_symbol": "SkillHandtoHand"
+    },
+    "29": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:29",
+      "name": "Hide",
+      "source_id": 29,
+      "source_symbol": "SkillHide"
+    },
+    "3": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:3",
+      "name": "2H Slashing",
+      "source_id": 3,
+      "source_symbol": "Skill2HSlashing"
+    },
+    "30": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:30",
+      "name": "Kick",
+      "source_id": 30,
+      "source_symbol": "SkillKick"
+    },
+    "31": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:31",
+      "name": "Meditate",
+      "source_id": 31,
+      "source_symbol": "SkillMeditate"
+    },
+    "32": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:32",
+      "name": "Mend",
+      "source_id": 32,
+      "source_symbol": "SkillMend"
+    },
+    "33": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:33",
+      "name": "Offense",
+      "source_id": 33,
+      "source_symbol": "SkillOffense"
+    },
+    "34": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:34",
+      "name": "Parry",
+      "source_id": 34,
+      "source_symbol": "SkillParry"
+    },
+    "35": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:35",
+      "name": "Pick Lock",
+      "source_id": 35,
+      "source_symbol": "SkillPickLock"
+    },
+    "36": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:36",
+      "name": "1H Piercing",
+      "source_id": 36,
+      "source_symbol": "Skill1HPiercing"
+    },
+    "37": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:37",
+      "name": "Riposte",
+      "source_id": 37,
+      "source_symbol": "SkillRiposte"
+    },
+    "38": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:38",
+      "name": "Round Kick",
+      "source_id": 38,
+      "source_symbol": "SkillRoundKick"
+    },
+    "39": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:39",
+      "name": "Safe Fall",
+      "source_id": 39,
+      "source_symbol": "SkillSafeFall"
+    },
+    "4": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:4",
+      "name": "Abjuration",
+      "source_id": 4,
+      "source_symbol": "SkillAbjuration"
+    },
+    "40": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:40",
+      "name": "Sense Heading",
+      "source_id": 40,
+      "source_symbol": "SkillSenseHeading"
+    },
+    "41": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:41",
+      "name": "Singing",
+      "source_id": 41,
+      "source_symbol": "SkillSinging"
+    },
+    "42": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:42",
+      "name": "Sneak",
+      "source_id": 42,
+      "source_symbol": "SkillSneak"
+    },
+    "43": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:43",
+      "name": "Specialize Abjuration",
+      "source_id": 43,
+      "source_symbol": "SkillSpecializeAbjure"
+    },
+    "44": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:44",
+      "name": "Specialize Alteration",
+      "source_id": 44,
+      "source_symbol": "SkillSpecializeAlteration"
+    },
+    "45": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:45",
+      "name": "Specialize Conjuration",
+      "source_id": 45,
+      "source_symbol": "SkillSpecializeConjuration"
+    },
+    "46": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:46",
+      "name": "Specialize Divination",
+      "source_id": 46,
+      "source_symbol": "SkillSpecializeDivination"
+    },
+    "47": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:47",
+      "name": "Specialize Evocation",
+      "source_id": 47,
+      "source_symbol": "SkillSpecializeEvocation"
+    },
+    "48": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:48",
+      "name": "Pick Pockets",
+      "source_id": 48,
+      "source_symbol": "SkillPickPockets"
+    },
+    "49": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:49",
+      "name": "Stringed Instruments",
+      "source_id": 49,
+      "source_symbol": "SkillStringedInstruments"
+    },
+    "5": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:5",
+      "name": "Alteration",
+      "source_id": 5,
+      "source_symbol": "SkillAlteration"
+    },
+    "50": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:50",
+      "name": "Swimming",
+      "source_id": 50,
+      "source_symbol": "SkillSwimming"
+    },
+    "51": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:51",
+      "name": "Throwing",
+      "source_id": 51,
+      "source_symbol": "SkillThrowing"
+    },
+    "52": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:52",
+      "name": "Tiger Claw",
+      "source_id": 52,
+      "source_symbol": "SkillTigerClaw"
+    },
+    "53": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:53",
+      "name": "Tracking",
+      "source_id": 53,
+      "source_symbol": "SkillTracking"
+    },
+    "54": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:54",
+      "name": "Wind Instruments",
+      "source_id": 54,
+      "source_symbol": "SkillWindInstruments"
+    },
+    "55": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:55",
+      "name": "Fishing",
+      "source_id": 55,
+      "source_symbol": "SkillFishing"
+    },
+    "56": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:56",
+      "name": "Make Poison",
+      "source_id": 56,
+      "source_symbol": "SkillMakePoison"
+    },
+    "57": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:57",
+      "name": "Tinkering",
+      "source_id": 57,
+      "source_symbol": "SkillTinkering"
+    },
+    "58": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:58",
+      "name": "Research",
+      "source_id": 58,
+      "source_symbol": "SkillResearch"
+    },
+    "59": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:59",
+      "name": "Alchemy",
+      "source_id": 59,
+      "source_symbol": "SkillAlchemy"
+    },
+    "6": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:6",
+      "name": "Apply Poison",
+      "source_id": 6,
+      "source_symbol": "SkillApplyPoison"
+    },
+    "60": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:60",
+      "name": "Baking",
+      "source_id": 60,
+      "source_symbol": "SkillBaking"
+    },
+    "61": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:61",
+      "name": "Tailoring",
+      "source_id": 61,
+      "source_symbol": "SkillTailoring"
+    },
+    "62": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:62",
+      "name": "Sense Traps",
+      "source_id": 62,
+      "source_symbol": "SkillSenseTraps"
+    },
+    "63": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:63",
+      "name": "Blacksmithing",
+      "source_id": 63,
+      "source_symbol": "SkillBlacksmithing"
+    },
+    "64": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:64",
+      "name": "Fletching",
+      "source_id": 64,
+      "source_symbol": "SkillFletching"
+    },
+    "65": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:65",
+      "name": "Brewing",
+      "source_id": 65,
+      "source_symbol": "SkillBrewing"
+    },
+    "66": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:66",
+      "name": "Alcohol Tolerance",
+      "source_id": 66,
+      "source_symbol": "SkillAlcoholTolerance"
+    },
+    "67": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:67",
+      "name": "Begging",
+      "source_id": 67,
+      "source_symbol": "SkillBegging"
+    },
+    "68": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:68",
+      "name": "Jewelry Making",
+      "source_id": 68,
+      "source_symbol": "SkillJewelryMaking"
+    },
+    "69": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:69",
+      "name": "Pottery",
+      "source_id": 69,
+      "source_symbol": "SkillPottery"
+    },
+    "7": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:7",
+      "name": "Archery",
+      "source_id": 7,
+      "source_symbol": "SkillArchery"
+    },
+    "70": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:70",
+      "name": "Percussion Instruments",
+      "source_id": 70,
+      "source_symbol": "SkillPercussionInstruments"
+    },
+    "71": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:71",
+      "name": "Intimidation",
+      "source_id": 71,
+      "source_symbol": "SkillIntimidation"
+    },
+    "72": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:72",
+      "name": "Berserking",
+      "source_id": 72,
+      "source_symbol": "SkillBerserking"
+    },
+    "73": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:73",
+      "name": "Taunt",
+      "source_id": 73,
+      "source_symbol": "SkillTaunt"
+    },
+    "74": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:74",
+      "name": "Frenzy",
+      "source_id": 74,
+      "source_symbol": "SkillFrenzy"
+    },
+    "75": {
+      "aliases": [],
+      "era_hint": "sof_plus",
+      "key": "eqemu:skill:75",
+      "name": "Remove Traps",
+      "source_id": 75,
+      "source_symbol": "SkillRemoveTraps"
+    },
+    "76": {
+      "aliases": [],
+      "era_hint": "sof_plus",
+      "key": "eqemu:skill:76",
+      "name": "Triple Attack",
+      "source_id": 76,
+      "source_symbol": "SkillTripleAttack"
+    },
+    "77": {
+      "aliases": [],
+      "era_hint": "rof2_plus",
+      "key": "eqemu:skill:77",
+      "name": "2H Piercing",
+      "source_id": 77,
+      "source_symbol": "Skill2HPiercing"
+    },
+    "8": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:8",
+      "name": "Backstab",
+      "source_id": 8,
+      "source_symbol": "SkillBackstab"
+    },
+    "9": {
+      "aliases": [],
+      "era_hint": null,
+      "key": "eqemu:skill:9",
+      "name": "Bind Wound",
+      "source_id": 9,
+      "source_symbol": "SkillBindWound"
+    }
+  }
+}

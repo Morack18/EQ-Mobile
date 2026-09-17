@@ -91,3 +91,17 @@ NPC/faction/merchant/item/loot cross-dataset references. Merchant UI display
 data resolves its `item_ref` through the generated `ItemDefinition` catalog;
 the prior copied display fields remain import provenance only. Loot remains
 reference-only runtime data until its gameplay rules are reviewed.
+
+`tools/import_phase2_identity.py` also emits the semantic EQEmu class, race,
+and skill registries, plus the Halas PEQ NPC-spell-list and spell closure.
+Registry presence records a source identity; it never enables that identity for
+the selected classic profile. Races are limited to the current Halas NPC
+closure plus PEQ character-creation races with `expansions_req = 0`; spell
+definitions are limited to expansion/content-filtered NPC spell-list entries
+and their explicitly unfiltered list proc references. `spells_new` itself has
+no classic-era field and remains `current_unreviewed_peq`.
+
+`data/quests.json` is an intentionally empty `eqm:quest:*` registry. ProjectEQ
+`peq:task:*` is a separate, deferred task domain and is never a classic quest
+identity. A future quest record requires reviewed script provenance and must
+not derive its identity from a script path, NPC ID, task ID, or quest global.

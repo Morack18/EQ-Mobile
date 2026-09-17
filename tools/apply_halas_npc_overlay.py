@@ -489,6 +489,10 @@ def apply_overlay(
         npc["key"] = f"peq:npc:{int(npc['id'])}"
         npc["class_ref"] = f"eqemu:class:{int(npc['class'])}"
         npc["race_ref"] = f"eqemu:race:{int(npc['race'])}"
+        npc_spells_id = int(npc.get("npc_spells_id", 0))
+        npc["npc_spell_list_ref"] = (
+            f"peq:npc_spell_list:{npc_spells_id}" if npc_spells_id > 0 else None
+        )
         npc_faction_id = int(npc.get("npc_faction_id", 0))
         merchant_id = int(npc.get("merchant_id", 0))
         loottable_id = int(npc.get("loottable_id", 0))

@@ -41,6 +41,7 @@ python3 tools/validate_halas_faction_data.py
 python3 tools/validate_halas_world_space.py
 godot --headless --path . --script res://tools/world_space_test_runner.gd
 python3 tools/validate_identity_contract.py
+python3 tools/import_phase2_identity.py resources/reference-data/projecteq/peq-1789171214.zip
 python3 tools/import_peq_halas_items_loot.py resources/reference-data/projecteq/peq-1789171214.zip data/halas_items_source.json data/halas_loot_source.json
 godot --headless --path . --script res://tools/save_migration_test_runner.gd
 python3 tools/validate_player_combat_data.py

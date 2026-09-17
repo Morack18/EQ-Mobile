@@ -1,0 +1,31 @@
+{
+  "dataset_id": "eqm:dataset:quests",
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "Source identity and relationship registry",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "classic_quest_import": "deferred pending reviewed script evidence"
+    },
+    "generator": {
+      "tool": "tools/import_phase2_identity.py"
+    },
+    "overlay": null,
+    "review_state": "pending_reviewed_quest_evidence",
+    "sources": [
+      {
+        "artifact": "docs/identity-contract.md",
+        "namespace": "eqm",
+        "sha256": "89821bc3f9d3082d69b8031e64057b97f1793e45f5887acc1dc366aabc0877c1"
+      }
+    ]
+  },
+  "quests": {},
+  "schema_id": "eqm.identity_registry",
+  "schema_version": 1
+}

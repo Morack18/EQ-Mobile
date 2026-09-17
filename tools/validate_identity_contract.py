@@ -40,6 +40,11 @@ def main() -> None:
     merchants = json.loads((ROOT / "data/halas_merchants_source.json").read_text())
     peq_items = json.loads((ROOT / "data/halas_items_source.json").read_text())
     loot = json.loads((ROOT / "data/halas_loot_source.json").read_text())
+    class_registry = json.loads((ROOT / "data/eqemu_classes.json").read_text())
+    race_registry = json.loads((ROOT / "data/eqemu_races.json").read_text())
+    skill_registry = json.loads((ROOT / "data/eqemu_skills.json").read_text())
+    spell_registry = json.loads((ROOT / "data/halas_spells_source.json").read_text())
+    quests = json.loads((ROOT / "data/quests.json").read_text())
     require(zone.get("schema_id") == "eqm.zone_definition" and zone.get("schema_version") == 1, "zone definition schema metadata missing")
     require(zone.get("key") == "eqm:zone:halas" and KEY.fullmatch(zone["key"]) is not None, "zone key is invalid")
     require(zone.get("source_refs", {}).get("client_geometry") == "client:zone_geometry:halas", "zone geometry source ref missing")
@@ -57,11 +62,43 @@ def main() -> None:
     validate_generated_envelope(merchants, "eqm.halas.merchants.raw", "eqm:dataset:halas-merchants-raw", "merchant snapshot")
     validate_generated_envelope(peq_items, "eqm.halas.items.raw", "eqm:dataset:halas-items-raw", "item snapshot")
     validate_generated_envelope(loot, "eqm.halas.loot.raw", "eqm:dataset:halas-loot-raw", "loot snapshot")
+    for registry, dataset_id, label in (
+        (class_registry, "eqm:dataset:eqemu-classes", "class registry"),
+        (race_registry, "eqm:dataset:eqemu-races-halas", "race registry"),
+        (skill_registry, "eqm:dataset:eqemu-skills", "skill registry"),
+        (spell_registry, "eqm:dataset:halas-spell-closure", "spell registry"),
+        (quests, "eqm:dataset:quests", "quest registry"),
+    ):
+        validate_generated_envelope(registry, "eqm.identity_registry", dataset_id, label)
     npc_keys = {npc["key"] for npc in derived_npcs["npc_types"]}
+    class_keys = {definition["key"] for definition in class_registry["classes"].values()}
+    race_keys = {definition["key"] for definition in race_registry["races"].values()}
+    skill_keys = {definition["key"] for definition in skill_registry["skills"].values()}
+    spell_keys = {definition["key"] for definition in spell_registry["spells"].values()}
+    spell_list_keys = {definition["key"] for definition in spell_registry["npc_spell_lists"].values()}
+    for source_id, definition in class_registry["classes"].items():
+        require(definition["key"] == f"eqemu:class:{source_id}" and int(source_id) == definition["source_id"], f"class identity mismatch for {source_id}")
+        require(definition["player_class"] == (1 <= definition["source_id"] <= 16), f"class player classification mismatch for {source_id}")
+    for source_id, definition in race_registry["races"].items():
+        require(definition["key"] == f"eqemu:race:{source_id}" and int(source_id) == definition["source_id"], f"race identity mismatch for {source_id}")
+        require(isinstance(definition.get("source_symbol"), str) and definition["source_symbol"], f"race source symbol missing for {source_id}")
+    seen_skill_ids = set()
+    for source_id, definition in skill_registry["skills"].items():
+        require(definition["key"] == f"eqemu:skill:{source_id}" and int(source_id) == definition["source_id"], f"skill identity mismatch for {source_id}")
+        require(definition["source_id"] not in seen_skill_ids, f"duplicate skill identity {source_id}")
+        seen_skill_ids.add(definition["source_id"])
+    require("21" in skill_registry["skills"] and "SkillTailRake" in skill_registry["skills"]["21"]["aliases"], "Tail Rake must remain an alias of skill 21")
     for npc in derived_npcs["npc_types"]:
         require(npc["key"] == f"peq:npc:{npc['id']}", f"NPC typed key mismatch for {npc['id']}")
         require(npc["class_ref"] == f"eqemu:class:{npc['class']}", f"NPC class ref mismatch for {npc['id']}")
         require(npc["race_ref"] == f"eqemu:race:{npc['race']}", f"NPC race ref mismatch for {npc['id']}")
+        require(npc["class_ref"] in class_keys, f"NPC class ref unresolved for {npc['id']}")
+        require(npc["race_ref"] in race_keys, f"NPC race ref unresolved for {npc['id']}")
+        raw_spell_list = int(npc["npc_spells_id"])
+        expected_list = f"peq:npc_spell_list:{raw_spell_list}" if raw_spell_list > 0 else None
+        require(npc.get("npc_spell_list_ref") == expected_list, f"NPC spell-list ref mismatch for {npc['id']}")
+        if expected_list is not None:
+            require(expected_list in spell_list_keys, f"NPC spell-list ref unresolved for {npc['id']}")
     spawn_group_keys = {group["key"] for group in derived_npcs["spawn_groups"].values()}
     for spawn in derived_npcs["spawns"]:
         require(spawn["key"] == f"peq:spawn:{spawn['spawn2_id']}", f"spawn typed key mismatch for {spawn['spawn2_id']}")
@@ -107,6 +144,31 @@ def main() -> None:
         if int(npc["loottable_id"]) > 0:
             require(npc["loot_table_ref"] == f"peq:loot_table:{npc['loottable_id']}", f"NPC loot ref mismatch for {npc['id']}")
             require(npc["loot_table_ref"] in loot_table_keys, f"NPC loot ref unresolved for {npc['id']}")
+    for source_id, spell in spell_registry["spells"].items():
+        require(spell["key"] == f"peq:spell:{source_id}" and int(source_id) == spell["source_id"], f"spell identity mismatch for {source_id}")
+        skill_ref = spell.get("casting_skill_ref")
+        if skill_ref is not None:
+            require(skill_ref in skill_keys, f"spell {source_id} has unresolved casting skill")
+        if spell["casting_skill_id_raw"] == 98:
+            require(skill_ref is None, "spell raw skill sentinel 98 must not fabricate a skill reference")
+    parents = {}
+    for source_id, spell_list in spell_registry["npc_spell_lists"].items():
+        require(spell_list["key"] == f"peq:npc_spell_list:{source_id}" and int(source_id) == spell_list["source_id"], f"spell-list identity mismatch for {source_id}")
+        parent = spell_list.get("parent_ref")
+        if parent is not None:
+            require(parent in spell_list_keys, f"spell-list parent unresolved for {source_id}")
+            parents[spell_list["key"]] = parent
+        for entry in spell_list["entries"]:
+            require(entry["spell_ref"] in spell_keys, f"spell-list entry unresolved for {source_id}")
+        for proc_ref in spell_list["proc_spell_refs"]:
+            require(proc_ref in spell_keys, f"spell-list proc unresolved for {source_id}")
+    for start in spell_list_keys:
+        seen, current = set(), start
+        while current in parents:
+            require(current not in seen, f"spell-list parent cycle at {start}")
+            seen.add(current)
+            current = parents[current]
+    require(quests["quests"] == {}, "unreviewed Phase 2 quest registry must remain empty")
     print("PASS: Phase 2 metadata envelopes and NPC, faction, merchant, item, and loot references are valid.")
 
 

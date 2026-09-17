@@ -1,0 +1,192 @@
+{
+  "dataset_id": "eqm:dataset:eqemu-races-halas",
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "Source identity and relationship registry",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "classic_player_races": "char_create_combinations.expansions_req=0",
+      "npc_closure": "data/halas_npcs.json"
+    },
+    "generator": {
+      "tool": "tools/import_phase2_identity.py"
+    },
+    "overlay": null,
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "resources/EQEmu-master/common/races.h",
+        "namespace": "eqemu",
+        "sha256": "51174f1d3e49d7c00f27ce05b8a417b640a2f00c30159765b2637fbf31bf9260"
+      },
+      {
+        "artifact": "resources/EQEmu-master/common/races.cpp",
+        "namespace": "eqemu",
+        "sha256": "e4701011fabf16b83c8cd388e1eaf94b6da4b0a9fc274ade71ee4289c036838b"
+      },
+      {
+        "artifact": "peq-1789171214.zip",
+        "member": "peq-dump/create_tables_content.sql",
+        "namespace": "peq",
+        "sha256": "96a13e1e601f782a2997c8ae8342bcd849631614203de3fd823dc40d4850cd4d"
+      }
+    ]
+  },
+  "races": {
+    "1": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:1",
+      "name": "Human",
+      "player_race": true,
+      "source_id": 1,
+      "source_symbol": "Human"
+    },
+    "10": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:10",
+      "name": "Ogre",
+      "player_race": true,
+      "source_id": 10,
+      "source_symbol": "Ogre"
+    },
+    "11": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:11",
+      "name": "Halfling",
+      "player_race": true,
+      "source_id": 11,
+      "source_symbol": "Halfling"
+    },
+    "12": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:12",
+      "name": "Gnome",
+      "player_race": true,
+      "source_id": 12,
+      "source_symbol": "Gnome"
+    },
+    "2": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:2",
+      "name": "Barbarian",
+      "player_race": true,
+      "source_id": 2,
+      "source_symbol": "Barbarian"
+    },
+    "240": {
+      "key": "eqemu:race:240",
+      "name": "Teleport Man",
+      "player_race": false,
+      "source_id": 240,
+      "source_symbol": "TeleportMan"
+    },
+    "3": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:3",
+      "name": "Erudite",
+      "player_race": true,
+      "source_id": 3,
+      "source_symbol": "Erudite"
+    },
+    "4": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:4",
+      "name": "Wood Elf",
+      "player_race": true,
+      "source_id": 4,
+      "source_symbol": "WoodElf"
+    },
+    "42": {
+      "key": "eqemu:race:42",
+      "name": "Wolf",
+      "player_race": false,
+      "source_id": 42,
+      "source_symbol": "Wolf"
+    },
+    "5": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:5",
+      "name": "High Elf",
+      "player_race": true,
+      "source_id": 5,
+      "source_symbol": "HighElf"
+    },
+    "6": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:6",
+      "name": "Dark Elf",
+      "player_race": true,
+      "source_id": 6,
+      "source_symbol": "DarkElf"
+    },
+    "7": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:7",
+      "name": "Half Elf",
+      "player_race": true,
+      "source_id": 7,
+      "source_symbol": "HalfElf"
+    },
+    "73": {
+      "key": "eqemu:race:73",
+      "name": "Launch",
+      "player_race": false,
+      "source_id": 73,
+      "source_symbol": "Launch"
+    },
+    "8": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:8",
+      "name": "Dwarf",
+      "player_race": true,
+      "source_id": 8,
+      "source_symbol": "Dwarf"
+    },
+    "9": {
+      "availability": {
+        "original_classic_pre_kunark": "current_peq_supported"
+      },
+      "key": "eqemu:race:9",
+      "name": "Troll",
+      "player_race": true,
+      "source_id": 9,
+      "source_symbol": "Troll"
+    },
+    "90": {
+      "key": "eqemu:race:90",
+      "name": "Barbarian",
+      "player_race": false,
+      "source_id": 90,
+      "source_symbol": "HalasCitizen"
+    }
+  },
+  "schema_id": "eqm.identity_registry",
+  "schema_version": 1
+}
