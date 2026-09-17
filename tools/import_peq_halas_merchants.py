@@ -8,13 +8,39 @@ Usage:
 from __future__ import annotations
 
 import json
+import re
 import sys
+import zipfile
 from pathlib import Path
 
 from import_peq_halas import as_int, rows_for_table
 
 
 CLASSIC_EXPANSION = 0
+SQL_MEMBER = "peq-dump/create_tables_content.sql"
+
+
+def table_columns(archive: Path, table: str) -> dict[str, int]:
+    """Read column order from the archived schema instead of guessing it."""
+    marker = f"CREATE TABLE `{table}` ("
+    columns: list[str] = []
+    reading = False
+    with zipfile.ZipFile(archive) as bundle, bundle.open(SQL_MEMBER) as raw:
+        for raw_line in raw:
+            line = raw_line.decode("latin-1").rstrip("\r\n")
+            if line == marker:
+                reading = True
+                continue
+            if not reading:
+                continue
+            if line.startswith(")"):
+                break
+            match = re.match(r"\s*`([^`]+)`", line)
+            if match:
+                columns.append(match.group(1))
+    if not columns:
+        raise SystemExit(f"Could not read {table} schema from {archive}")
+    return {name: index for index, name in enumerate(columns)}
 
 
 def available_in_classic(row: list[str]) -> bool:
@@ -63,6 +89,29 @@ def main() -> None:
             "classes_required": as_int(row[8]),
             "probability": as_int(row[9]),
         })
+
+    # Item names and base prices are available locally. They are source display
+    # data, not a claim about final purchase prices (which can vary by faction,
+    # charisma, and server rules).
+    item_ids = {listing["item_id"] for listings in merchants.values() for listing in listings}
+    item_columns = table_columns(archive, "items")
+    if "id" not in item_columns or "Name" not in item_columns or "price" not in item_columns:
+        raise SystemExit("items schema is missing id, Name, or price")
+    item_details: dict[int, dict[str, object]] = {}
+    for row in rows_for_table(archive, "items"):
+        item_id = as_int(row[item_columns["id"]])
+        if item_id not in item_ids:
+            continue
+        item_details[item_id] = {
+            "item_name": row[item_columns["Name"]],
+            "base_price": as_int(row[item_columns["price"]]),
+        }
+    missing_items = item_ids - set(item_details)
+    if missing_items:
+        raise SystemExit(f"Merchant listings reference missing items: {sorted(missing_items)}")
+    for listings in merchants.values():
+        for listing in listings:
+            listing.update(item_details[listing["item_id"]])
     for listings in merchants.values():
         listings.sort(key=lambda listing: listing["slot"])
 
@@ -73,6 +122,7 @@ def main() -> None:
             "npc_source": str(npc_source),
             "target_era": "classic_p1999",
             "filter": "classic expansion range; no content flags",
+            "item_enrichment": "items.id -> items.Name, items.price (base price only)",
         },
         "merchants": merchants,
     }

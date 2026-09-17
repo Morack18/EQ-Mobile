@@ -4,6 +4,7 @@ const SAVE_PATH := "user://offline_slice_save.json"
 const ZONE_PATH := "res://data/halas.json"
 const ITEM_PATH := "res://data/items.json"
 const PLAYER_CLASS_PATH := "res://data/player_classes.json"
+const MERCHANT_PATH := "res://data/halas_merchants_source.json"
 # EQEmu's 0.7 × 40 = 28 is the client-update animation/wire value, not a
 # physical world-speed authority. eqoxide's centralized controller uses 44
 # u/s, but its direct manual-drive path uses 35 u/s. EQ Mobile's two-stick
@@ -103,6 +104,7 @@ var zone_prop_load_failures: Array[String] = []
 var halas_population: HalasNpcPopulation
 var selected_halas_target: Dictionary = {}
 var item_definitions: Dictionary = {}
+var merchant_definitions: Dictionary = {}
 var inventory: Dictionary = {}
 # Halas's client .wtr region file is not present in the supplied resources.
 # This is therefore an authored-surface fallback, populated from the zone's
@@ -112,6 +114,7 @@ var authored_water_triangles: Array[PackedVector3Array] = []
 func _ready() -> void:
 	zone = _load_zone()
 	item_definitions = _load_item_definitions()
+	merchant_definitions = _load_merchant_definitions()
 	player_class_definitions = _load_player_class_definitions()
 	_build_world()
 	_build_zone_objects()
@@ -1090,8 +1093,24 @@ func _selected_npc_interaction_summary(target: Dictionary) -> String:
 		details.append("faction unresolved")
 	if details.is_empty():
 		details.append("faction indifferent")
-	return "You target %s (Lv %d) — %s; combat disabled pending review." % [
+	var summary := "You target %s (Lv %d) — %s; combat disabled pending review." % [
 		str(target.name), int(target.level), ", ".join(details)
+	]
+	if str(target.get("merchant_state", "none")) == "candidate":
+		var preview := _merchant_preview(int(target.get("merchant_id", 0)))
+		if not preview.is_empty():
+			summary += "\n%s" % preview
+	return summary
+
+func _merchant_preview(merchant_id: int) -> String:
+	var listings: Array = merchant_definitions.get(str(merchant_id), [])
+	if listings.is_empty():
+		return "Shop inventory is unavailable."
+	var names: Array[String] = []
+	for listing in listings.slice(0, 3):
+		names.append(str(listing.get("item_name", "Unknown item")))
+	return "Shop stock (%d): %s%s — browsing only." % [
+		listings.size(), ", ".join(names), "…" if listings.size() > names.size() else ""
 	]
 
 func _load_zone() -> Dictionary:
@@ -1106,6 +1125,13 @@ func _load_item_definitions() -> Dictionary:
 	var parsed = JSON.parse_string(file.get_as_text())
 	assert(parsed is Dictionary and parsed.get("items") is Dictionary, "Invalid item definitions")
 	return parsed.items
+
+func _load_merchant_definitions() -> Dictionary:
+	var file := FileAccess.open(MERCHANT_PATH, FileAccess.READ)
+	assert(file != null, "Unable to read merchant definitions: %s" % MERCHANT_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Dictionary and parsed.get("merchants") is Dictionary, "Invalid merchant definitions")
+	return parsed.merchants
 
 func _load_player_class_definitions() -> Dictionary:
 	var file := FileAccess.open(PLAYER_CLASS_PATH, FileAccess.READ)

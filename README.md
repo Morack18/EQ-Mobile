@@ -8,9 +8,10 @@ Open this folder in Godot 4.7 or newer and press **Run**. The starting scene is
 `scenes/Main.tscn`.
 
 Desktop controls are WASD/arrow keys to move, Space to jump, Tab to target the
-nearest Halas NPC, and click to attack. On a device, use the lower-left
+nearest Halas NPC, and toggle auto-attack with the attack action. On a device, use the lower-left
 joystick to move, drag the right side to orbit the camera, hold **JUMP** to
-jump or swim upward, tap an NPC to target it, and tap **ATTACK** when in range.
+jump or swim upward, tap an NPC to target it, tap **ATTACK** to toggle auto-attack,
+and tap **TRAINING STRIKE** for its separate melee ability.
 
 The prototype currently starts in [Halas](data/halas.json), rendering the GLB
 and all 445 static object placements from Lantern's manifest. It includes a
@@ -36,6 +37,7 @@ python3 tools/validate_halas_zone_data.py
 python3 tools/validate_halas_spawn_coordinates.py
 python3 tools/validate_halas_asset_scale.py
 python3 tools/validate_halas_merchant_data.py
+python3 tools/validate_player_combat_data.py
 python3 tools/apply_halas_npc_overlay.py --verify-only
 python3 tools/validate_training_slice_data.py
 ```

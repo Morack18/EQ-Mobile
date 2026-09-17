@@ -204,3 +204,8 @@ question.
 - `merchant_id` and `loottable_id` are displayed as candidate/reference-only
   interaction states. They do not authorize merchant transactions or random
   loot rolls until their item data and classic correctness are reviewed.
+- `merchantlist.item → items.id` is now imported with `items.Name` and
+  `items.price` as display name and base price. The runtime can safely preview
+  a selected merchant's stock, but no purchase is enabled: final EQEmu prices
+  also depend on faction, charisma, and rules not yet represented by the
+  offline player profile.

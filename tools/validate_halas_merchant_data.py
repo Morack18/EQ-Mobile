@@ -21,6 +21,8 @@ MERCHANT_SOURCE = ROOT / "data/halas_merchants_source.json"
 LISTING_FIELDS = {
     "slot",
     "item_id",
+    "item_name",
+    "base_price",
     "faction_required",
     "level_required",
     "min_status",
@@ -79,12 +81,17 @@ def main() -> None:
             label = f"merchant {merchant_id} listing {index}"
             if not isinstance(listing, dict) or set(listing) != LISTING_FIELDS:
                 fail(f"{label} must contain exactly the supported listing fields")
-            values = {field: integer(listing[field], f"{label}.{field}") for field in LISTING_FIELDS}
+            numeric_fields = LISTING_FIELDS - {"item_name"}
+            values = {field: integer(listing[field], f"{label}.{field}") for field in numeric_fields}
             slot = values["slot"]
             if slot <= 0 or slot in slots or slot <= previous_slot:
                 fail(f"{label}.slot must be positive, unique, and ascending")
             if values["item_id"] <= 0:
                 fail(f"{label}.item_id must be positive")
+            if not isinstance(listing["item_name"], str) or not listing["item_name"].strip():
+                fail(f"{label}.item_name must be a non-empty string")
+            if values["base_price"] < 0:
+                fail(f"{label}.base_price must be non-negative")
             if values["level_required"] < 0 or values["alt_currency_cost"] < 0 or values["classes_required"] < 0:
                 fail(f"{label} has a negative level, currency cost, or class mask")
             if not 0 <= values["min_status"] <= values["max_status"] <= 255:
