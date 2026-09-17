@@ -1,4 +1,3 @@
-Markdown
 # Phase 3 — Simulation Architecture
 
 ## Boundary contract
@@ -166,7 +165,8 @@ The canonical Phase 3 architecture gate is:
 
 ```bash
 tools/run_phase3_tests.sh
+```
 
-The script first runs a headless editor/compile scan and fails on SCRIPT ERROR, Parse Error, Compile Error, or Failed to load script. It then runs res://tests/run_phase3_tests.gd, propagates the Godot process exit code, independently rejects script/parse/compile/load errors even when Godot exits zero, and requires the expected test-suite PASS marker.
+The script first runs a headless editor/compile scan and fails on `SCRIPT ERROR`, `Parse Error`, `Compile Error`, or `Failed to load script`. It then runs `res://tests/run_phase3_tests.gd`, propagates the Godot process exit code, independently rejects script/parse/compile/load errors even when Godot exits zero, and requires the expected test-suite PASS marker.
 
-The existing Android build-tools warning does not match the gate's script-error conditions and is not a Phase 3 architecture failure.
+The existing Android `build-tools` warning does not match the gate's script-error conditions and is not a Phase 3 architecture failure.

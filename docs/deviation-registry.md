@@ -1,4 +1,3 @@
-```markdown
 # EQ Mobile Deviation Registry
 
 This is the single record of deliberate differences between source behavior and
