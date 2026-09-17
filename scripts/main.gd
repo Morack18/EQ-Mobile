@@ -79,6 +79,7 @@ var player_race_id := 2 # Barbarian fixture identity; source-valid Halas start, 
 var player_deity_id := 396 # Agnostic fixture identity.
 var faction_values: Dictionary = {}
 var faction_definitions: Dictionary = {}
+var merchant_panel: MerchantBrowsePanel
 var ability_cooldowns: Dictionary = {}
 var auto_attack_enabled := false
 var primary_attack_remaining := 0.0
@@ -160,6 +161,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
 		_target_nearest_halas_npc()
+		return
+	if event is InputEventKey and event.pressed and event.keycode == KEY_M:
+		open_selected_merchant()
 		return
 	if event.is_action_pressed("attack"):
 		toggle_auto_attack()
@@ -1029,6 +1033,7 @@ func _build_hud() -> void:
 	hud = preload("res://scripts/mobile_hud.gd").new()
 	hud.attack_requested.connect(toggle_auto_attack)
 	hud.ability_requested.connect(try_training_strike)
+	hud.interact_requested.connect(open_selected_merchant)
 	hud.jump_changed.connect(_set_jump_held)
 	hud.joystick_changed.connect(func(value: Vector2): joystick_vector = value)
 	hud.look_changed.connect(func(value: Vector2): look_stick = value)
@@ -1051,6 +1056,7 @@ func _update_hud() -> void:
 	var ability_available := not training_strike.is_empty() and _ability_is_learned(training_strike)
 	hud.set_ability(str(training_strike.get("display_name", "TRAINING\nSTRIKE")), ability_available, _ability_cooldown_remaining(str(training_strike.get("cooldown_group", ""))))
 	var class_line := "Class: %s    Auto: %s" % [_class_display_name(), "ON" if auto_attack_enabled else "OFF"]
+	hud.set_interaction_available(_selected_merchant_is_browseable())
 	if npc == null:
 		var target_line := "No target"
 		if not selected_halas_target.is_empty():
@@ -1166,6 +1172,37 @@ func _merchant_preview(merchant_id: int) -> String:
 	return "Shop stock (%d): %s%s — browsing only." % [
 		listings.size(), ", ".join(names), "…" if listings.size() > names.size() else ""
 	]
+
+func _selected_merchant_is_browseable() -> bool:
+	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
+		return false
+	var reaction := _resolve_npc_faction(selected_halas_target)
+	return _merchant_browse_allowed(str(reaction.get("standing", "Unresolved")))
+
+func _merchant_browse_allowed(standing: String) -> bool:
+	# EQEmu rejects merchant opening at Dubious or worse. Reaction calculation
+	# remains separate from this authorization decision.
+	return standing in ["Ally", "Warmly", "Kindly", "Amiably", "Indifferently", "Apprehensively"]
+
+func open_selected_merchant() -> void:
+	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
+		status_text = "Select a merchant to browse their stock."
+		return
+	var reaction := _resolve_npc_faction(selected_halas_target)
+	if not _merchant_browse_allowed(str(reaction.get("standing", "Unresolved"))):
+		status_text = "%s will not trade with you (%s)." % [str(selected_halas_target.name), str(reaction.get("standing", "Unresolved"))]
+		return
+	var merchant_id := int(selected_halas_target.merchant_id)
+	var listings: Array = merchant_definitions.get(str(merchant_id), [])
+	if listings.is_empty():
+		status_text = "This merchant has no available stock."
+		return
+	if merchant_panel != null:
+		merchant_panel.queue_free()
+	merchant_panel = preload("res://scripts/merchant_browse_panel.gd").new()
+	merchant_panel.closed.connect(func(): merchant_panel = null)
+	add_child(merchant_panel)
+	merchant_panel.show_merchant(str(selected_halas_target.name), listings)
 
 func _load_zone() -> Dictionary:
 	var file := FileAccess.open(ZONE_PATH, FileAccess.READ)

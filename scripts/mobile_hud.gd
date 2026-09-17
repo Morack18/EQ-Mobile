@@ -4,6 +4,7 @@ signal joystick_changed(value: Vector2)
 signal look_changed(value: Vector2)
 signal attack_requested
 signal ability_requested
+signal interact_requested
 signal jump_changed(pressed: bool)
 
 var left_touch := -1
@@ -16,6 +17,7 @@ var look_stick_value := Vector2.ZERO
 var status_label: Label
 var attack_button: Button
 var ability_button: Button
+var interact_button: Button
 var jump_button: Button
 
 func _ready() -> void:
@@ -55,6 +57,15 @@ func _ready() -> void:
 	jump_button.button_down.connect(func(): jump_changed.emit(true))
 	jump_button.button_up.connect(func(): jump_changed.emit(false))
 	add_child(jump_button)
+	interact_button = Button.new()
+	interact_button.text = "INTERACT"
+	interact_button.add_theme_font_size_override("font_size", 18)
+	interact_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	interact_button.position = Vector2(-176, 18)
+	interact_button.size = Vector2(150, 54)
+	interact_button.pressed.connect(interact_requested.emit)
+	interact_button.visible = false
+	add_child(interact_button)
 	queue_redraw()
 
 func set_status(text: String) -> void:
@@ -72,6 +83,9 @@ func set_ability(label: String, available: bool, cooldown_remaining: float) -> v
 	else:
 		ability_button.text = label
 		ability_button.modulate = Color.WHITE if available else Color("a6a6a6")
+
+func set_interaction_available(available: bool) -> void:
+	interact_button.visible = available
 
 func handle_touch(index: int, position: Vector2, pressed: bool) -> void:
 	if pressed:

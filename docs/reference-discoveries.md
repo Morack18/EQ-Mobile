@@ -226,3 +226,16 @@ question.
   indifferent; missing/negative special definitions remain unresolved. A
   reaction is information only: imported NPC auto-hostility and commerce remain
   disabled until individual classic review and their dependent systems exist.
+
+## Merchant browse UI
+
+- `resources/EverQuest/uifiles/default/EQUI_MerchantWnd.xml` establishes the
+  useful merchant hierarchy: merchant identity, scrolling inventory, a stable
+  selected-item detail area, and close/action controls. EQ Mobile adapts it as
+  an original dark Godot panel with touch-sized rows, a single base-price field,
+  selected-item feedback, and close controls; it does not copy XML, artwork,
+  coin sprites, or desktop measurements.
+- The source merchant opening behavior rejects Dubious and worse standings.
+  EQ Mobile authorizes browsing only at Apprehensive or better, before the
+  panel is created. The panel is intentionally browse-only: buy/sell, currency,
+  quantity, price modifiers, and inventory mutation remain deferred.

@@ -8,10 +8,10 @@ Open this folder in Godot 4.7 or newer and press **Run**. The starting scene is
 `scenes/Main.tscn`.
 
 Desktop controls are WASD/arrow keys to move, Space to jump, Tab to target the
-nearest Halas NPC, and toggle auto-attack with the attack action. On a device, use the lower-left
+nearest Halas NPC, toggle auto-attack with the attack action, and press `M` to browse an eligible merchant. On a device, use the lower-left
 joystick to move, drag the right side to orbit the camera, hold **JUMP** to
 jump or swim upward, tap an NPC to target it, tap **ATTACK** to toggle auto-attack,
-and tap **TRAINING STRIKE** for its separate melee ability.
+tap **INTERACT** when it appears for an eligible merchant, and tap **TRAINING STRIKE** for its separate melee ability.
 
 The prototype currently starts in [Halas](data/halas.json), rendering the GLB
 and all 445 static object placements from Lantern's manifest. It includes a
