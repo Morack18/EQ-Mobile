@@ -1,3 +1,4 @@
+```markdown
 # EQ Mobile Deviation Registry
 
 This is the single record of deliberate differences between source behavior and
@@ -15,6 +16,7 @@ research note until a decision is made.
 | DEV-007 | Merchant economy | Full EQ price calculation includes unimplemented faction/CHA/rule modifiers. | Browse-only merchant UI displays source base prices; no purchases or sales. | `intentional_mobile_offline_deviation` | Atomic merchant transaction implementation. |
 | DEV-008 | Grounded movement | No reviewed classic-client source establishes the project’s Godot floor angle, snap distance, or safe margin. | Use 60° floor angle, 0.5-unit snap, and 0.05 safe margin as temporary grounded-controller stability values. | `temporary_fixture_default` | Dedicated classic slope/collision evidence and device validation. |
 | DEV-009 | Step-up | eqoxide documents a 2-unit native step bound, but EQ Mobile implements it through Godot sweep/landing checks rather than the reference client code. | Preserve a bounded 2-unit step-up with explicit headroom/travel/walkable-landing checks. | `intentional_mobile_offline_deviation` | Native collision-controller replacement or contradictory classic evidence. |
+| DEV-010 | Simulation timers | EQEmu/server simulation authority is independent of an individual mobile client process lifetime; EQ Mobile has no continuously hosted simulation after the application closes. | Persist remaining cooldown, dying/death, and respawn durations and pause those simulation timers while the app is closed. Real-world time is used only for legacy migration or mechanics explicitly designed to progress offline. | `intentional_mobile_offline_deviation` | Any offline-progression, background-simulation, or continuously hosted simulation feature. |
 
 ## Entry rules
 
