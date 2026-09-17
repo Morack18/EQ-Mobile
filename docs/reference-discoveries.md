@@ -9,9 +9,11 @@ copy of reference implementation code.
 - `resources/EQEmu-master/zone/client.cpp` constructs a standard client with
   run speed `0.7`.
 - `resources/EQEmu-master/zone/mob.cpp` resolves that value as
-  `base_runspeed = runspeed * 40`, giving a classic unmodified base rate of
-  `28`. EQ Mobile uses 28 native EQ-sized world units per second for player
-  run movement.
+  `base_runspeed = runspeed * 40`, giving `28` for client-update
+  animation/wire semantics. `resources/eqoxide-main/crates/eqoxide-net/src/action_loop.rs`
+  maps its physical 44 u/s controller rate back to that value, so EQ Mobile
+  uses 44 u/s for physical player movement rather than treating 28 as a world
+  speed.
 - `resources/EQEmu-master/common/races.cpp:GetRaceGenderDefaultHeight` is the
   authority for native model-size fallback. `resources/EQEmu-master/zone/npc.cpp`
   assigns that default directly when an NPC's database `size` is non-positive;
@@ -22,6 +24,34 @@ copy of reference implementation code.
   that race/gender default when source size is non-positive.
 
 ## Client rendering and movement — eqoxide
+
+- `resources/eqoxide-main/crates/eqoxide-core/src/physics.rs` defines the
+  local controller's physical `RUN_SPEED` as 44 world units/s and derives walk
+  as `44 * (0.3 / 0.7)` (about 18.857), with a 20 u/s walk/run animation
+  threshold. `crates/eqoxide-net/src/action_loop.rs` maps physical 44 u/s back
+  to the EQ client-update animation value 28, so EQ Mobile does not treat
+  `0.7 * 40 = 28` as a physical world speed. The same snapshot's
+  `src/app.rs` direct manual-drive path uses 35 u/s; EQ Mobile selects that
+  value for its corresponding two-stick controller after Android-feel testing
+  found 44 u/s too fast. This remains an explicit eqoxide inconsistency, not a
+  claim that one universal physical rate is proven.
+- `resources/eqoxide-main/src/movement.rs` uses `GROUND_SNAP_TOL = 0.5` and
+  `SKIN = 0.05`; EQ Mobile adapts these as Godot floor-snap length and safe
+  margin while preserving its existing bounded two-unit step-up. Its small
+  grounded downward bias remains a Jolt/Godot triangle-seam stability
+  adaptation, not a claimed native client rule.
+- `resources/eqoxide-main/src/camera_state.rs` follows with
+  `1 - exp(-FOLLOW_RATE * dt)` at `FOLLOW_RATE = 5.0`. EQ Mobile initially
+  used that frame-rate-independent follow form, but its third-person mobile
+  camera now anchors its orbit pivot directly to the player and aims at the
+  player visual center, per the product requirement that the player remain
+  centered on screen. Physics interpolation remains the presentation smoothing
+  mechanism; camera collision still retracts the camera before aiming.
+- The imported `assets/imported/halas/characters/hlm_s0_h0.glb` provides
+  `idle`, `walk`, `attack`, `death`, `swimming`, and `treading`, but no run
+  clip. Resolved motion above the 20 u/s threshold therefore keeps the walk
+  clip as a documented temporary fallback rather than faking run by changing
+  animation playback speed.
 
 - `resources/eqoxide-main/README.md` identifies the most relevant reference
   areas: zone terrain/object placement, per-race/gender skinned models,
@@ -129,3 +159,31 @@ copy of reference implementation code.
 For each future discovery, add: reference repository/path, concise observed
 behavior or formula, the Godot adaptation, and any known deviation or open
 question.
+
+## Player combat foundation
+
+- `resources/EQEmu-master/common/classes.h:26-121` defines Warrior as numeric
+  class ID `1`. EQ Mobile persists only `class_id` and derives its display name,
+  attack profile, and learned abilities from static `data/player_classes.json`.
+- `resources/EQEmu-master/zone/client_process.cpp:397-455` shows normal melee
+  as a latched auto-attack loop: a ready timer validates range, line of sight,
+  and facing before one attack round. `zone/attack.cpp:3491-3592` supplies the
+  ordinary unarmed fallback delay of `35` tenths (3.5 seconds). EQ Mobile uses
+  that cadence and exactly one swing per ready round; haste, dual wield, and
+  extra swings are intentionally deferred.
+- `resources/EQEmu-master/zone/aggro.cpp:1113-1250` supplies the ordinary
+  `CombatRange` small-body branch: effective size floors at 8 and range squared
+  is `size² × 4`, yielding 256 / a 16-unit horizontal radius. `zone/mob.cpp:
+  7597-7615` supplies the roughly ±56.25-degree facing cone. EQ Mobile adapts
+  those two bounds and uses its authored world collision ray for line of sight.
+- `resources/EQEmu-master/zone/special_attacks.cpp:325-622`,
+  `common/features.h:119-142`, and `common/ptimer.*` establish the useful shape
+  of a melee combat ability: eligibility-gated, independently timed, and
+  persistent across reload. EQ Mobile's original `Training Strike` is a
+  Warrior-only level-1 fixture ability with a five-second wall-clock
+  `combat_ability` cooldown. It does not consume mana/endurance or reset the
+  primary auto-attack timer.
+- Existing Training Spark damage stays explicitly deterministic behind
+  `_resolve_fixture_melee_damage()`. The current sources' complete hit,
+  avoidance, mitigation, skills, and item stack is not treated as a safe
+  classic-era formula until corresponding player/NPC data is imported.

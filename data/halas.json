@@ -9,6 +9,11 @@
   "npc_model_directory": "res://assets/imported/halas/characters",
   "enable_training_npc": true,
   "player_respawn_seconds": 2.5,
+  "progression": {
+    "formula_version": 1,
+    "max_level": 50,
+    "era_cap_basis": "original_classic_pre_kunark"
+  },
   "player_spawn_revision": 6,
   "bounds": { "half_extent": 820.0 },
   "player_spawn": [-13.0, 4.38, -10.0],
@@ -29,7 +34,8 @@
       "aggro_range": 8.0,
       "attack_range": 1.7,
       "attack_cooldown": 1.4,
-      "loot": [{ "item_id": "training_spark_fragment", "quantity": 1 }]
+      "loot": [{ "item_id": "training_spark_fragment", "quantity": 1 }],
+      "xp_reward": 1000
     }
   }
 }

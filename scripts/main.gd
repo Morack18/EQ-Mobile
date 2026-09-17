@@ -3,13 +3,15 @@ extends Node3D
 const SAVE_PATH := "user://offline_slice_save.json"
 const ZONE_PATH := "res://data/halas.json"
 const ITEM_PATH := "res://data/items.json"
-# Classic EQ's unmodified client run speed is 0.7 (and its walk speed is 0.3).
-# EQEmu resolves that client value with `runspeed * 40`, giving the canonical
-# base movement rate of 28. Halas now runs in native EQ-sized world units, so
-# use that rate directly rather than an arbitrary presentation multiplier.
-const EQ_DEFAULT_RUN_SPEED := 0.7
-const EQ_RUN_SPEED_UNITS_PER_SECOND := EQ_DEFAULT_RUN_SPEED * 40.0
-const PLAYER_SPEED := EQ_RUN_SPEED_UNITS_PER_SECOND
+const PLAYER_CLASS_PATH := "res://data/player_classes.json"
+# EQEmu's 0.7 × 40 = 28 is the client-update animation/wire value, not a
+# physical world-speed authority. eqoxide's centralized controller uses 44
+# u/s, but its direct manual-drive path uses 35 u/s. EQ Mobile's two-stick
+# controller is the latter interaction model, and device feel confirms 44 is
+# too fast for this project; use 35 u/s while retaining the discrepancy below.
+const PLAYER_RUN_SPEED := 35.0
+const PLAYER_WALK_SPEED := PLAYER_RUN_SPEED * (0.3 / 0.7)
+const WALK_RUN_THRESHOLD := 20.0
 # EQEmu's GetRaceGenderDefaultHeight defines HLM as a seven-foot actor in the
 # same coordinate system as the Halas zone.  The raw Lantern GLB is only an
 # authored rig; it must be normalized to this height before rendering.
@@ -23,7 +25,8 @@ const COLLISION_LAYER_WORLD_OBJECTS := 2
 const COLLISION_LAYER_TARGET_PICK := 4
 const PLAYER_WORLD_COLLISION_MASK := COLLISION_LAYER_TERRAIN | COLLISION_LAYER_WORLD_OBJECTS
 const PLAYER_MAX_SLOPE_ANGLE := deg_to_rad(60.0)
-const PLAYER_FLOOR_SNAP_DISTANCE := 1.25
+const PLAYER_FLOOR_SNAP_DISTANCE := 0.5
+const PLAYER_SAFE_MARGIN := 0.05
 # eqoxide's native-parity CharacterController uses STEP_UP = 2 EQ units for
 # both free movement and navigation. It is a bounded stair/low-lip rule, not
 # permission to climb arbitrary vertical walls.
@@ -39,12 +42,14 @@ const EQ_SWIM_BUOYANCY_RATE := 30.0
 const EQ_SWIM_FLOAT_DEPTH := 2.0
 const WATER_SURFACE_MARGIN := 0.05
 const PLAYER_MAX_HEALTH := 100.0
-const PLAYER_ATTACK_DAMAGE := 10.0
-const PLAYER_ATTACK_RANGE := 2.2
-const PLAYER_ATTACK_COOLDOWN := 0.55
+# EQEmu CombatRange's ordinary-body branch floors small actor size at 8 and
+# uses range_squared = size² × 4. That produces this horizontal 16-unit reach.
+const ORDINARY_MELEE_EFFECTIVE_SIZE := 8.0
+const ORDINARY_MELEE_RANGE := ORDINARY_MELEE_EFFECTIVE_SIZE * 2.0
+const MELEE_FACING_DOT_MIN := 0.556
 const CAMERA_TURN_SPEED := 2.45
 const CAMERA_PITCH_SPEED := 1.55
-const CAMERA_OFFSET := Vector3(0.0, 4.7, 8.5)
+const CAMERA_OFFSET := Vector3(0.0, 4.7, 10.5)
 const CAMERA_COLLISION_MARGIN := 0.35
 const PLAYER_ATTACK_ANIMATION_SECONDS := 0.45
 # eqoxide's renderer establishes that the exported glTF character meshes face
@@ -61,10 +66,16 @@ var camera_pivot: Node3D
 var camera: Camera3D
 var hud: Control
 var player_health := PLAYER_MAX_HEALTH
+var player_xp_total := 0
+var player_level := 1
 var player_dead := false
 var player_respawn_remaining := 0.0
 var player_action_animation_remaining := 0.0
-var attack_timer := 0.0
+var player_class_definitions: Dictionary = {}
+var player_class_id := 1
+var ability_cooldowns: Dictionary = {}
+var auto_attack_enabled := false
+var primary_attack_remaining := 0.0
 var npc_health := 0.0
 var npc_alive := false
 var npc_attack_timer := 0.0
@@ -101,6 +112,7 @@ var authored_water_triangles: Array[PackedVector3Array] = []
 func _ready() -> void:
 	zone = _load_zone()
 	item_definitions = _load_item_definitions()
+	player_class_definitions = _load_player_class_definitions()
 	_build_world()
 	_build_zone_objects()
 	_build_npc_population()
@@ -113,9 +125,9 @@ func _ready() -> void:
 	_update_hud()
 
 func _process(delta: float) -> void:
-	attack_timer = maxf(0.0, attack_timer - delta)
 	player_action_animation_remaining = maxf(0.0, player_action_animation_remaining - delta)
 	_update_player_respawn(delta)
+	_update_auto_attack(delta)
 	_update_npc(delta)
 	_update_camera(delta)
 	_update_hud()
@@ -141,7 +153,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_target_nearest_halas_npc()
 		return
 	if event.is_action_pressed("attack"):
-		try_attack()
+		toggle_auto_attack()
 	if event is InputEventScreenTouch:
 		hud.handle_touch(event.index, event.position, event.pressed)
 		if event.pressed:
@@ -152,33 +164,162 @@ func _unhandled_input(event: InputEvent) -> void:
 		clear_save()
 		get_tree().reload_current_scene()
 
-func try_attack() -> void:
+func toggle_auto_attack() -> void:
 	if player_dead:
 		return
-	if npc == null and not selected_halas_target.is_empty():
-		# Real Halas targets are now selected by source spawn ID. Their combat
-		# statistics/loot tables are intentionally not fabricated from appearance
-		# data; those records are the next import dependency.
-		status_text = "%s is targeted. Source combat data has not been imported yet." % str(selected_halas_target.name)
+	auto_attack_enabled = not auto_attack_enabled
+	if auto_attack_enabled:
+		status_text = "Auto-attack enabled."
+	else:
+		status_text = "Auto-attack disabled."
+
+func _update_auto_attack(delta: float) -> void:
+	if player_dead or not auto_attack_enabled:
 		return
-	if npc == null or not npc_alive or attack_timer > 0.0:
+	primary_attack_remaining = maxf(0.0, primary_attack_remaining - delta)
+	if primary_attack_remaining > 0.0:
 		return
-	var distance := player.global_position.distance_to(npc.global_position)
-	if distance > PLAYER_ATTACK_RANGE:
-		status_text = "Move closer to attack."
-		return
-	attack_timer = PLAYER_ATTACK_COOLDOWN
+	if _perform_primary_attack():
+		primary_attack_remaining = _primary_attack_interval_seconds()
+
+func _perform_primary_attack() -> bool:
+	var validation := _validate_fixture_melee_target(_attack_profile())
+	if not validation.is_empty():
+		status_text = validation
+		return false
 	_play_player_animation("attack")
 	player_action_animation_remaining = PLAYER_ATTACK_ANIMATION_SECONDS
-	npc_health = maxf(0.0, npc_health - PLAYER_ATTACK_DAMAGE)
+	npc_health = maxf(0.0, npc_health - _resolve_fixture_melee_damage(str(_attack_profile().get("damage_profile", "")), 10.0))
 	status_text = "You strike the Training Spark."
-	if npc_health <= 0.0:
-		_award_training_loot()
-		npc_alive = false
-		respawn_remaining = float(_spawn_data().get("respawn_seconds", 12.0))
-		npc.visible = false
-		status_text = "Training Spark defeated — respawning soon."
+	_finish_training_spark_if_defeated()
 	_save_game()
+	return true
+
+func try_training_strike() -> void:
+	if player_dead:
+		return
+	var ability := _ability_definition("training_strike")
+	if ability.is_empty() or not _ability_is_learned(ability):
+		status_text = "Training Strike is unavailable to this class."
+		return
+	var group := str(ability.get("cooldown_group", ""))
+	if _ability_cooldown_remaining(group) > 0.0:
+		status_text = "Training Strike is recovering."
+		return
+	var validation := _validate_fixture_melee_target(ability)
+	if not validation.is_empty():
+		status_text = validation
+		return
+	# A valid use starts its persistent shared timer independently of normal
+	# melee timing, matching the useful pTimerCombatAbility behavior.
+	ability_cooldowns[group] = _unix_time_ms() + int(float(ability.get("cooldown_seconds", 0.0)) * 1000.0)
+	_play_player_animation(str(ability.get("animation", "attack")))
+	player_action_animation_remaining = PLAYER_ATTACK_ANIMATION_SECONDS
+	npc_health = maxf(0.0, npc_health - _resolve_fixture_melee_damage(str(ability.get("damage_profile", "")), float(ability.get("damage", 0.0))))
+	status_text = "You use Training Strike."
+	_finish_training_spark_if_defeated()
+	_save_game()
+
+func _finish_training_spark_if_defeated() -> void:
+	if npc_health > 0.0:
+		return
+	_award_training_loot()
+	_award_training_xp()
+	npc_alive = false
+	respawn_remaining = float(_spawn_data().get("respawn_seconds", 12.0))
+	npc.visible = false
+	status_text = "Training Spark defeated — respawning soon."
+
+func _class_definition() -> Dictionary:
+	return player_class_definitions.get("classes", {}).get(str(player_class_id), {})
+
+func _class_display_name() -> String:
+	return str(_class_definition().get("display_name", "Unknown"))
+
+func _attack_profile() -> Dictionary:
+	return _class_definition().get("attack_profile", {})
+
+func _ability_definition(ability_id: String) -> Dictionary:
+	return player_class_definitions.get("abilities", {}).get(ability_id, {})
+
+func _ability_is_learned(ability: Dictionary) -> bool:
+	if player_level < int(ability.get("required_level", 1)):
+		return false
+	var allowed_classes: Array = ability.get("allowed_class_ids", [])
+	return player_class_id in allowed_classes
+
+func _primary_attack_interval_seconds() -> float:
+	# Item delay is expressed in EQ tenths; no haste exists in this vertical
+	# slice, while EQEmu's default minimum-hasted delay remains 400 ms.
+	var delay_tenths := maxi(1, int(_attack_profile().get("delay_tenths", 35)))
+	return maxf(0.4, delay_tenths * 0.1)
+
+func _ordinary_melee_range_squared(attacker_size: float, defender_size: float) -> float:
+	# Bounded ordinary-actor adaptation of EQEmu Mob::CombatRange: effective
+	# size is floored at 8 and range² is largest_size² × 4 for sizes <= 19.
+	var effective_size := maxf(ORDINARY_MELEE_EFFECTIVE_SIZE, maxf(attacker_size, defender_size))
+	return effective_size * effective_size * 4.0
+
+func _validate_fixture_melee_target(profile: Dictionary) -> String:
+	if npc == null and not selected_halas_target.is_empty():
+		return "%s is targeted. Source combat data has not been imported yet." % str(selected_halas_target.name)
+	if npc == null or not npc_alive:
+		return "No hostile target."
+	var horizontal_offset := npc.global_position - player.global_position
+	horizontal_offset.y = 0.0
+	if horizontal_offset.length_squared() > _ordinary_melee_range_squared(ORDINARY_MELEE_EFFECTIVE_SIZE, ORDINARY_MELEE_EFFECTIVE_SIZE):
+		return "Move closer to attack."
+	if bool(profile.get("requires_facing", true)) and not _player_is_facing(npc.global_position):
+		return "Face the Training Spark to attack."
+	if bool(profile.get("requires_los", true)) and not _has_melee_line_of_sight(npc.global_position):
+		return "Your line of sight is blocked."
+	return ""
+
+func _player_is_facing(target_position: Vector3) -> bool:
+	var forward := -player.global_transform.basis.z
+	forward.y = 0.0
+	var toward_target := target_position - player.global_position
+	toward_target.y = 0.0
+	if toward_target.length_squared() <= 0.000001:
+		return true
+	return forward.normalized().dot(toward_target.normalized()) >= MELEE_FACING_DOT_MIN
+
+func _has_melee_line_of_sight(target_position: Vector3) -> bool:
+	var origin := player.global_position + Vector3.UP * (PLAYER_SERVER_SIZE * 0.5)
+	var destination := target_position + Vector3.UP * 0.7
+	var query := PhysicsRayQueryParameters3D.create(origin, destination, PLAYER_WORLD_COLLISION_MASK, [player.get_rid()])
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+func _resolve_fixture_melee_damage(damage_profile: String, fallback_damage: float) -> float:
+	# The fixture has no sourced STR/skills/AC/hit data. Keep current deterministic
+	# tuning behind this explicit seam so source-appropriate resolution can replace
+	# it without changing attack cadence or ability scheduling.
+	if damage_profile == "training_fixture":
+		return fallback_damage
+	push_warning("Unknown fixture damage profile: %s" % damage_profile)
+	return 0.0
+
+func _unix_time_ms() -> int:
+	return int(Time.get_unix_time_from_system() * 1000.0)
+
+func _ability_cooldown_remaining(group: String) -> float:
+	if group.is_empty():
+		return 0.0
+	return maxf(0.0, (int(ability_cooldowns.get(group, 0)) - _unix_time_ms()) / 1000.0)
+
+func _sanitized_ability_cooldowns(saved_cooldowns: Variant) -> Dictionary:
+	var restored: Dictionary = {}
+	if not saved_cooldowns is Dictionary:
+		return restored
+	var now := _unix_time_ms()
+	for group_variant in saved_cooldowns:
+		var group := str(group_variant)
+		var ready_at := int(saved_cooldowns[group_variant])
+		if not group.is_empty() and ready_at > now:
+			restored[group] = ready_at
+	return restored
 
 func _move_player(delta: float) -> void:
 	var keyboard := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -197,10 +338,11 @@ func _move_player(delta: float) -> void:
 		right.y = 0.0
 		right = right.normalized()
 		direction = (right * input.x + forward * input.y).normalized()
-		# The extracted HLM actor uses Godot's conventional local -Z forward axis.
-		player.look_at(player.global_position + direction, Vector3.UP)
+	# Heading is camera-driven state, separate from horizontal displacement: left
+	# stick lateral input strafes and must not rotate the body toward its wish.
+	player.rotation.y = camera_pivot.rotation.y
 
-	var movement_speed := EQ_SWIM_SPEED if swimming else PLAYER_SPEED
+	var movement_speed := EQ_SWIM_SPEED if swimming else PLAYER_RUN_SPEED
 	player.velocity.x = direction.x * movement_speed
 	player.velocity.z = direction.z * movement_speed
 	if swimming:
@@ -213,15 +355,6 @@ func _move_player(delta: float) -> void:
 		player.velocity.y = -1.0
 	else:
 		player.velocity.y = maxf(player.velocity.y - EQ_GRAVITY * delta, -EQ_MAX_FALL_SPEED)
-	if player_action_animation_remaining <= 0.0:
-		if swimming:
-			# eqoxide's action priority is swim stroke for any deliberate horizontal
-			# or vertical travel, and tread-water idle while holding position.
-			_play_water_animation(input.length() > 0.05 or jump_held)
-		elif direction == Vector3.ZERO:
-			_play_player_animation("idle")
-		else:
-			_play_player_animation("walk")
 	var horizontal_motion := Vector3(direction.x, 0.0, direction.z) * movement_speed * delta
 	# The reference controller grants a swimmer the same bounded step-up as a
 	# grounded walker, allowing a player to haul out over a legitimate shore lip.
@@ -230,9 +363,29 @@ func _move_player(delta: float) -> void:
 	var stepped_up := direction != Vector3.ZERO and (player.is_on_floor() or may_swim_step) and _try_step_up(horizontal_motion)
 	if not stepped_up:
 		player.move_and_slide()
+	_update_locomotion_animation(swimming)
 
 	_clamp_player_to_zone_bounds()
 	jump_pressed = false
+
+func _update_locomotion_animation(swimming: bool) -> void:
+	if player_action_animation_remaining > 0.0:
+		return
+	var actual_velocity := player.get_real_velocity()
+	var horizontal_speed := Vector2(actual_velocity.x, actual_velocity.z).length()
+	if swimming:
+		_play_water_animation(horizontal_speed > 0.01 or absf(actual_velocity.y) > 0.01)
+		return
+	if horizontal_speed <= 0.01:
+		_play_player_animation("idle")
+	elif horizontal_speed <= WALK_RUN_THRESHOLD:
+		_play_player_animation("walk")
+	elif player_animator != null and player_animator.has_animation("run"):
+		_play_player_animation("run")
+	else:
+		# The HLM export currently contains no run clip. Do not fake it by speeding
+		# up walk; this is a visible asset dependency, not source-faithful running.
+		_play_player_animation("walk")
 
 
 func _set_jump_held(pressed: bool) -> void:
@@ -321,6 +474,8 @@ func _update_npc(delta: float) -> void:
 		status_text = "The Training Spark hits you."
 		if player_health <= 0.0:
 			player_dead = true
+			auto_attack_enabled = false
+			primary_attack_remaining = 0.0
 			player_respawn_remaining = float(zone.get("player_respawn_seconds", 2.5))
 			player.velocity = Vector3.ZERO
 			_play_player_animation("death")
@@ -336,15 +491,21 @@ func _update_player_respawn(delta: float) -> void:
 	if player_respawn_remaining > 0.0:
 		return
 	player_dead = false
+	auto_attack_enabled = false
+	primary_attack_remaining = 0.0
 	player_health = PLAYER_MAX_HEALTH
 	player.global_position = _array_to_vector3(zone.player_spawn)
 	player.velocity = Vector3.ZERO
+	player.reset_physics_interpolation()
 	_play_player_animation("idle")
 	status_text = "You recover at the clearing entrance."
 	_save_game()
 
 func _update_camera(delta: float) -> void:
-	camera_pivot.global_position = camera_pivot.global_position.lerp(player.global_position, minf(1.0, delta * 8.0))
+	# Camera follow has no positional lag: the orbit pivot is always the player,
+	# keeping the character centered while physics interpolation smooths rendered
+	# movement between fixed ticks.
+	camera_pivot.global_position = player.global_position
 	# The right mobile stick continuously controls yaw and pitch. Movement stays
 	# camera-relative, so the left stick naturally follows the new heading.
 	camera_pivot.rotation.y -= look_stick.x * CAMERA_TURN_SPEED * delta
@@ -368,10 +529,17 @@ func _update_camera_collision() -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		camera.position = CAMERA_OFFSET
+		camera.look_at(_camera_focus_position(), Vector3.UP)
 		return
 	var total_distance := origin.distance_to(desired)
 	var clear_distance := maxf(0.5, origin.distance_to(hit.position) - CAMERA_COLLISION_MARGIN)
 	camera.global_position = origin.lerp(desired, clear_distance / total_distance)
+	camera.look_at(_camera_focus_position(), Vector3.UP)
+
+func _camera_focus_position() -> Vector3:
+	# Aim at the visual center rather than the CharacterBody's ground origin so
+	# the whole player, not its feet, remains centered on screen.
+	return player.global_position + Vector3.UP * (PLAYER_SERVER_SIZE * 0.5)
 
 func _respawn_npc() -> void:
 	if npc == null:
@@ -700,12 +868,16 @@ func _build_player() -> void:
 	# Keep walkable terrain as floor instead of interpreting an incline's next
 	# triangle as a wall. Very steep faces still remain collision walls.
 	player.motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
+	player.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	player.floor_max_angle = PLAYER_MAX_SLOPE_ANGLE
 	player.floor_snap_length = PLAYER_FLOOR_SNAP_DISTANCE
 	player.floor_constant_speed = true
-	player.floor_stop_on_slope = false
+	# A stationary grounded player must not creep downhill on walkable terrain.
+	# This is a Godot/Jolt stability adaptation; the project has no sourced
+	# classic-client slope-angle/slide rule to claim here.
+	player.floor_stop_on_slope = true
 	player.max_slides = 6
-	player.safe_margin = 0.04
+	player.safe_margin = PLAYER_SAFE_MARGIN
 	player.collision_layer = 0
 	player.collision_mask = PLAYER_WORLD_COLLISION_MASK
 	add_child(player)
@@ -833,7 +1005,8 @@ func _build_camera() -> void:
 
 func _build_hud() -> void:
 	hud = preload("res://scripts/mobile_hud.gd").new()
-	hud.attack_requested.connect(try_attack)
+	hud.attack_requested.connect(toggle_auto_attack)
+	hud.ability_requested.connect(try_training_strike)
 	hud.jump_changed.connect(_set_jump_held)
 	hud.joystick_changed.connect(func(value: Vector2): joystick_vector = value)
 	hud.look_changed.connect(func(value: Vector2): look_stick = value)
@@ -850,15 +1023,21 @@ func _update_hud() -> void:
 	if hud == null:
 		return
 	var inventory_line := _inventory_summary()
+	var progression_line := _progression_summary()
+	hud.set_auto_attack(auto_attack_enabled)
+	var training_strike := _ability_definition("training_strike")
+	var ability_available := not training_strike.is_empty() and _ability_is_learned(training_strike)
+	hud.set_ability(str(training_strike.get("display_name", "TRAINING\nSTRIKE")), ability_available, _ability_cooldown_remaining(str(training_strike.get("cooldown_group", ""))))
+	var class_line := "Class: %s    Auto: %s" % [_class_display_name(), "ON" if auto_attack_enabled else "OFF"]
 	if npc == null:
 		var target_line := "No target"
 		if not selected_halas_target.is_empty():
 			target_line = "Target: %s (Lv %d)" % [str(selected_halas_target.name), int(selected_halas_target.level)]
-		hud.set_status("%s\nHP %.0f / %.0f    %s\n%s" % [status_text, player_health, PLAYER_MAX_HEALTH, target_line, inventory_line])
+		hud.set_status("%s\nLevel %d    HP %.0f / %.0f    %s\n%s\n%s\n%s" % [status_text, player_level, player_health, PLAYER_MAX_HEALTH, target_line, class_line, progression_line, inventory_line])
 		return
 	var npc_name := str(zone.npc_archetypes[_spawn_data().archetype].name)
 	var npc_line := "%s: %.0f / %.0f" % [npc_name, npc_health, float(zone.npc_archetypes[_spawn_data().archetype].max_health)] if npc_alive else "%s: respawns in %.0fs" % [npc_name, maxf(0.0, respawn_remaining)]
-	hud.set_status("%s\nHP %.0f / %.0f    %s\n%s" % [status_text, player_health, PLAYER_MAX_HEALTH, npc_line, inventory_line])
+	hud.set_status("%s\nLevel %d    HP %.0f / %.0f    %s\n%s\n%s\n%s" % [status_text, player_level, player_health, PLAYER_MAX_HEALTH, npc_line, class_line, progression_line, inventory_line])
 
 
 func _target_nearest_halas_npc() -> void:
@@ -911,6 +1090,13 @@ func _load_item_definitions() -> Dictionary:
 	assert(parsed is Dictionary and parsed.get("items") is Dictionary, "Invalid item definitions")
 	return parsed.items
 
+func _load_player_class_definitions() -> Dictionary:
+	var file := FileAccess.open(PLAYER_CLASS_PATH, FileAccess.READ)
+	assert(file != null, "Unable to read player class definitions: %s" % PLAYER_CLASS_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Dictionary and parsed.get("classes") is Dictionary and parsed.get("abilities") is Dictionary, "Invalid player class definitions")
+	return parsed
+
 func _load_save() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
 		return
@@ -924,6 +1110,17 @@ func _load_save() -> void:
 	if int(saved.get("player_spawn_revision", -1)) == int(zone.get("player_spawn_revision", 0)):
 		player.global_position = _array_to_vector3(saved.get("player_position", zone.player_spawn))
 	player_health = clampf(float(saved.get("player_health", PLAYER_MAX_HEALTH)), 1.0, PLAYER_MAX_HEALTH)
+	player_xp_total = clampi(int(saved.get("player_xp_total", 0)), 0, _xp_cap_total())
+	player_level = _level_for_xp(player_xp_total)
+	player_class_id = int(saved.get("class_id", 1))
+	if _class_definition().is_empty():
+		push_warning("Saved player class is unavailable; using Warrior fixture class.")
+		player_class_id = 1
+	ability_cooldowns = _sanitized_ability_cooldowns(saved.get("ability_cooldowns", {}))
+	# Toggle/target state is intentionally transient, so a reload never resumes
+	# unattended combat.
+	auto_attack_enabled = false
+	primary_attack_remaining = 0.0
 	inventory = _sanitized_inventory(saved.get("inventory", {}))
 	if npc == null:
 		return
@@ -938,7 +1135,7 @@ func _load_save() -> void:
 func _save_game() -> void:
 	if player_dead:
 		return
-	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory}
+	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory, "progression_version": int(_progression().get("formula_version", 1)), "player_xp_total": player_xp_total, "player_level": player_level, "class_id": player_class_id, "ability_cooldowns": _sanitized_ability_cooldowns(ability_cooldowns)}
 	if npc != null:
 		saved.merge({"npc_alive": npc_alive, "npc_health": npc_health, "npc_position": [npc.global_position.x, npc.global_position.y, npc.global_position.z], "respawn_remaining": respawn_remaining, "npc_loot_awarded": npc_loot_awarded})
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -971,6 +1168,74 @@ func _award_training_loot() -> void:
 		awarded.append("%s ×%d" % [str(item_definitions[item_id].get("display_name", item_id)), quantity])
 	if not awarded.is_empty():
 		status_text = "Training Spark defeated — looted %s." % ", ".join(awarded)
+
+func _award_training_xp() -> void:
+	var reward := int(zone.npc_archetypes[_spawn_data().archetype].get("xp_reward", 0))
+	if reward <= 0:
+		return
+	var previous_level := player_level
+	player_xp_total = mini(_xp_cap_total(), player_xp_total + reward)
+	player_level = _level_for_xp(player_xp_total)
+	if player_level > previous_level:
+		status_text = "Training Spark defeated — level %d reached!" % player_level
+	else:
+		status_text = "Training Spark defeated — gained %d XP." % reward
+
+func _progression() -> Dictionary:
+	return zone.get("progression", {})
+
+func _xp_threshold(level: int) -> int:
+	# EQEmu GetEXPForLevel's classic cubic threshold shape, without the
+	# timeline-sensitive race/class modifiers. Thresholds are cumulative.
+	var hell_modifier := 1.0
+	if level >= 31 and level <= 35:
+		hell_modifier = 1.1
+	elif level >= 36 and level <= 40:
+		hell_modifier = 1.2
+	elif level >= 41 and level <= 45:
+		hell_modifier = 1.3
+	elif level >= 46 and level <= 51:
+		hell_modifier = 1.4
+	elif level == 52:
+		hell_modifier = 1.5
+	elif level == 53:
+		hell_modifier = 1.6
+	elif level == 54:
+		hell_modifier = 1.7
+	elif level == 55:
+		hell_modifier = 1.9
+	elif level == 56:
+		hell_modifier = 2.1
+	elif level == 57:
+		hell_modifier = 2.3
+	elif level == 58:
+		hell_modifier = 2.5
+	elif level == 59:
+		hell_modifier = 2.7
+	elif level == 60:
+		hell_modifier = 3.0
+	elif level >= 61:
+		hell_modifier = 3.1
+	return int(pow(maxi(0, level - 1), 3) * 1000.0 * hell_modifier)
+
+func _max_level() -> int:
+	return maxi(1, int(_progression().get("max_level", 50)))
+
+func _xp_cap_total() -> int:
+	return _xp_threshold(_max_level() + 1)
+
+func _level_for_xp(total_xp: int) -> int:
+	var level := 1
+	while level < _max_level() and total_xp >= _xp_threshold(level + 1):
+		level += 1
+	return level
+
+func _progression_summary() -> String:
+	if player_level >= _max_level():
+		return "XP: %d (level cap)" % player_xp_total
+	var threshold := _xp_threshold(player_level)
+	var next_threshold := _xp_threshold(player_level + 1)
+	return "XP: %d / %d" % [player_xp_total - threshold, next_threshold - threshold]
 
 func _sanitized_inventory(saved_inventory: Variant) -> Dictionary:
 	var restored: Dictionary = {}

@@ -19,7 +19,9 @@ death/respawn, and offline persistence. Defeating that fixture awards an
 original Training Spark Fragment and persists its count; it does not enable
 loot for the imported Halas NPC roster. Press `R` on desktop to clear its local
 save. Player defeat temporarily locks movement and attacks, then returns the
-player to the configured safe spawn with full health.
+player to the configured safe spawn with full health. The fixture also awards
+explicit tuned XP, displaying cumulative progress and applying the configured
+classic-era level cap; it does not assign XP to imported Halas NPCs.
 
 See [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for source-resource boundaries,
 architecture, and the next milestones.

@@ -31,6 +31,11 @@ def main() -> None:
     if zone.get("enable_training_npc") is not True:
         fail("enable_training_npc must be true for the playable vertical slice")
     positive_number(zone.get("player_respawn_seconds"), "player_respawn_seconds")
+    progression = zone.get("progression")
+    if not isinstance(progression, dict) or progression.get("formula_version") != 1:
+        fail("progression must declare formula_version 1")
+    if not isinstance(progression.get("max_level"), int) or progression["max_level"] < 1:
+        fail("progression.max_level must be a positive integer")
     items = items_document.get("items")
     if not isinstance(items, dict) or not items:
         fail("items.json must contain a non-empty items object")
@@ -41,6 +46,8 @@ def main() -> None:
         fail("missing training_spark archetype")
     for field in ("max_health", "damage", "move_speed", "aggro_range", "attack_range", "attack_cooldown"):
         positive_number(archetype.get(field), f"training_spark.{field}")
+    if not isinstance(archetype.get("xp_reward"), int) or archetype["xp_reward"] <= 0:
+        fail("training_spark.xp_reward must be a positive fixture-tuning integer")
     rewards = archetype.get("loot")
     if not isinstance(rewards, list) or not rewards:
         fail("training_spark.loot must be a non-empty list")

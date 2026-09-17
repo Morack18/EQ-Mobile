@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "source": {
+    "class_ids": "EQEmu common/classes.h (Warrior = 1)",
+    "melee_timing": "EQEmu zone/attack.cpp unarmed fallback delay = 35 tenths",
+    "note": "Training Strike and deterministic Training Spark damage are original vertical-slice fixture content."
+  },
+  "classes": {
+    "1": {
+      "key": "warrior",
+      "display_name": "Warrior",
+      "starter_ability_ids": ["training_strike"],
+      "attack_profile": {
+        "delay_tenths": 35,
+        "damage_profile": "training_fixture",
+        "range_mode": "melee",
+        "requires_los": true,
+        "requires_facing": true
+      }
+    }
+  },
+  "abilities": {
+    "training_strike": {
+      "display_name": "TRAINING\nSTRIKE",
+      "kind": "melee_skill",
+      "allowed_class_ids": [1],
+      "required_level": 1,
+      "target": "current_hostile",
+      "range_mode": "melee",
+      "requires_los": true,
+      "requires_facing": true,
+      "cooldown_group": "combat_ability",
+      "cooldown_seconds": 5.0,
+      "resource_type": "none",
+      "resource_cost": 0,
+      "damage_profile": "training_fixture",
+      "damage": 20.0,
+      "animation": "attack"
+    }
+  }
+}

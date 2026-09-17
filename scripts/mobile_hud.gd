@@ -3,16 +3,19 @@ extends Control
 signal joystick_changed(value: Vector2)
 signal look_changed(value: Vector2)
 signal attack_requested
+signal ability_requested
 signal jump_changed(pressed: bool)
 
 var left_touch := -1
 var right_touch := -1
 var attack_touch := -1
+var ability_touch := -1
 var jump_touch := -1
 var stick_value := Vector2.ZERO
 var look_stick_value := Vector2.ZERO
 var status_label: Label
 var attack_button: Button
+var ability_button: Button
 var jump_button: Button
 
 func _ready() -> void:
@@ -20,7 +23,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	status_label = Label.new()
 	status_label.position = Vector2(18, 18)
-	status_label.size = Vector2(640, 124)
+	status_label.size = Vector2(640, 190)
 	status_label.add_theme_font_size_override("font_size", 20)
 	status_label.add_theme_color_override("font_color", Color.WHITE)
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -35,11 +38,19 @@ func _ready() -> void:
 	attack_button.size = Vector2(150, 88)
 	attack_button.pressed.connect(attack_requested.emit)
 	add_child(attack_button)
+	ability_button = Button.new()
+	ability_button.text = "TRAINING\nSTRIKE"
+	ability_button.add_theme_font_size_override("font_size", 18)
+	ability_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	ability_button.position = Vector2(-176, -370)
+	ability_button.size = Vector2(150, 88)
+	ability_button.pressed.connect(ability_requested.emit)
+	add_child(ability_button)
 	jump_button = Button.new()
 	jump_button.text = "JUMP"
 	jump_button.add_theme_font_size_override("font_size", 22)
 	jump_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	jump_button.position = Vector2(-176, -370)
+	jump_button.position = Vector2(-176, -474)
 	jump_button.size = Vector2(150, 88)
 	jump_button.button_down.connect(func(): jump_changed.emit(true))
 	jump_button.button_up.connect(func(): jump_changed.emit(false))
@@ -49,11 +60,27 @@ func _ready() -> void:
 func set_status(text: String) -> void:
 	status_label.text = text
 
+func set_auto_attack(active: bool) -> void:
+	attack_button.text = "ATTACK ON" if active else "ATTACK"
+	attack_button.modulate = Color("9dffbd") if active else Color.WHITE
+
+func set_ability(label: String, available: bool, cooldown_remaining: float) -> void:
+	ability_button.disabled = not available
+	if cooldown_remaining > 0.0:
+		ability_button.text = "%s\n%.1fs" % [label, cooldown_remaining]
+		ability_button.modulate = Color("a6a6a6")
+	else:
+		ability_button.text = label
+		ability_button.modulate = Color.WHITE if available else Color("a6a6a6")
+
 func handle_touch(index: int, position: Vector2, pressed: bool) -> void:
 	if pressed:
 		if _attack_rect().has_point(position):
 			attack_touch = index
 			attack_requested.emit()
+		elif _ability_rect().has_point(position):
+			ability_touch = index
+			ability_requested.emit()
 		elif _jump_rect().has_point(position):
 			jump_touch = index
 			jump_changed.emit(true)
@@ -76,6 +103,8 @@ func handle_touch(index: int, position: Vector2, pressed: bool) -> void:
 			queue_redraw()
 		if index == attack_touch:
 			attack_touch = -1
+		if index == ability_touch:
+			ability_touch = -1
 		if index == jump_touch:
 			jump_touch = -1
 			jump_changed.emit(false)
@@ -127,4 +156,7 @@ func _attack_rect() -> Rect2:
 
 
 func _jump_rect() -> Rect2:
+	return Rect2(size.x - 176.0, size.y - 474.0, 150.0, 88.0)
+
+func _ability_rect() -> Rect2:
 	return Rect2(size.x - 176.0, size.y - 370.0, 150.0, 88.0)

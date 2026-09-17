@@ -29,12 +29,13 @@ only. This is not legal advice.
 - Engine: Godot 4.7 project (`project.godot`), Mobile renderer and Jolt 3D
   physics enabled.
 - Current playable slice: `scenes/Main.tscn` provides mobile movement/camera,
-  combat against a data-defined test NPC, respawn, a minimal original fixture
-  loot/inventory loop, and local persistence. Its
+  combat against a data-defined test NPC, respawn, minimal original fixture
+  loot/inventory and XP/level loops, and local persistence. Its
   placeholder player is the animated `hlm_s0_h0` actor normalized to the same
-  classic HLM size (`7` EQ world feet) as Halas-citizen NPCs; standard movement uses EQ's default `0.7`
-  run-speed value, resolved to the canonical base rate of 28 native EQ-sized
-  world units per second. The player is a gravity-driven `CharacterBody3D`
+  classic HLM size (`7` EQ world feet) as Halas-citizen NPCs; two-stick movement uses eqoxide's
+  35 native EQ-sized-unit/s manual-drive path. EQEmu's `0.7 * 40 = 28` value is
+  retained as client-update animation/wire semantics, not physical speed; the
+  separate eqoxide 44 u/s controller constant remains a documented source discrepancy. The player is a gravity-driven `CharacterBody3D`
   with a grounded capsule collider against zone terrain and walls; its
   third-person camera retracts against the same collision instead of clipping
   through zone walls.
