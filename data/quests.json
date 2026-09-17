@@ -5,8 +5,9 @@
     "era_profile": "original_classic_pre_kunark",
     "evidence": [
       {
-        "claim": "Source identity and relationship registry",
-        "label": "confirmed_source_behavior"
+        "claim": "No classic quest definitions are emitted until reviewed script evidence is available.",
+        "label": "inference",
+        "review_trigger": "reviewed classic quest-script provenance"
       }
     ],
     "filters": {

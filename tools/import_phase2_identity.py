@@ -3,16 +3,18 @@
 
 Usage:
   python3 tools/import_phase2_identity.py PEQ_ARCHIVE [OUTPUT_DIRECTORY]
+  python3 tools/import_phase2_identity.py PEQ_ARCHIVE --verify-only
 
 This imports identities and relationships only.  It does not enable class,
 race, skill, spell, or quest gameplay.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
-import sys
+import tempfile
 from pathlib import Path
 
 from import_peq_halas import as_int, rows_for_table, table_columns
@@ -31,7 +33,8 @@ def write(path: Path, value: dict) -> None:
 
 
 def meta(dataset_id: str, tool: str, sources: list[dict], filters: dict,
-         review_state: str = "current_unreviewed_peq") -> dict:
+         review_state: str = "current_unreviewed_peq",
+         evidence: list[dict] | None = None) -> dict:
     return {
         "schema_id": "eqm.identity_registry",
         "schema_version": 1,
@@ -40,7 +43,7 @@ def meta(dataset_id: str, tool: str, sources: list[dict], filters: dict,
             "era_profile": "original_classic_pre_kunark",
             "design_target": "classic_p1999",
             "review_state": review_state,
-            "evidence": [{"label": "confirmed_source_behavior", "claim": "Source identity and relationship registry"}],
+            "evidence": evidence or [{"label": "confirmed_source_behavior", "claim": "Source identity and relationship registry"}],
             "sources": sources,
             "generator": {"tool": tool},
             "filters": filters,
@@ -61,10 +64,11 @@ def display_names_from_switch(path: Path, scope: str) -> dict[str, str]:
         case = re.search(rf"case {re.escape(scope)}::(\w+):", line)
         if case:
             pending.append(case.group(1))
-        returned = re.search(r'return "([^"]*)";', line)
-        if returned and pending:
-            for symbol in pending:
-                names.setdefault(symbol, returned.group(1))
+        if re.search(r"\breturn\b", line) and pending:
+            returned = re.search(r'return "([^"]*)";', line)
+            if returned:
+                for symbol in pending:
+                    names.setdefault(symbol, returned.group(1))
             pending = []
     return names
 
@@ -95,10 +99,17 @@ def display_symbol(symbol: str) -> str:
 
 
 def main() -> None:
-    if not 2 <= len(sys.argv) <= 3:
-        raise SystemExit(__doc__)
-    archive = Path(sys.argv[1]).resolve()
-    output = Path(sys.argv[2]).resolve() if len(sys.argv) == 3 else ROOT / "data"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("archive", type=Path)
+    parser.add_argument("output", type=Path, nargs="?")
+    parser.add_argument("--verify-only", action="store_true",
+                        help="Regenerate into a temporary directory and byte-compare checked-in output.")
+    args = parser.parse_args()
+    if args.verify_only and args.output is not None:
+        parser.error("OUTPUT_DIRECTORY cannot be used with --verify-only")
+    archive = args.archive.resolve()
+    temporary_output = tempfile.TemporaryDirectory() if args.verify_only else None
+    output = Path(temporary_output.name) if temporary_output else (args.output.resolve() if args.output else ROOT / "data")
     if not archive.is_file():
         raise SystemExit(f"Archive not found: {archive}")
     output.mkdir(parents=True, exist_ok=True)
@@ -212,9 +223,17 @@ def main() -> None:
     write(output / "halas_spells_source.json", spell_data)
 
     contract = ROOT / "docs/identity-contract.md"
-    quest_data = meta("eqm:dataset:quests", "tools/import_phase2_identity.py", [{"namespace": "eqm", "artifact": "docs/identity-contract.md", "sha256": digest(contract)}], {"classic_quest_import": "deferred pending reviewed script evidence"}, "pending_reviewed_quest_evidence")
+    quest_data = meta("eqm:dataset:quests", "tools/import_phase2_identity.py", [{"namespace": "eqm", "artifact": "docs/identity-contract.md", "sha256": digest(contract)}], {"classic_quest_import": "deferred pending reviewed script evidence"}, "pending_reviewed_quest_evidence", [{"label": "inference", "claim": "No classic quest definitions are emitted until reviewed script evidence is available.", "review_trigger": "reviewed classic quest-script provenance"}])
     quest_data["quests"] = {}
     write(output / "quests.json", quest_data)
+    if temporary_output:
+        for name in ("eqemu_classes.json", "eqemu_races.json", "eqemu_skills.json", "halas_spells_source.json", "quests.json"):
+            expected = ROOT / "data" / name
+            if not expected.is_file() or (output / name).read_bytes() != expected.read_bytes():
+                raise SystemExit(f"FAIL: checked-in {name} differs from deterministic regeneration")
+        temporary_output.cleanup()
+        print("PASS: Phase 2 identity registries match deterministic regeneration.")
+        return
     print(f"Wrote {len(class_data['classes'])} classes, {len(race_data['races'])} races, {len(skill_data['skills'])} skills, {len(lists)} spell lists, {len(spells)} spells, and an empty quest registry.")
 
 

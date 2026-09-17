@@ -27,10 +27,18 @@ classic-era level cap; it does not assign XP to imported Halas NPCs.
 See [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for source-resource boundaries,
 architecture, and the next milestones.
 
-## Validate Halas import data
+## Regenerate and validate Halas import data
 
-Run the read-only checks after regenerating Halas source data or refreshing
-imported assets:
+Regeneration writes the checked-in derived datasets. Run it after changing an
+importer, its source archive, or its source snapshots:
+
+```bash
+python3 tools/import_peq_halas_items_loot.py resources/reference-data/projecteq/peq-1789171214.zip data/halas_items_source.json data/halas_loot_source.json
+python3 tools/import_phase2_identity.py resources/reference-data/projecteq/peq-1789171214.zip
+python3 tools/apply_halas_npc_overlay.py
+```
+
+Then run the read-only validation and reproducibility checks:
 
 ```bash
 python3 tools/validate_halas_zone_data.py
@@ -41,8 +49,7 @@ python3 tools/validate_halas_faction_data.py
 python3 tools/validate_halas_world_space.py
 godot --headless --path . --script res://tools/world_space_test_runner.gd
 python3 tools/validate_identity_contract.py
-python3 tools/import_phase2_identity.py resources/reference-data/projecteq/peq-1789171214.zip
-python3 tools/import_peq_halas_items_loot.py resources/reference-data/projecteq/peq-1789171214.zip data/halas_items_source.json data/halas_loot_source.json
+python3 tools/import_phase2_identity.py resources/reference-data/projecteq/peq-1789171214.zip --verify-only
 godot --headless --path . --script res://tools/save_migration_test_runner.gd
 python3 tools/validate_player_combat_data.py
 python3 tools/apply_halas_npc_overlay.py --verify-only

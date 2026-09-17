@@ -114,7 +114,7 @@
     },
     "24": {
       "key": "eqemu:class:24",
-      "name": "Druid Guildmaster",
+      "name": "Shadow Knight Guildmaster",
       "player_class": false,
       "source_id": 24,
       "source_symbol": "ShadowKnightGM"

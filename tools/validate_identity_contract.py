@@ -30,6 +30,17 @@ def validate_generated_envelope(data: dict, schema_id: str, dataset_id: str, lab
     require("filters" in meta and "overlay" in meta, f"{label} filters or overlay metadata is missing")
 
 
+def require_unique_records(records: list[dict], source_id: str, key: str, label: str) -> None:
+    """Reject collisions before set-based cross-reference checks can hide them."""
+    ids, keys = set(), set()
+    for index, record in enumerate(records):
+        record_id, record_key = record.get(source_id), record.get(key)
+        require(record_id not in ids, f"duplicate {label} source ID {record_id!r} at record {index}")
+        require(record_key not in keys, f"duplicate {label} key {record_key!r} at record {index}")
+        ids.add(record_id)
+        keys.add(record_key)
+
+
 def main() -> None:
     zone = json.loads((ROOT / "data/halas.json").read_text())
     items = json.loads((ROOT / "data/items.json").read_text())["items"]
@@ -70,6 +81,10 @@ def main() -> None:
         (quests, "eqm:dataset:quests", "quest registry"),
     ):
         validate_generated_envelope(registry, "eqm.identity_registry", dataset_id, label)
+    require_unique_records(raw_npcs["npc_types"], "id", "id", "raw NPC")
+    require_unique_records(derived_npcs["npc_types"], "id", "key", "derived NPC")
+    require_unique_records(raw_npcs["spawns"], "spawn2_id", "spawn2_id", "raw spawn")
+    require_unique_records(derived_npcs["spawns"], "spawn2_id", "key", "derived spawn")
     npc_keys = {npc["key"] for npc in derived_npcs["npc_types"]}
     class_keys = {definition["key"] for definition in class_registry["classes"].values()}
     race_keys = {definition["key"] for definition in race_registry["races"].values()}
