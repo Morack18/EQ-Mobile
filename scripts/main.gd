@@ -54,6 +54,7 @@ const CAMERA_PITCH_SPEED := 1.55
 const CAMERA_OFFSET := Vector3(0.0, 4.7, 10.5)
 const CAMERA_COLLISION_MARGIN := 0.35
 const PLAYER_ATTACK_ANIMATION_SECONDS := 0.45
+const GENERAL_INVENTORY_CAPACITY := 8
 const NPC_LONG_PRESS_SECONDS := 0.55
 const NPC_LONG_PRESS_CANCEL_DISTANCE := 28.0
 # eqoxide's renderer establishes that the exported glTF character meshes face
@@ -119,7 +120,8 @@ var halas_population: HalasNpcPopulation
 var selected_halas_target: Dictionary = {}
 var item_definitions: Dictionary = {}
 var merchant_definitions: Dictionary = {}
-var inventory: Dictionary = {}
+var inventory: Array[Dictionary] = []
+var wallet := {"platinum": 0, "gold": 0, "silver": 0, "copper": 0}
 # Halas's client .wtr region file is not present in the supplied resources.
 # This is therefore an authored-surface fallback, populated from the zone's
 # explicit halaswater material triangles rather than a guessed rectangular pool.
@@ -1320,6 +1322,7 @@ func _load_save() -> void:
 	auto_attack_enabled = false
 	primary_attack_remaining = 0.0
 	inventory = _sanitized_inventory(saved.get("inventory", {}))
+	wallet = _sanitized_wallet(saved.get("wallet", {}))
 	if npc == null:
 		return
 	npc_alive = bool(saved.get("npc_alive", true))
@@ -1333,7 +1336,7 @@ func _load_save() -> void:
 func _save_game() -> void:
 	if player_dead:
 		return
-	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory, "progression_version": int(_progression().get("formula_version", 1)), "player_xp_total": player_xp_total, "player_level": player_level, "class_id": player_class_id, "race_id": player_race_id, "deity_id": player_deity_id, "faction_values": _sanitized_faction_values(faction_values), "ability_cooldowns": _sanitized_ability_cooldowns(ability_cooldowns)}
+	var saved := {"zone_id": zone.id, "player_spawn_revision": int(zone.get("player_spawn_revision", 0)), "player_position": [player.global_position.x, player.global_position.y, player.global_position.z], "player_health": player_health, "inventory": inventory, "wallet": wallet, "progression_version": int(_progression().get("formula_version", 1)), "player_xp_total": player_xp_total, "player_level": player_level, "class_id": player_class_id, "race_id": player_race_id, "deity_id": player_deity_id, "faction_values": _sanitized_faction_values(faction_values), "ability_cooldowns": _sanitized_ability_cooldowns(ability_cooldowns)}
 	if npc != null:
 		saved.merge({"npc_alive": npc_alive, "npc_health": npc_health, "npc_position": [npc.global_position.x, npc.global_position.y, npc.global_position.z], "respawn_remaining": respawn_remaining, "npc_loot_awarded": npc_loot_awarded})
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -1351,7 +1354,6 @@ func _save_game() -> void:
 func _award_training_loot() -> void:
 	if npc_loot_awarded:
 		return
-	npc_loot_awarded = true
 	var rewards: Array = zone.npc_archetypes[_spawn_data().archetype].get("loot", [])
 	var awarded: Array[String] = []
 	for reward in rewards:
@@ -1362,8 +1364,11 @@ func _award_training_loot() -> void:
 		if item_id.is_empty() or quantity <= 0 or not item_definitions.has(item_id):
 			push_warning("Ignoring invalid Training Spark loot entry: %s" % reward)
 			continue
-		inventory[item_id] = int(inventory.get(item_id, 0)) + quantity
-		awarded.append("%s ×%d" % [str(item_definitions[item_id].get("display_name", item_id)), quantity])
+		if not _add_item(item_id, quantity):
+			status_text = "Inventory is full; Training Spark loot remains unclaimed."
+			return
+		awarded.append("%s ×%d" % [str(item_definitions[item_id].get("name", item_id)), quantity])
+	npc_loot_awarded = true
 	if not awarded.is_empty():
 		status_text = "Training Spark defeated — looted %s." % ", ".join(awarded)
 
@@ -1435,27 +1440,98 @@ func _progression_summary() -> String:
 	var next_threshold := _xp_threshold(player_level + 1)
 	return "XP: %d / %d" % [player_xp_total - threshold, next_threshold - threshold]
 
-func _sanitized_inventory(saved_inventory: Variant) -> Dictionary:
-	var restored: Dictionary = {}
-	if not saved_inventory is Dictionary:
-		return restored
-	for item_id_variant in saved_inventory:
-		var item_id := str(item_id_variant)
-		var quantity := int(saved_inventory[item_id_variant])
-		if item_definitions.has(item_id) and quantity > 0:
-			restored[item_id] = quantity
+func _sanitized_inventory(saved_inventory: Variant) -> Array[Dictionary]:
+	var restored: Array[Dictionary] = []
+	# Migrate the former fixture item_id → quantity map without dropping rewards.
+	if saved_inventory is Dictionary:
+		for legacy_key in saved_inventory:
+			var item_key := "fixture:training_spark_fragment" if str(legacy_key) == "training_spark_fragment" else str(legacy_key)
+			_append_loaded_item(restored, item_key, int(saved_inventory[legacy_key]), null)
+	elif saved_inventory is Array:
+		for instance in saved_inventory:
+			if instance is Dictionary:
+				_append_loaded_item(restored, str(instance.get("item_key", "")), int(instance.get("quantity", 0)), instance.get("charges_remaining"))
 	return restored
+
+func _append_loaded_item(destination: Array[Dictionary], item_key: String, quantity: int, charges: Variant) -> void:
+	if not item_definitions.has(item_key) or quantity <= 0:
+		return
+	var definition: Dictionary = item_definitions[item_key]
+	var remaining := quantity
+	var stack_size := maxi(1, int(definition.get("stack_size", 1))) if bool(definition.get("stackable", false)) else 1
+	while remaining > 0:
+		destination.append({"item_key": item_key, "quantity": mini(remaining, stack_size), "charges_remaining": charges})
+		remaining -= stack_size
+
+func _add_item(item_key: String, amount: int) -> bool:
+	if not item_definitions.has(item_key) or amount <= 0:
+		return false
+	var candidate: Array[Dictionary] = []
+	for instance in inventory:
+		candidate.append(instance.duplicate())
+	var definition: Dictionary = item_definitions[item_key]
+	var remaining := amount
+	if bool(definition.get("stackable", false)):
+		var stack_size := maxi(1, int(definition.get("stack_size", 1)))
+		for instance in candidate:
+			if str(instance.item_key) != item_key or int(instance.quantity) >= stack_size:
+				continue
+			var moved := mini(remaining, stack_size - int(instance.quantity))
+			instance.quantity = int(instance.quantity) + moved
+			remaining -= moved
+			if remaining <= 0:
+				break
+	while remaining > 0:
+		if candidate.size() >= GENERAL_INVENTORY_CAPACITY:
+			return false
+		var quantity := mini(remaining, maxi(1, int(definition.get("stack_size", 1)))) if bool(definition.get("stackable", false)) else 1
+		var charges: Variant = null
+		if not bool(definition.get("stackable", false)) and int(definition.get("max_charges", 0)) > 0:
+			charges = int(definition.get("max_charges", 0))
+		candidate.append({"item_key": item_key, "quantity": quantity, "charges_remaining": charges})
+		remaining -= quantity
+	inventory = candidate
+	return true
+
+func _sanitized_wallet(saved_wallet: Variant) -> Dictionary:
+	var restored := {"platinum": 0, "gold": 0, "silver": 0, "copper": 0}
+	if saved_wallet is Dictionary:
+		for denomination in restored:
+			restored[denomination] = maxi(0, int(saved_wallet.get(denomination, 0)))
+	return restored
+
+func wallet_total_copper() -> int:
+	return int(wallet.copper) + int(wallet.silver) * 10 + int(wallet.gold) * 100 + int(wallet.platinum) * 1000
+
+func credit_copper(amount: int) -> void:
+	_set_wallet_total_copper(wallet_total_copper() + maxi(0, amount))
+
+func debit_copper(amount: int) -> bool:
+	if amount < 0 or wallet_total_copper() < amount:
+		return false
+	_set_wallet_total_copper(wallet_total_copper() - amount)
+	return true
+
+func _set_wallet_total_copper(total: int) -> void:
+	var remaining := maxi(0, total)
+	wallet.platinum = remaining / 1000
+	remaining %= 1000
+	wallet.gold = remaining / 100
+	remaining %= 100
+	wallet.silver = remaining / 10
+	wallet.copper = remaining % 10
 
 func _inventory_summary() -> String:
 	if inventory.is_empty():
-		return "Inventory: empty"
-	var item_ids: Array = inventory.keys()
-	item_ids.sort()
+		return "Inventory: empty    Wallet: %s" % _format_wallet()
 	var entries: Array[String] = []
-	for item_id_variant in item_ids:
-		var item_id := str(item_id_variant)
-		entries.append("%s ×%d" % [str(item_definitions[item_id].get("display_name", item_id)), int(inventory[item_id])])
-	return "Inventory: %s" % ", ".join(entries)
+	for instance in inventory:
+		var item_key := str(instance.item_key)
+		entries.append("%s ×%d" % [str(item_definitions[item_key].get("name", item_key)), int(instance.quantity)])
+	return "Inventory (%d/%d): %s    Wallet: %s" % [inventory.size(), GENERAL_INVENTORY_CAPACITY, ", ".join(entries), _format_wallet()]
+
+func _format_wallet() -> String:
+	return "%dpp %dgp %dsp %dcp" % [int(wallet.platinum), int(wallet.gold), int(wallet.silver), int(wallet.copper)]
 
 func clear_save() -> void:
 	if FileAccess.file_exists(SAVE_PATH):

@@ -34,7 +34,7 @@
       "aggro_range": 8.0,
       "attack_range": 1.7,
       "attack_cooldown": 1.4,
-      "loot": [{ "item_id": "training_spark_fragment", "quantity": 1 }],
+      "loot": [{ "item_id": "fixture:training_spark_fragment", "quantity": 1 }],
       "xp_reward": 1000
     }
   }

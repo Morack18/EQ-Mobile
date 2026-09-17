@@ -41,6 +41,13 @@ def main() -> None:
         fail("items.json must contain a non-empty items object")
     if items_document.get("source", {}).get("kind") != "original_development_fixture":
         fail("items.json must declare original_development_fixture provenance")
+    for item_key, item in items.items():
+        if not item_key.startswith("fixture:") or not isinstance(item, dict):
+            fail("fixture item keys must be namespaced and definitions must be objects")
+        if not isinstance(item.get("name"), str) or not item["name"].strip():
+            fail(f"item {item_key} must have a name")
+        if not isinstance(item.get("stackable"), bool) or not isinstance(item.get("stack_size"), int) or item["stack_size"] < 1:
+            fail(f"item {item_key} must declare a valid stack policy")
     archetype = zone.get("npc_archetypes", {}).get("training_spark")
     if not isinstance(archetype, dict):
         fail("missing training_spark archetype")

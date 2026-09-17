@@ -5,9 +5,24 @@
     "note": "These placeholder items are not EverQuest content."
   },
   "items": {
-    "training_spark_fragment": {
-      "display_name": "Training Spark Fragment",
-      "description": "A harmless original fixture reward for the offline loot loop."
+    "fixture:training_spark_fragment": {
+      "name": "Training Spark Fragment",
+      "description": "A harmless original fixture reward for the offline loot loop.",
+      "item_class": 0,
+      "item_type": 11,
+      "stackable": true,
+      "stack_size": 20,
+      "max_charges": 0,
+      "price_copper": 0,
+      "sell_rate": 1.0,
+      "weight_tenths": 0,
+      "size": 0,
+      "equip_slots_mask": 0,
+      "classes_mask": 0,
+      "races_mask": 0,
+      "required_level": 0,
+      "lore_group": 0,
+      "container": null
     }
   }
 }
