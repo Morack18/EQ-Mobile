@@ -13,6 +13,8 @@ research note until a decision is made.
 | DEV-005 | Faction thresholds | EQEmu rule defaults are configurable current values. | Use them as data-backed offline defaults, not verified P1999 constants. | `inference` | Classic/P1999 threshold evidence. |
 | DEV-006 | Inventory slots | Titanium client uses protocol-specific slot IDs. | Eight ordered logical root slots; no protocol IDs, bags, bank, or cursor semantics yet. | `intentional_mobile_offline_deviation` | Dedicated classic inventory/bag pass. |
 | DEV-007 | Merchant economy | Full EQ price calculation includes unimplemented faction/CHA/rule modifiers. | Browse-only merchant UI displays source base prices; no purchases or sales. | `intentional_mobile_offline_deviation` | Atomic merchant transaction implementation. |
+| DEV-008 | Grounded movement | No reviewed classic-client source establishes the project’s Godot floor angle, snap distance, or safe margin. | Use 60° floor angle, 0.5-unit snap, and 0.05 safe margin as temporary grounded-controller stability values. | `temporary_fixture_default` | Dedicated classic slope/collision evidence and device validation. |
+| DEV-009 | Step-up | eqoxide documents a 2-unit native step bound, but EQ Mobile implements it through Godot sweep/landing checks rather than the reference client code. | Preserve a bounded 2-unit step-up with explicit headroom/travel/walkable-landing checks. | `intentional_mobile_offline_deviation` | Native collision-controller replacement or contradictory classic evidence. |
 
 ## Entry rules
 

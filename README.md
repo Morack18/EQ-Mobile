@@ -39,6 +39,7 @@ python3 tools/validate_halas_asset_scale.py
 python3 tools/validate_halas_merchant_data.py
 python3 tools/validate_halas_faction_data.py
 python3 tools/validate_halas_world_space.py
+godot --headless --path . --script res://tools/world_space_test_runner.gd
 python3 tools/validate_player_combat_data.py
 python3 tools/apply_halas_npc_overlay.py --verify-only
 python3 tools/validate_training_slice_data.py

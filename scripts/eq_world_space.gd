@@ -32,13 +32,20 @@ static func map_position(source: Array, axis_map: Array) -> Vector3:
 	# world X=-source[1], Y=source[2], Z=source[0]. Zone calibration supplies
 	# data; it never needs to reimplement coordinate arithmetic.
 	assert(source.size() == 3 and axis_map.size() == 3, "Position maps require three components")
+	var used_components := {}
 	var mapped: Array[float] = []
 	for component_variant in axis_map:
 		var component := int(component_variant)
 		assert(component != 0 and abs(component) <= 3, "Axis map component out of range")
+		assert(not used_components.has(abs(component)), "Axis map must be a signed permutation of 1, 2, 3")
+		used_components[abs(component)] = true
 		var value := float(source[abs(component) - 1])
 		mapped.append(-value if component < 0 else value)
+	assert(used_components.size() == 3, "Axis map must contain each source component exactly once")
 	return Vector3(mapped[0], mapped[1], mapped[2])
+
+static func position_within_precision(actual: Vector3, expected: Vector3, precision: float = DEFAULT_POSITION_PRECISION) -> bool:
+	return actual.distance_to(expected) <= precision
 
 static func halas_lantern_prop_yaw(degrees_eq: float) -> float:
 	return deg_to_rad(-degrees_eq)
@@ -56,9 +63,9 @@ static func visual_scale_for_height(measured_height: float, target_height: float
 	return target_height / measured_height
 
 static func run_contract_tests() -> void:
-	assert(halas_server_position([0.0, 0.0, 0.0]).is_equal_approx(Vector3.ZERO))
-	assert(halas_server_position([10.0, 20.0, 30.0]).is_equal_approx(Vector3(-20.0, 30.0, 10.0)))
-	assert(map_position([10.0, 20.0, 30.0], [-1, 2, 3]).is_equal_approx(Vector3(-10.0, 20.0, 30.0)))
+	assert(position_within_precision(halas_server_position([0.0, 0.0, 0.0]), Vector3.ZERO))
+	assert(position_within_precision(halas_server_position([10.0, 20.0, 30.0]), Vector3(-20.0, 30.0, 10.0)))
+	assert(position_within_precision(map_position([10.0, 20.0, 30.0], [-1, 2, 3]), Vector3(-10.0, 20.0, 30.0)))
 	assert(is_equal_approx(heading_to_godot_yaw(0.0), PI * 0.5))
 	assert(is_equal_approx(heading_to_godot_yaw(256.0), -PI * 0.5))
 	assert(heading_forward(0.0).is_equal_approx(Vector3(-1.0, 0.0, 0.0)))

@@ -25,8 +25,9 @@ of these explicit profiles:
 historical phase, and PEQ/EQEmu may contain later or server-configured behavior.
 No current value becomes canonical merely because it appears in either source.
 When a mechanic differs across profiles, the implementation must name the chosen
-profile in its data or documentation and record the difference in
-[`deviation-registry.md`](deviation-registry.md).
+profile in its data or documentation. Use
+[`deviation-registry.md`](deviation-registry.md) only when EQ Mobile
+intentionally differs from that selected authoritative behavior.
 
 ## 2. Source-authority matrix
 
