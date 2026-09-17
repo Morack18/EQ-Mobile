@@ -1,8 +1,10 @@
 {
+  "dataset_id": "eqm:dataset:halas-factions-raw",
   "factions": {
     "1159": {
       "base": -500,
       "id": 1159,
+      "key": "peq:faction:1159",
       "modifiers": [],
       "name": "Nature Animal - Beetle",
       "personal_max": 2500,
@@ -11,6 +13,7 @@
     "223": {
       "base": 0,
       "id": 223,
+      "key": "peq:faction:223",
       "modifiers": [
         {
           "identity_id": 10,
@@ -272,6 +275,7 @@
     "230": {
       "base": 0,
       "id": 230,
+      "key": "peq:faction:230",
       "modifiers": [
         {
           "identity_id": 10,
@@ -503,6 +507,7 @@
     "244": {
       "base": 0,
       "id": 244,
+      "key": "peq:faction:244",
       "modifiers": [
         {
           "identity_id": 11,
@@ -734,6 +739,7 @@
     "262": {
       "base": 0,
       "id": 262,
+      "key": "peq:faction:262",
       "modifiers": [
         {
           "identity_id": 11,
@@ -911,6 +917,7 @@
     "273": {
       "base": 0,
       "id": 273,
+      "key": "peq:faction:273",
       "modifiers": [
         {
           "identity_id": 10,
@@ -944,6 +951,7 @@
     "281": {
       "base": 0,
       "id": 281,
+      "key": "peq:faction:281",
       "modifiers": [
         {
           "identity_id": 11,
@@ -1091,6 +1099,7 @@
     "284": {
       "base": 0,
       "id": 284,
+      "key": "peq:faction:284",
       "modifiers": [
         {
           "identity_id": 11,
@@ -1256,6 +1265,7 @@
     "285": {
       "base": 0,
       "id": 285,
+      "key": "peq:faction:285",
       "modifiers": [
         {
           "identity_id": 1,
@@ -1361,6 +1371,7 @@
     "291": {
       "base": 0,
       "id": 291,
+      "key": "peq:faction:291",
       "modifiers": [
         {
           "identity_id": 11,
@@ -1526,6 +1537,7 @@
     "304": {
       "base": 0,
       "id": 304,
+      "key": "peq:faction:304",
       "modifiers": [
         {
           "identity_id": 202,
@@ -1655,6 +1667,7 @@
     "305": {
       "base": 0,
       "id": 305,
+      "key": "peq:faction:305",
       "modifiers": [
         {
           "identity_id": 10,
@@ -1886,6 +1899,7 @@
     "306": {
       "base": 0,
       "id": 306,
+      "key": "peq:faction:306",
       "modifiers": [
         {
           "identity_id": 1,
@@ -1991,6 +2005,7 @@
     "311": {
       "base": 0,
       "id": 311,
+      "key": "peq:faction:311",
       "modifiers": [
         {
           "identity_id": 1,
@@ -2126,6 +2141,7 @@
     "319": {
       "base": 0,
       "id": 319,
+      "key": "peq:faction:319",
       "modifiers": [
         {
           "identity_id": 1,
@@ -2231,6 +2247,7 @@
     "320": {
       "base": 0,
       "id": 320,
+      "key": "peq:faction:320",
       "modifiers": [
         {
           "identity_id": 1,
@@ -2438,6 +2455,7 @@
     "327": {
       "base": 0,
       "id": 327,
+      "key": "peq:faction:327",
       "modifiers": [
         {
           "identity_id": 10,
@@ -2597,6 +2615,7 @@
     "328": {
       "base": 0,
       "id": 328,
+      "key": "peq:faction:328",
       "modifiers": [
         {
           "identity_id": 11,
@@ -2696,6 +2715,7 @@
     "336": {
       "base": 0,
       "id": 336,
+      "key": "peq:faction:336",
       "modifiers": [
         {
           "identity_id": 3,
@@ -2843,6 +2863,7 @@
     "404": {
       "base": 0,
       "id": 404,
+      "key": "peq:faction:404",
       "modifiers": [
         {
           "identity_id": 1,
@@ -2936,6 +2957,7 @@
     "5013": {
       "base": -1000,
       "id": 5013,
+      "key": "peq:faction:5013",
       "modifiers": [],
       "name": "KOS",
       "personal_max": 3000,
@@ -2944,6 +2966,7 @@
     "5014": {
       "base": 0,
       "id": 5014,
+      "key": "peq:faction:5014",
       "modifiers": [],
       "name": "KOS_animal",
       "personal_max": 2000,
@@ -2952,41 +2975,80 @@
     "5023": {
       "base": 0,
       "id": 5023,
+      "key": "peq:faction:5023",
       "modifiers": [],
       "name": "Noobie Monsters KOS to Guards",
       "personal_max": 2000,
       "personal_min": -2000
     }
   },
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "PEQ faction and NPC-faction relationships",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "referenced_by": "data/halas_npcs_source.json"
+    },
+    "generator": {
+      "tool": "tools/import_peq_halas_factions.py"
+    },
+    "overlay": null,
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "peq-1789171214.zip",
+        "member": "peq-dump/create_tables_content.sql",
+        "namespace": "peq",
+        "sha256": "96a13e1e601f782a2997c8ae8342bcd849631614203de3fd823dc40d4850cd4d",
+        "tables": [
+          "npc_faction",
+          "npc_faction_entries",
+          "faction_list",
+          "faction_base_data",
+          "faction_list_mod"
+        ]
+      }
+    ]
+  },
   "npc_faction_bundles": {
     "1202": {
       "entries": [
         {
           "faction_id": 262,
+          "faction_ref": "peq:faction:262",
           "npc_value": 1,
           "temp": 0,
           "value": -1
         },
         {
           "faction_id": 281,
+          "faction_ref": "peq:faction:281",
           "npc_value": 1,
           "temp": 0,
           "value": -1
         },
         {
           "faction_id": 284,
+          "faction_ref": "peq:faction:284",
           "npc_value": 1,
           "temp": 0,
           "value": -3
         },
         {
           "faction_id": 285,
+          "faction_ref": "peq:faction:285",
           "npc_value": 0,
           "temp": 0,
           "value": 1
         },
         {
           "faction_id": 304,
+          "faction_ref": "peq:faction:304",
           "npc_value": 0,
           "temp": 0,
           "value": 1
@@ -2994,37 +3056,44 @@
       ],
       "id": 1202,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:1202",
       "name": "LeagueofAntonicanBards3",
-      "primary_faction_id": 284
+      "primary_faction_id": 284,
+      "primary_faction_ref": "peq:faction:284"
     },
     "122": {
       "entries": [
         {
           "faction_id": 223,
+          "faction_ref": "peq:faction:223",
           "npc_value": 0,
           "temp": 0,
           "value": 150
         },
         {
           "faction_id": 244,
+          "faction_ref": "peq:faction:244",
           "npc_value": 0,
           "temp": 0,
           "value": 200
         },
         {
           "faction_id": 327,
+          "faction_ref": "peq:faction:327",
           "npc_value": 0,
           "temp": 0,
           "value": -1000
         },
         {
           "faction_id": 328,
+          "faction_ref": "peq:faction:328",
           "npc_value": 1,
           "temp": 0,
           "value": -150
         },
         {
           "faction_id": 336,
+          "faction_ref": "peq:faction:336",
           "npc_value": 0,
           "temp": 0,
           "value": 150
@@ -3032,20 +3101,25 @@
       ],
       "id": 122,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:122",
       "name": "Halas_Shamen_of_Justice",
-      "primary_faction_id": 327
+      "primary_faction_id": 327,
+      "primary_faction_ref": "peq:faction:327"
     },
     "1337": {
       "entries": [],
       "id": 1337,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:1337",
       "name": "Dargon",
-      "primary_faction_id": 404
+      "primary_faction_id": 404,
+      "primary_faction_ref": "peq:faction:404"
     },
     "164": {
       "entries": [
         {
           "faction_id": 305,
+          "faction_ref": "peq:faction:305",
           "npc_value": 1,
           "temp": 0,
           "value": -1000
@@ -3053,67 +3127,79 @@
       ],
       "id": 164,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:164",
       "name": "Halas_Rogues_of_the_White_Rose",
-      "primary_faction_id": 305
+      "primary_faction_id": 305,
+      "primary_faction_ref": "peq:faction:305"
     },
     "74": {
       "entries": [
         {
           "faction_id": 306,
+          "faction_ref": "peq:faction:306",
           "npc_value": -1,
           "temp": 0,
           "value": 0
         },
         {
           "faction_id": 311,
+          "faction_ref": "peq:faction:311",
           "npc_value": 1,
           "temp": 0,
           "value": -1
         },
         {
           "faction_id": 319,
+          "faction_ref": "peq:faction:319",
           "npc_value": -1,
           "temp": 0,
           "value": 0
         },
         {
           "faction_id": 320,
+          "faction_ref": "peq:faction:320",
           "npc_value": 1,
           "temp": 0,
           "value": -15
         },
         {
           "faction_id": 327,
+          "faction_ref": "peq:faction:327",
           "npc_value": 1,
           "temp": 0,
           "value": -3
         },
         {
           "faction_id": 328,
+          "faction_ref": "peq:faction:328",
           "npc_value": 1,
           "temp": 0,
           "value": -3
         },
         {
           "faction_id": 1159,
+          "faction_ref": "peq:faction:1159",
           "npc_value": -1,
           "temp": 0,
           "value": 0
         },
         {
           "faction_id": 5013,
+          "faction_ref": "peq:faction:5013",
           "npc_value": -1,
           "temp": 0,
           "value": 0
         },
         {
           "faction_id": 5014,
+          "faction_ref": "peq:faction:5014",
           "npc_value": -1,
           "temp": 0,
           "value": 0
         },
         {
           "faction_id": 5023,
+          "faction_ref": "peq:faction:5023",
           "npc_value": -1,
           "temp": 0,
           "value": 0
@@ -3121,37 +3207,44 @@
       ],
       "id": 74,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:74",
       "name": "Wolves_of_the_North",
-      "primary_faction_id": 320
+      "primary_faction_id": 320,
+      "primary_faction_ref": "peq:faction:320"
     },
     "885": {
       "entries": [
         {
           "faction_id": 223,
+          "faction_ref": "peq:faction:223",
           "npc_value": 1,
           "temp": 0,
           "value": -100
         },
         {
           "faction_id": 230,
+          "faction_ref": "peq:faction:230",
           "npc_value": 1,
           "temp": 0,
           "value": -15
         },
         {
           "faction_id": 262,
+          "faction_ref": "peq:faction:262",
           "npc_value": 0,
           "temp": 0,
           "value": 15
         },
         {
           "faction_id": 273,
+          "faction_ref": "peq:faction:273",
           "npc_value": 1,
           "temp": 0,
           "value": -10
         },
         {
           "faction_id": 291,
+          "faction_ref": "peq:faction:291",
           "npc_value": 0,
           "temp": 0,
           "value": 15
@@ -3159,37 +3252,44 @@
       ],
       "id": 885,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:885",
       "name": "Timvu",
-      "primary_faction_id": 223
+      "primary_faction_id": 223,
+      "primary_faction_ref": "peq:faction:223"
     },
     "94": {
       "entries": [
         {
           "faction_id": 305,
+          "faction_ref": "peq:faction:305",
           "npc_value": 1,
           "temp": 0,
           "value": -30
         },
         {
           "faction_id": 311,
+          "faction_ref": "peq:faction:311",
           "npc_value": 1,
           "temp": 0,
           "value": -30
         },
         {
           "faction_id": 320,
+          "faction_ref": "peq:faction:320",
           "npc_value": 1,
           "temp": 0,
           "value": -30
         },
         {
           "faction_id": 327,
+          "faction_ref": "peq:faction:327",
           "npc_value": 1,
           "temp": 0,
           "value": -30
         },
         {
           "faction_id": 328,
+          "faction_ref": "peq:faction:328",
           "npc_value": 1,
           "temp": 0,
           "value": -30
@@ -3197,10 +3297,14 @@
       ],
       "id": 94,
       "ignore_primary_assist": 0,
+      "key": "peq:npc_faction:94",
       "name": "Merchants_of_Halas",
-      "primary_faction_id": 328
+      "primary_faction_id": 328,
+      "primary_faction_ref": "peq:faction:328"
     }
   },
+  "schema_id": "eqm.halas.factions.raw",
+  "schema_version": 1,
   "source": {
     "archive": "peq-1789171214.zip",
     "npc_source": "data/halas_npcs_source.json",

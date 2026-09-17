@@ -3,6 +3,7 @@ extends Node3D
 const SAVE_PATH := "user://offline_slice_save.json"
 const ZONE_PATH := "res://data/halas.json"
 const ITEM_PATH := "res://data/items.json"
+const PEQ_ITEM_PATH := "res://data/halas_items_source.json"
 const PLAYER_CLASS_PATH := "res://data/player_classes.json"
 const MERCHANT_PATH := "res://data/halas_merchants_source.json"
 const FACTION_PATH := "res://data/halas_factions_source.json"
@@ -360,13 +361,18 @@ func _sanitized_faction_values(saved_values: Variant) -> Dictionary:
 	if not saved_values is Dictionary:
 		return restored
 	for faction_id_variant in saved_values:
-		var faction_id := str(faction_id_variant)
-		var definition: Dictionary = faction_definitions.get("factions", {}).get(faction_id, {})
+		var faction_ref := _normalize_faction_ref(str(faction_id_variant))
+		var definition: Dictionary = faction_definitions.get("factions_by_key", {}).get(faction_ref, {})
 		if definition.is_empty():
 			continue
 		var value := int(saved_values[faction_id_variant])
-		restored[faction_id] = clampi(value, int(definition.get("personal_min", -2000)), int(definition.get("personal_max", 2000)))
+		restored[faction_ref] = clampi(value, int(definition.get("personal_min", -2000)), int(definition.get("personal_max", 2000)))
 	return restored
+
+func _normalize_faction_ref(value: String) -> String:
+	if value.begins_with("peq:faction:"):
+		return value
+	return "peq:faction:%d" % int(value)
 
 func _move_player(delta: float) -> void:
 	var keyboard := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -1182,30 +1188,30 @@ func _selected_npc_interaction_summary(target: Dictionary) -> String:
 		str(target.name), int(target.level), ", ".join(details)
 	]
 	if str(target.get("merchant_state", "none")) == "candidate":
-		var preview := _merchant_preview(int(target.get("merchant_id", 0)))
+		var preview := _merchant_preview(target)
 		if not preview.is_empty():
 			summary += "\n%s" % preview
 	return summary
 
 func _resolve_npc_faction(target: Dictionary) -> Dictionary:
-	var bundle_id := int(target.get("npc_faction_id", 0))
-	if bundle_id == 0:
+	var bundle_ref := str(target.get("npc_faction_ref", ""))
+	if bundle_ref.is_empty() and int(target.get("npc_faction_id", 0)) > 0:
+		bundle_ref = "peq:npc_faction:%d" % int(target.npc_faction_id)
+	if bundle_ref.is_empty():
 		return {"standing": "Indifferently", "score": 0}
-	var bundle: Dictionary = faction_definitions.get("npc_faction_bundles", {}).get(str(bundle_id), {})
-	var primary_id := int(bundle.get("primary_faction_id", 0))
-	if primary_id == 0:
+	var bundle: Dictionary = faction_definitions.get("npc_faction_bundles_by_key", {}).get(bundle_ref, {})
+	var primary_ref := str(bundle.get("primary_faction_ref", ""))
+	if primary_ref.is_empty():
 		return {"standing": "Indifferently", "score": 0}
-	if primary_id < 0:
-		return {"standing": "Unresolved", "score": null}
-	var faction: Dictionary = faction_definitions.get("factions", {}).get(str(primary_id), {})
+	var faction: Dictionary = faction_definitions.get("factions_by_key", {}).get(primary_ref, {})
 	if faction.is_empty():
 		return {"standing": "Unresolved", "score": null}
-	var score := int(faction_values.get(str(primary_id), 0)) + int(faction.get("base", 0))
+	var score := int(faction_values.get(primary_ref, 0)) + int(faction.get("base", 0))
 	for modifier in faction.get("modifiers", []):
 		var identity_id := player_class_id if modifier.get("kind") == "class" else player_race_id if modifier.get("kind") == "race" else player_deity_id
 		if int(modifier.get("identity_id", -1)) == identity_id:
 			score += int(modifier.get("value", 0))
-	return {"standing": _faction_standing(score), "score": score, "primary_faction_id": primary_id}
+	return {"standing": _faction_standing(score), "score": score, "primary_faction_ref": primary_ref}
 
 func _faction_standing(score: int) -> String:
 	var thresholds: Dictionary = faction_definitions.get("thresholds", {})
@@ -1219,8 +1225,28 @@ func _faction_standing(score: int) -> String:
 	if score >= int(thresholds.get("threateningly", -750)): return "Threateningly"
 	return "Scowls"
 
-func _merchant_preview(merchant_id: int) -> String:
-	var listings: Array = merchant_definitions.get(str(merchant_id), [])
+func _merchant_listings_for(target: Dictionary) -> Array:
+	var merchant_ref := str(target.get("merchant_ref", ""))
+	var listings: Array = []
+	if not merchant_ref.is_empty():
+		listings = merchant_definitions.get("by_key", {}).get(merchant_ref, [])
+	else:
+		listings = merchant_definitions.get("by_id", {}).get(str(target.get("merchant_id", 0)), [])
+	var resolved: Array = []
+	for listing in listings:
+		var item_ref := str(listing.get("item_ref", ""))
+		var item_definition: Dictionary = item_definitions.get(item_ref, {})
+		if item_definition.is_empty():
+			push_warning("Merchant listing has unresolved item ref: %s" % item_ref)
+			continue
+		var entry: Dictionary = listing.duplicate()
+		entry["item_name"] = item_definition.get("name", entry.get("item_name", "Unknown item"))
+		entry["base_price"] = int(item_definition.get("price_copper", entry.get("base_price", 0)))
+		resolved.append(entry)
+	return resolved
+
+func _merchant_preview(target: Dictionary) -> String:
+	var listings := _merchant_listings_for(target)
 	if listings.is_empty():
 		return "Shop inventory is unavailable."
 	var names: Array[String] = []
@@ -1249,8 +1275,7 @@ func open_selected_merchant() -> void:
 	if not _merchant_browse_allowed(str(reaction.get("standing", "Unresolved"))):
 		status_text = "%s will not trade with you (%s)." % [str(selected_halas_target.name), str(reaction.get("standing", "Unresolved"))]
 		return
-	var merchant_id := int(selected_halas_target.merchant_id)
-	var listings: Array = merchant_definitions.get(str(merchant_id), [])
+	var listings := _merchant_listings_for(selected_halas_target)
 	if listings.is_empty():
 		status_text = "This merchant has no available stock."
 		return
@@ -1272,20 +1297,45 @@ func _load_item_definitions() -> Dictionary:
 	assert(file != null, "Unable to read item definitions: %s" % ITEM_PATH)
 	var parsed = JSON.parse_string(file.get_as_text())
 	assert(parsed is Dictionary and parsed.get("items") is Dictionary, "Invalid item definitions")
-	return parsed.items
+	var definitions: Dictionary = parsed.items.duplicate(true)
+	var peq_file := FileAccess.open(PEQ_ITEM_PATH, FileAccess.READ)
+	assert(peq_file != null, "Unable to read generated PEQ item definitions: %s" % PEQ_ITEM_PATH)
+	var peq_parsed = JSON.parse_string(peq_file.get_as_text())
+	assert(peq_parsed is Dictionary and peq_parsed.get("items") is Dictionary, "Invalid generated PEQ item definitions")
+	for source_id in peq_parsed.items:
+		var definition: Dictionary = peq_parsed.items[source_id]
+		var item_ref := str(definition.get("key", ""))
+		assert(not item_ref.is_empty() and not definitions.has(item_ref), "Duplicate item definition key: %s" % item_ref)
+		definitions[item_ref] = definition
+	return definitions
 
 func _load_merchant_definitions() -> Dictionary:
 	var file := FileAccess.open(MERCHANT_PATH, FileAccess.READ)
 	assert(file != null, "Unable to read merchant definitions: %s" % MERCHANT_PATH)
 	var parsed = JSON.parse_string(file.get_as_text())
 	assert(parsed is Dictionary and parsed.get("merchants") is Dictionary, "Invalid merchant definitions")
-	return parsed.merchants
+	var by_key: Dictionary = {}
+	for merchant_id in parsed.merchants:
+		var listings: Array = parsed.merchants[merchant_id]
+		if not listings.is_empty():
+			by_key[str(listings[0].get("merchant_ref", "peq:merchant:%s" % merchant_id))] = listings
+	return {"by_id": parsed.merchants, "by_key": by_key}
 
 func _load_faction_definitions() -> Dictionary:
 	var file := FileAccess.open(FACTION_PATH, FileAccess.READ)
 	assert(file != null, "Unable to read faction definitions: %s" % FACTION_PATH)
 	var parsed = JSON.parse_string(file.get_as_text())
 	assert(parsed is Dictionary and parsed.get("factions") is Dictionary and parsed.get("npc_faction_bundles") is Dictionary, "Invalid faction definitions")
+	var factions_by_key: Dictionary = {}
+	for faction_id in parsed.factions:
+		var definition: Dictionary = parsed.factions[faction_id]
+		factions_by_key[str(definition.get("key", "peq:faction:%s" % faction_id))] = definition
+	var bundles_by_key: Dictionary = {}
+	for bundle_id in parsed.npc_faction_bundles:
+		var bundle: Dictionary = parsed.npc_faction_bundles[bundle_id]
+		bundles_by_key[str(bundle.get("key", "peq:npc_faction:%s" % bundle_id))] = bundle
+	parsed["factions_by_key"] = factions_by_key
+	parsed["npc_faction_bundles_by_key"] = bundles_by_key
 	return parsed
 
 func _load_player_class_definitions() -> Dictionary:
@@ -1446,14 +1496,18 @@ func _sanitized_inventory(saved_inventory: Variant) -> Array[Dictionary]:
 	# Migrate the former fixture item_id → quantity map without dropping rewards.
 	if saved_inventory is Dictionary:
 		for legacy_key in saved_inventory:
-			var legacy_text := str(legacy_key)
-			var item_key := "fixture:item:training_spark_fragment" if legacy_text in ["training_spark_fragment", "fixture:training_spark_fragment"] else legacy_text
+			var item_key := _normalize_saved_item_key(str(legacy_key))
 			_append_loaded_item(restored, item_key, int(saved_inventory[legacy_key]), null)
 	elif saved_inventory is Array:
 		for instance in saved_inventory:
 			if instance is Dictionary:
-				_append_loaded_item(restored, str(instance.get("item_key", "")), int(instance.get("quantity", 0)), instance.get("charges_remaining"))
+				_append_loaded_item(restored, _normalize_saved_item_key(str(instance.get("item_key", ""))), int(instance.get("quantity", 0)), instance.get("charges_remaining"))
 	return restored
+
+func _normalize_saved_item_key(item_key: String) -> String:
+	if item_key in ["training_spark_fragment", "fixture:training_spark_fragment"]:
+		return "fixture:item:training_spark_fragment"
+	return item_key
 
 func _append_loaded_item(destination: Array[Dictionary], item_key: String, quantity: int, charges: Variant) -> void:
 	if not item_definitions.has(item_key) or quantity <= 0:

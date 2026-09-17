@@ -7,6 +7,7 @@ Usage:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -109,13 +110,28 @@ def main() -> None:
     missing_items = item_ids - set(item_details)
     if missing_items:
         raise SystemExit(f"Merchant listings reference missing items: {sorted(missing_items)}")
-    for listings in merchants.values():
+    for merchant_id, listings in merchants.items():
         for listing in listings:
             listing.update(item_details[listing["item_id"]])
+            listing["item_ref"] = f"peq:item:{listing['item_id']}"
+            listing["merchant_ref"] = f"peq:merchant:{merchant_id}"
     for listings in merchants.values():
         listings.sort(key=lambda listing: listing["slot"])
 
     result = {
+        "schema_id": "eqm.halas.merchants.raw",
+        "schema_version": 1,
+        "dataset_id": "eqm:dataset:halas-merchants-raw",
+        "meta": {
+            "era_profile": "original_classic_pre_kunark",
+            "design_target": "classic_p1999",
+            "review_state": "current_unreviewed_peq",
+            "evidence": [{"label": "confirmed_source_behavior", "claim": "PEQ merchant listings and item display fields"}],
+            "sources": [{"namespace": "peq", "artifact": archive.name, "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(), "member": SQL_MEMBER, "tables": ["merchantlist", "items"]}],
+            "generator": {"tool": "tools/import_peq_halas_merchants.py"},
+            "filters": {"referenced_by": "data/halas_npcs_source.json", "expansion_id": 0, "content_flags": "excluded"},
+            "overlay": None,
+        },
         "source": {
             "archive": archive.name,
             "table": "merchantlist",

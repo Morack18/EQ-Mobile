@@ -47,6 +47,9 @@ class NpcActor:
 	var merchant_id := 0
 	var npc_faction_id := 0
 	var loottable_id := 0
+	var merchant_ref := ""
+	var npc_faction_ref := ""
+	var loot_table_ref := ""
 	var hp := 1
 	var armor_class := 0
 	var min_damage := 0
@@ -84,10 +87,21 @@ func _physics_process(_delta: float) -> void:
 
 func _build_population(content: Dictionary) -> void:
 	var npc_types: Dictionary = {}
+	var spawn_groups: Dictionary = {}
 	for npc_type in content.get("npc_types", []):
-		npc_types[int(npc_type.id)] = npc_type
+		npc_types[str(npc_type.get("key", "peq:npc:%d" % int(npc_type.id)))] = npc_type
+	for group_id in content.get("spawn_groups", {}):
+		var group: Dictionary = content.spawn_groups[group_id]
+		spawn_groups[str(group.get("key", "peq:spawn_group:%s" % group_id))] = group
 	for spawn in content.get("spawns", []):
-		var npc_type: Dictionary = _choose_npc_type(spawn, npc_types)
+		var spawn_group_ref := str(spawn.get("spawn_group_ref", "peq:spawn_group:%d" % int(spawn.get("spawn_group_id", 0))))
+		var spawn_group: Dictionary = spawn_groups.get(spawn_group_ref, {})
+		if spawn_group.is_empty():
+			push_error("Spawn %s has no resolved SpawnGroup %s" % [str(spawn.get("key", spawn.get("spawn2_id", "?"))), spawn_group_ref])
+			continue
+		var selection_spawn: Dictionary = spawn.duplicate()
+		selection_spawn["candidates"] = spawn_group.get("candidates", [])
+		var npc_type: Dictionary = _choose_npc_type(selection_spawn, npc_types)
 		if npc_type.is_empty():
 			continue
 		var model_name := _model_for(npc_type)
@@ -134,6 +148,9 @@ func _build_population(content: Dictionary) -> void:
 		actor.merchant_id = int(npc_type.get("merchant_id", 0))
 		actor.npc_faction_id = int(npc_type.get("npc_faction_id", 0))
 		actor.loottable_id = int(npc_type.get("loottable_id", 0))
+		actor.merchant_ref = str(npc_type.get("merchant_ref", ""))
+		actor.npc_faction_ref = str(npc_type.get("npc_faction_ref", ""))
+		actor.loot_table_ref = str(npc_type.get("loot_table_ref", ""))
 		actor.hp = int(npc_type.get("hp", 1))
 		actor.armor_class = int(npc_type.get("armor_class", 0))
 		actor.min_damage = int(npc_type.get("mindmg", 0))
@@ -190,6 +207,9 @@ func nearest_target(origin: Vector3, view_forward: Vector3, max_distance: float 
 		"merchant_id": best.merchant_id,
 		"npc_faction_id": best.npc_faction_id,
 		"loottable_id": best.loottable_id,
+		"merchant_ref": best.merchant_ref,
+		"npc_faction_ref": best.npc_faction_ref,
+		"loot_table_ref": best.loot_table_ref,
 		"source_hp": best.hp,
 		"source_armor_class": best.armor_class,
 		"source_min_damage": best.min_damage,
@@ -218,6 +238,9 @@ func target_for_pick_area(area: Area3D) -> Dictionary:
 				"merchant_id": actor.merchant_id,
 				"npc_faction_id": actor.npc_faction_id,
 				"loottable_id": actor.loottable_id,
+				"merchant_ref": actor.merchant_ref,
+				"npc_faction_ref": actor.npc_faction_ref,
+				"loot_table_ref": actor.loot_table_ref,
 				"source_hp": actor.hp,
 				"source_armor_class": actor.armor_class,
 				"source_min_damage": actor.min_damage,
@@ -290,8 +313,8 @@ func _choose_npc_type(spawn: Dictionary, npc_types: Dictionary) -> Dictionary:
 	for candidate in candidates:
 		roll -= int(candidate.chance)
 		if roll < 0:
-			return npc_types.get(int(candidate.npc_type_id), {})
-	return npc_types.get(int(candidates[0].npc_type_id), {})
+			return npc_types.get(str(candidate.get("npc_ref", "peq:npc:%d" % int(candidate.npc_type_id))), {})
+	return npc_types.get(str(candidates[0].get("npc_ref", "peq:npc:%d" % int(candidates[0].npc_type_id))), {})
 
 
 func _model_for(npc_type: Dictionary) -> String:

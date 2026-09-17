@@ -1,4 +1,5 @@
 {
+  "dataset_id": "eqm:dataset:halas-npcs-raw",
   "grids": {
     "3": [
       {
@@ -1787,6 +1788,42 @@
           12.0,
           -100.0,
           -4.0
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "PEQ spawn/group/NPC relationships",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "content_flags": "excluded",
+      "expansion_id": 0,
+      "zone_short_name": "halas",
+      "zone_version": 0
+    },
+    "generator": {
+      "tool": "tools/import_peq_halas.py"
+    },
+    "overlay": null,
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "peq-1789171214.zip",
+        "member": "peq-dump/create_tables_content.sql",
+        "namespace": "peq",
+        "sha256": "96a13e1e601f782a2997c8ae8342bcd849631614203de3fd823dc40d4850cd4d",
+        "tables": [
+          "zone",
+          "spawn2",
+          "spawnentry",
+          "npc_types",
+          "grid_entries"
         ]
       }
     ]
@@ -3833,6 +3870,8 @@
       "walk_speed": 0.0
     }
   ],
+  "schema_id": "eqm.halas.npcs.raw",
+  "schema_version": 1,
   "source": {
     "archive": "peq-1789171214.zip",
     "expansion_id": 0,

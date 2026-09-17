@@ -21,6 +21,8 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
+import hashlib
 import sys
 import zipfile
 from pathlib import Path
@@ -81,6 +83,34 @@ def is_available_in_classic(row: list[str]) -> bool:
     )
 
 
+def table_columns(archive: Path, table: str) -> dict[str, int]:
+    """Read a PEQ table's column order for table-specific availability rules."""
+    marker, names, reading = f"CREATE TABLE `{table}` (", [], False
+    with zipfile.ZipFile(archive) as bundle, bundle.open(SQL_MEMBER) as raw:
+        for raw_line in raw:
+            line = raw_line.decode("latin-1").rstrip("\r\n")
+            if line == marker:
+                reading = True
+            elif reading and line.startswith(")"):
+                break
+            elif reading:
+                match = re.match(r"\s*`([^`]+)`", line)
+                if match:
+                    names.append(match.group(1))
+    if not names:
+        raise SystemExit(f"Could not read schema for {table}")
+    return {name: index for index, name in enumerate(names)}
+
+
+def spawnentry_available_in_classic(row: list[str], columns: dict[str, int]) -> bool:
+    return (
+        as_int(row[columns["min_expansion"]]) in (-1, CLASSIC_EXPANSION)
+        and as_int(row[columns["max_expansion"]]) in (-1, CLASSIC_EXPANSION)
+        and row[columns["content_flags"]] == "NULL"
+        and row[columns["content_flags_disabled"]] == "NULL"
+    )
+
+
 def main() -> None:
     if len(sys.argv) != 3:
         raise SystemExit(__doc__)
@@ -124,9 +154,12 @@ def main() -> None:
 
     candidates: dict[int, list[dict]] = {group_id: [] for group_id in group_ids}
     npc_ids: set[int] = set()
+    spawnentry_columns = table_columns(archive, "spawnentry")
     for row in rows_for_table(archive, "spawnentry"):
         group_id = as_int(row[0])
         if group_id not in candidates:
+            continue
+        if not spawnentry_available_in_classic(row, spawnentry_columns):
             continue
         npc_id = as_int(row[1])
         npc_ids.add(npc_id)
@@ -226,6 +259,37 @@ def main() -> None:
     }
 
     result = {
+        "schema_id": "eqm.halas.npcs.raw",
+        "schema_version": 1,
+        "dataset_id": "eqm:dataset:halas-npcs-raw",
+        "meta": {
+            "era_profile": "original_classic_pre_kunark",
+            "design_target": "classic_p1999",
+            "review_state": "current_unreviewed_peq",
+            "evidence": [
+                {
+                    "label": "confirmed_source_behavior",
+                    "claim": "PEQ spawn/group/NPC relationships",
+                }
+            ],
+            "sources": [
+                {
+                    "namespace": "peq",
+                    "artifact": archive.name,
+                    "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+                    "member": SQL_MEMBER,
+                    "tables": ["zone", "spawn2", "spawnentry", "npc_types", "grid_entries"],
+                }
+            ],
+            "generator": {"tool": "tools/import_peq_halas.py"},
+            "filters": {
+                "zone_short_name": "halas",
+                "zone_version": 0,
+                "expansion_id": CLASSIC_EXPANSION,
+                "content_flags": "excluded",
+            },
+            "overlay": None,
+        },
         "source": {
             "archive": archive.name,
             "zone": "halas",

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -51,7 +52,7 @@ def main() -> None:
     for row in rows_for_table(archive, "npc_faction"):
         bundle_id = as_int(field(row, npc_cols, "id"))
         if bundle_id in bundle_ids:
-            bundles[bundle_id] = {"id": bundle_id, "name": field(row, npc_cols, "name"),
+            bundles[bundle_id] = {"id": bundle_id, "key": f"peq:npc_faction:{bundle_id}", "name": field(row, npc_cols, "name"),
                                   "primary_faction_id": as_int(field(row, npc_cols, "primaryfaction")),
                                   "ignore_primary_assist": as_int(field(row, npc_cols, "ignore_primary_assist")), "entries": []}
     missing = bundle_ids - set(bundles)
@@ -63,7 +64,8 @@ def main() -> None:
         bundle_id = as_int(field(row, entry_cols, "npc_faction_id"))
         if bundle_id not in bundles:
             continue
-        entry = {"faction_id": as_int(field(row, entry_cols, "faction_id")), "value": as_int(field(row, entry_cols, "value")),
+        faction_id = as_int(field(row, entry_cols, "faction_id"))
+        entry = {"faction_id": faction_id, "faction_ref": f"peq:faction:{faction_id}" if faction_id > 0 else None, "value": as_int(field(row, entry_cols, "value")),
                  "npc_value": as_int(field(row, entry_cols, "npc_value")), "temp": as_int(field(row, entry_cols, "temp"))}
         bundles[bundle_id]["entries"].append(entry)
         if entry["faction_id"] > 0:
@@ -73,7 +75,7 @@ def main() -> None:
     for row in rows_for_table(archive, "faction_list"):
         faction_id = as_int(field(row, list_cols, "id"))
         if faction_id in faction_ids:
-            factions[faction_id] = {"id": faction_id, "name": field(row, list_cols, "name"), "base": as_int(field(row, list_cols, "base")), "modifiers": []}
+            factions[faction_id] = {"id": faction_id, "key": f"peq:faction:{faction_id}", "name": field(row, list_cols, "name"), "base": as_int(field(row, list_cols, "base")), "modifiers": []}
     missing = faction_ids - set(factions)
     if missing:
         raise SystemExit(f"Missing faction definitions: {sorted(missing)}")
@@ -98,10 +100,30 @@ def main() -> None:
         factions[faction_id]["modifiers"].append({"mod_name": mod_name, "kind": kind,
                                                     "identity_id": int(match.group(2)), "value": as_int(field(row, mod_cols, "mod"))})
     for bundle in bundles.values():
+        primary_id = int(bundle["primary_faction_id"])
+        bundle["primary_faction_ref"] = f"peq:faction:{primary_id}" if primary_id > 0 else None
         bundle["entries"].sort(key=lambda entry: entry["faction_id"])
     for faction in factions.values():
         faction["modifiers"].sort(key=lambda mod: mod["mod_name"])
-    result = {"source": {"archive": archive.name, "schema": "ProjectEQ content SQL", "target_era": "classic_p1999", "review_state": "current_unreviewed_peq", "threshold_basis": "current_eqemu_defaults", "npc_source": "data/halas_npcs_source.json"}, "thresholds": THRESHOLDS, "factions": {str(key): factions[key] for key in sorted(factions)}, "npc_faction_bundles": {str(key): bundles[key] for key in sorted(bundles)}}
+    result = {
+        "schema_id": "eqm.halas.factions.raw",
+        "schema_version": 1,
+        "dataset_id": "eqm:dataset:halas-factions-raw",
+        "meta": {
+            "era_profile": "original_classic_pre_kunark",
+            "design_target": "classic_p1999",
+            "review_state": "current_unreviewed_peq",
+            "evidence": [{"label": "confirmed_source_behavior", "claim": "PEQ faction and NPC-faction relationships"}],
+            "sources": [{"namespace": "peq", "artifact": archive.name, "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(), "member": SQL_MEMBER, "tables": ["npc_faction", "npc_faction_entries", "faction_list", "faction_base_data", "faction_list_mod"]}],
+            "generator": {"tool": "tools/import_peq_halas_factions.py"},
+            "filters": {"referenced_by": "data/halas_npcs_source.json"},
+            "overlay": None,
+        },
+        "source": {"archive": archive.name, "schema": "ProjectEQ content SQL", "target_era": "classic_p1999", "review_state": "current_unreviewed_peq", "threshold_basis": "current_eqemu_defaults", "npc_source": "data/halas_npcs_source.json"},
+        "thresholds": THRESHOLDS,
+        "factions": {str(key): factions[key] for key in sorted(factions)},
+        "npc_faction_bundles": {str(key): bundles[key] for key in sorted(bundles)},
+    }
     output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(f"Wrote {len(factions)} faction definitions and {len(bundles)} NPC faction bundles.")
 

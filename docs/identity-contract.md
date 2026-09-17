@@ -63,6 +63,31 @@ keys, missing foreign references, incompatible source IDs, absent schema
 versions, and unsupported era metadata. Optional numeric source foreign keys
 use `null` in neutral data, never fabricated `*:0` keys.
 
-Current raw PEQ snapshots remain source-shaped for deterministic overlay
-application. Their Phase 2 typed keys are derived at import/runtime boundaries
-until the versioned importer schema migration is complete.
+## Live generated datasets and runtime boundary
+
+The current Halas importers emit versioned metadata envelopes for the raw NPC,
+faction, merchant, item, and loot snapshots. Each contains its stable dataset key, the
+canonical-era selection, review/evidence status, input archive SHA-256, SQL
+tables used, deterministic generator name, filtering, and overlay state. The
+derived NPC snapshot copies the raw provenance and records the reviewed-overlay
+digest separately.
+
+Raw source IDs remain intentionally present for transparent reimport and audit.
+They are not the runtime foreign-key path: the derived NPC population resolves
+`SpawnGroup` by `spawn_group_ref`, resolves candidates by `npc_ref`, and carries
+typed merchant, NPC-faction, loot-table, class, and race references. Runtime
+merchant and faction lookups use their typed keys; numeric IDs are legacy-save
+and source-compatibility fallbacks only. Faction saves are rewritten as
+`peq:faction:<id>` keys after loading a prior numeric save.
+
+`tools/import_peq_halas_items_loot.py` follows only the Halas NPC loot-table
+and merchant item references. It emits reusable `LootTable` and `LootDrop`
+definitions separately, then produces the associated `ItemDefinition` subset.
+It does not enable PEQ loot awards or purchasing in the offline slice.
+
+`tools/validate_identity_contract.py` enforces the metadata envelope, key
+grammar, duplicate-safe generated identities, and the live
+NPC/faction/merchant/item/loot cross-dataset references. Merchant UI display
+data resolves its `item_ref` through the generated `ItemDefinition` catalog;
+the prior copied display fields remain import provenance only. Loot remains
+reference-only runtime data until its gameplay rules are reviewed.

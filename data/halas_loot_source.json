@@ -1,0 +1,491 @@
+{
+  "dataset_id": "eqm:dataset:halas-loot-raw",
+  "loot_drops": {
+    "148499": {
+      "entries": [
+        {
+          "chance": 50.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": false,
+          "item_ref": "peq:item:13403",
+          "multiplier": 2,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148499,
+      "key": "peq:loot_drop:148499",
+      "name": "148499_a_Sled_Dog_MAGELO-GEN"
+    },
+    "148500": {
+      "entries": [
+        {
+          "chance": 50.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": false,
+          "item_ref": "peq:item:13780",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148500,
+      "key": "peq:loot_drop:148500",
+      "name": "148500_a_Sled_Dog_MAGELO-GEN"
+    },
+    "148506": {
+      "entries": [
+        {
+          "chance": 125.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148506,
+      "key": "peq:loot_drop:148506",
+      "name": "148506_Alec_McMarrin_MAGELO-GEN"
+    },
+    "148509": {
+      "entries": [
+        {
+          "chance": 100.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148509,
+      "key": "peq:loot_drop:148509",
+      "name": "148509_Andres_McMarrin_MAGELO-GEN"
+    },
+    "148511": {
+      "entries": [
+        {
+          "chance": 14.286,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": false,
+          "item_ref": "peq:item:11854",
+          "multiplier": 2,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "chance": 14.286,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:44551",
+          "multiplier": 2,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148511,
+      "key": "peq:loot_drop:148511",
+      "name": "148511_Cian_McMarrin_MAGELO-GEN"
+    },
+    "148512": {
+      "entries": [
+        {
+          "chance": 100.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148512,
+      "key": "peq:loot_drop:148512",
+      "name": "148512_Cian_McMarrin_MAGELO-GEN"
+    },
+    "148514": {
+      "entries": [
+        {
+          "chance": 100.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148514,
+      "key": "peq:loot_drop:148514",
+      "name": "148514_Adon_McMarrin_MAGELO-GEN"
+    },
+    "148521": {
+      "entries": [
+        {
+          "chance": 100.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148521,
+      "key": "peq:loot_drop:148521",
+      "name": "148521_Clovan_McMarrin_MAGELO-GEN"
+    },
+    "148524": {
+      "entries": [
+        {
+          "chance": 100.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148524,
+      "key": "peq:loot_drop:148524",
+      "name": "148524_Nal_McMarrin_MAGELO-GEN"
+    },
+    "148527": {
+      "entries": [
+        {
+          "chance": 114.286,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148527,
+      "key": "peq:loot_drop:148527",
+      "name": "148527_Oli_McMarrin_MAGELO-GEN"
+    },
+    "148531": {
+      "entries": [
+        {
+          "chance": 100.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5351",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 148531,
+      "key": "peq:loot_drop:148531",
+      "name": "148531_Mils_McMarrin_MAGELO-GEN"
+    },
+    "2726": {
+      "entries": [
+        {
+          "chance": 25.0,
+          "charges": 1,
+          "disabled_chance": 0.0,
+          "equip": true,
+          "item_ref": "peq:item:5005",
+          "multiplier": 1,
+          "npc_level_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "id": 2726,
+      "key": "peq:loot_drop:2726",
+      "name": "1433_Gunex_Eklar_Wear"
+    }
+  },
+  "loot_tables": {
+    "102638": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 0,
+        "min_copper": 0
+      },
+      "entries": [
+        {
+          "drop_limit": 1,
+          "loot_drop_ref": "peq:loot_drop:148499",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        },
+        {
+          "drop_limit": 1,
+          "loot_drop_ref": "peq:loot_drop:148500",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102638,
+      "key": "peq:loot_table:102638",
+      "name": "102638_a_Sled_Dog_MAGELO-GEN"
+    },
+    "102640": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 1,
+          "loot_drop_ref": "peq:loot_drop:148506",
+          "min_drop": 1,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102640,
+      "key": "peq:loot_table:102640",
+      "name": "102640_Alec_McMarrin_MAGELO-GEN"
+    },
+    "102641": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 0,
+          "loot_drop_ref": "peq:loot_drop:148509",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102641,
+      "key": "peq:loot_table:102641",
+      "name": "102641_Andres_McMarrin_MAGELO-GEN"
+    },
+    "102642": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 1,
+          "loot_drop_ref": "peq:loot_drop:148511",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        },
+        {
+          "drop_limit": 0,
+          "loot_drop_ref": "peq:loot_drop:148512",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102642,
+      "key": "peq:loot_table:102642",
+      "name": "102642_Cian_McMarrin_MAGELO-GEN"
+    },
+    "102643": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 0,
+          "loot_drop_ref": "peq:loot_drop:148514",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102643,
+      "key": "peq:loot_table:102643",
+      "name": "102643_Adon_McMarrin_MAGELO-GEN"
+    },
+    "102645": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 0,
+          "loot_drop_ref": "peq:loot_drop:148521",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102645,
+      "key": "peq:loot_table:102645",
+      "name": "102645_Clovan_McMarrin_MAGELO-GEN"
+    },
+    "102646": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 0,
+          "loot_drop_ref": "peq:loot_drop:148524",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102646,
+      "key": "peq:loot_table:102646",
+      "name": "102646_Nal_McMarrin_MAGELO-GEN"
+    },
+    "102647": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 1,
+          "loot_drop_ref": "peq:loot_drop:148527",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102647,
+      "key": "peq:loot_table:102647",
+      "name": "102647_Oli_McMarrin_MAGELO-GEN"
+    },
+    "102648": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 4000,
+        "min_copper": 40
+      },
+      "entries": [
+        {
+          "drop_limit": 0,
+          "loot_drop_ref": "peq:loot_drop:148531",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 102648,
+      "key": "peq:loot_table:102648",
+      "name": "102648_Mils_McMarrin_MAGELO-GEN"
+    },
+    "1431": {
+      "cash": {
+        "average_coin": 0,
+        "max_copper": 8734,
+        "min_copper": 1320
+      },
+      "entries": [
+        {
+          "drop_limit": 1,
+          "loot_drop_ref": "peq:loot_drop:2726",
+          "min_drop": 0,
+          "multiplier": 1,
+          "probability_percent": 100.0
+        }
+      ],
+      "id": 1431,
+      "key": "peq:loot_table:1431",
+      "name": "Gunex_Eklar"
+    }
+  },
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "PEQ item and reusable loot table relationships",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "content_flags": "excluded",
+      "expansion_id": 0,
+      "referenced_by": [
+        "data/halas_npcs_source.json",
+        "data/halas_merchants_source.json"
+      ]
+    },
+    "generator": {
+      "tool": "tools/import_peq_halas_items_loot.py"
+    },
+    "overlay": null,
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "peq-1789171214.zip",
+        "member": "peq-dump/create_tables_content.sql",
+        "namespace": "peq",
+        "sha256": "96a13e1e601f782a2997c8ae8342bcd849631614203de3fd823dc40d4850cd4d",
+        "tables": [
+          "items",
+          "loottable",
+          "loottable_entries",
+          "lootdrop",
+          "lootdrop_entries"
+        ]
+      }
+    ]
+  },
+  "schema_id": "eqm.halas.loot.raw",
+  "schema_version": 1
+}

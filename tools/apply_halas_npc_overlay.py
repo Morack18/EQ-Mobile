@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import sys
@@ -292,6 +293,8 @@ def validate_overlay(overlay: dict[str, Any], source_data: dict[str, Any]) -> No
     npc_additions = npc_section.get("additions", [])
     if not isinstance(npc_additions, list):
         fail("overlay.npc_types.additions must be a list")
+    if npc_additions:
+        fail("NPC additions require an explicit project-owned identity contract and are not supported yet")
     seen_add_npc_ids: set[int] = set()
     for idx, npc in enumerate(npc_additions):
         label = f"npc_types addition[{idx}]"
@@ -369,6 +372,8 @@ def validate_overlay(overlay: dict[str, Any], source_data: dict[str, Any]) -> No
             fail(f"spawn2 ID {spawn_id} cannot be in both overrides and deletions")
         if "spawn2_id" in fields and fields["spawn2_id"] != spawn_id:
             fail(f"spawns override cannot change spawn2_id {spawn_id} to {fields['spawn2_id']}")
+        if "candidates" in fields:
+            fail("Spawn candidate overrides are not supported; SpawnGroup is the canonical candidate owner")
         validate_spawn_fields(fields, f"spawns override {spawn_id}", require_all=False)
         if "grid_id" in fields and fields["grid_id"] != 0 and fields["grid_id"] not in final_grid_ids:
             fail(f"spawns override {spawn_id} references missing grid ID: {fields['grid_id']}")
@@ -380,6 +385,8 @@ def validate_overlay(overlay: dict[str, Any], source_data: dict[str, Any]) -> No
     spawn_additions = spawn_section.get("additions", [])
     if not isinstance(spawn_additions, list):
         fail("overlay.spawns.additions must be a list")
+    if spawn_additions:
+        fail("Spawn additions require an explicit project-owned identity contract and are not supported yet")
     seen_add_spawn_ids: set[int] = set()
     for idx, spawn in enumerate(spawn_additions):
         label = f"spawns addition[{idx}]"
@@ -480,6 +487,14 @@ def apply_overlay(
     # transparent correction step rather than an identity rewrite.
     for npc in sorted_npc_types:
         npc["key"] = f"peq:npc:{int(npc['id'])}"
+        npc["class_ref"] = f"eqemu:class:{int(npc['class'])}"
+        npc["race_ref"] = f"eqemu:race:{int(npc['race'])}"
+        npc_faction_id = int(npc.get("npc_faction_id", 0))
+        merchant_id = int(npc.get("merchant_id", 0))
+        loottable_id = int(npc.get("loottable_id", 0))
+        npc["npc_faction_ref"] = f"peq:npc_faction:{npc_faction_id}" if npc_faction_id > 0 else None
+        npc["merchant_ref"] = f"peq:merchant:{merchant_id}" if merchant_id > 0 else None
+        npc["loot_table_ref"] = f"peq:loot_table:{loottable_id}" if loottable_id > 0 else None
     for spawn in sorted_spawns:
         spawn["key"] = f"peq:spawn:{int(spawn['spawn2_id'])}"
         spawn["spawn_group_ref"] = f"peq:spawn_group:{int(spawn['spawn_group_id'])}"
@@ -499,13 +514,31 @@ def apply_overlay(
     derived_source["p1999_overlay_applied"] = True
     derived_source["p1999_overlay_revision"] = int(overlay_data.get("schema_version", 1))
     derived_source["schema"] = "ProjectEQ content SQL with P1999 overlay"
+    meta = copy.deepcopy(source_data.get("meta", {}))
+    meta.update(
+        {
+            "overlay": {
+                "dataset_id": "eqm:overlay:halas-npcs-p1999-v1",
+                "schema_version": int(overlay_data.get("schema_version", 1)),
+                "sha256": hashlib.sha256(
+                    json.dumps(overlay_data, sort_keys=True).encode()
+                ).hexdigest(),
+                "review_state": "pending_reviewed_corrections",
+            },
+            "generator": {"tool": "tools/apply_halas_npc_overlay.py"},
+        }
+    )
 
     derived = {
-		"grids": sorted_grids,
-		"npc_types": sorted_npc_types,
-		"source": derived_source,
-		"spawns": sorted_spawns,
-		"spawn_groups": derived_groups,
+        "schema_id": "eqm.halas.npcs.derived",
+        "schema_version": 1,
+        "dataset_id": "eqm:dataset:halas-npcs",
+        "meta": meta,
+        "grids": sorted_grids,
+        "npc_types": sorted_npc_types,
+        "source": derived_source,
+        "spawns": sorted_spawns,
+        "spawn_groups": derived_groups,
     }
     return derived
 
