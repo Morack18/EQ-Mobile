@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +15,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 NPC_SOURCE = ROOT / "data/halas_npcs_source.json"
 MERCHANT_SOURCE = ROOT / "data/halas_merchants_source.json"
+PINNED_ARCHIVE = ROOT / "resources/reference-data/projecteq/peq-1789171214.zip"
+IMPORTER = ROOT / "tools/import_peq_halas_merchants.py"
+
+
+def fail(message: str) -> None:
+    print(f"FAIL: {message}", file=sys.stderr)
+    raise SystemExit(1)
 LISTING_FIELDS = {
     "slot",
     "item_id",
