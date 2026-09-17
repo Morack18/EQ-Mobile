@@ -456,6 +456,21 @@
       },
       {
         "alt_currency_cost": 0,
+        "base_price": 20830,
+        "classes_required": 65535,
+        "faction_required": -1100,
+        "item_id": 15157,
+        "item_name": "Spell: Dexterity",
+        "item_ref": "peq:item:15157",
+        "level_required": 0,
+        "max_status": 255,
+        "merchant_ref": "peq:merchant:29001",
+        "min_status": 0,
+        "probability": 100,
+        "slot": 2
+      },
+      {
+        "alt_currency_cost": 0,
         "base_price": 20764,
         "classes_required": 65535,
         "faction_required": -1100,
@@ -7283,6 +7298,21 @@
         "min_status": 0,
         "probability": 100,
         "slot": 4
+      },
+      {
+        "alt_currency_cost": 0,
+        "base_price": 5,
+        "classes_required": 65535,
+        "faction_required": -1100,
+        "item_id": 8060,
+        "item_name": "Bundled Wooden Arrow Shafts",
+        "item_ref": "peq:item:8060",
+        "level_required": 0,
+        "max_status": 255,
+        "merchant_ref": "peq:merchant:29044",
+        "min_status": 0,
+        "probability": 100,
+        "slot": 5
       },
       {
         "alt_currency_cost": 0,
