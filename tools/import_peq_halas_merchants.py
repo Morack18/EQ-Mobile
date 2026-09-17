@@ -44,14 +44,14 @@ def table_columns(archive: Path, table: str) -> dict[str, int]:
     return {name: index for index, name in enumerate(columns)}
 
 
-def available_in_classic(row: list[str]) -> bool:
-    min_expansion = as_int(row[13])
-    max_expansion = as_int(row[14])
+def available_in_classic(row: list[str], columns: dict[str, int]) -> bool:
+    min_expansion = as_int(row[columns["min_expansion"]])
+    max_expansion = as_int(row[columns["max_expansion"]])
     return (
         min_expansion in (-1, CLASSIC_EXPANSION)
         and max_expansion in (-1, CLASSIC_EXPANSION)
-        and row[15] == "NULL"
-        and row[16] == "NULL"
+        and row[columns["content_flags"]] == "NULL"
+        and row[columns["content_flags_disabled"]] == "NULL"
     )
 
 
@@ -71,24 +71,33 @@ def main() -> None:
         if int(npc_type["merchant_id"]) > 0
     }
     merchants: dict[int, list[dict]] = {merchant_id: [] for merchant_id in merchant_ids}
+    merchant_columns = table_columns(archive, "merchantlist")
+    required_columns = {
+        "merchantid", "slot", "item", "faction_required", "level_required",
+        "min_status", "max_status", "alt_currency_cost", "classes_required",
+        "probability", "min_expansion", "max_expansion", "content_flags",
+        "content_flags_disabled",
+    }
+    if not required_columns.issubset(merchant_columns):
+        raise SystemExit("merchantlist schema is missing classic-availability columns")
     excluded = 0
     for row in rows_for_table(archive, "merchantlist"):
-        merchant_id = as_int(row[0])
+        merchant_id = as_int(row[merchant_columns["merchantid"]])
         if merchant_id not in merchants:
             continue
-        if not available_in_classic(row):
+        if not available_in_classic(row, merchant_columns):
             excluded += 1
             continue
         merchants[merchant_id].append({
-            "slot": as_int(row[1]),
-            "item_id": as_int(row[2]),
-            "faction_required": as_int(row[3]),
-            "level_required": as_int(row[4]),
-            "min_status": as_int(row[5]),
-            "max_status": as_int(row[6]),
-            "alt_currency_cost": as_int(row[7]),
-            "classes_required": as_int(row[8]),
-            "probability": as_int(row[9]),
+            "slot": as_int(row[merchant_columns["slot"]]),
+            "item_id": as_int(row[merchant_columns["item"]]),
+            "faction_required": as_int(row[merchant_columns["faction_required"]]),
+            "level_required": as_int(row[merchant_columns["level_required"]]),
+            "min_status": as_int(row[merchant_columns["min_status"]]),
+            "max_status": as_int(row[merchant_columns["max_status"]]),
+            "alt_currency_cost": as_int(row[merchant_columns["alt_currency_cost"]]),
+            "classes_required": as_int(row[merchant_columns["classes_required"]]),
+            "probability": as_int(row[merchant_columns["probability"]]),
         })
 
     # Item names and base prices are available locally. They are source display
