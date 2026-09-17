@@ -3,6 +3,15 @@
   "display_name": "Halas",
   "geometry_scene": "res://assets/imported/halas/halas.glb",
   "geometry_scale": 10.0,
+  "world_space_contract": {
+    "unit": "one Godot world unit equals one native EQ world unit after geometry_scale",
+    "server_axis_map": [-2, 3, 1],
+    "server_position": "[x,y,elevation] -> [-y,elevation,x]",
+    "server_heading": "0..512 -> Godot yaw pi/2 - heading*tau/512",
+    "lantern_prop_position": "[x,y,z] -> [-x,y,z]",
+    "lantern_prop_axis_map": [-1, 2, 3],
+    "lantern_prop_heading": "degrees -> negative Godot yaw"
+  },
   "object_instances": "res://data/halas_objects.json",
   "object_model_directory": "res://assets/imported/halas/objects",
   "npc_source": "res://data/halas_npcs.json",

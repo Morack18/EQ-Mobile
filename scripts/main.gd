@@ -11,7 +11,7 @@ const FACTION_PATH := "res://data/halas_factions_source.json"
 # u/s, but its direct manual-drive path uses 35 u/s. EQ Mobile's two-stick
 # controller is the latter interaction model, and device feel confirms 44 is
 # too fast for this project; use 35 u/s while retaining the discrepancy below.
-const PLAYER_RUN_SPEED := 35.0
+const PLAYER_RUN_SPEED := EqWorldSpace.EQ_MANUAL_RUN_SPEED
 const PLAYER_WALK_SPEED := PLAYER_RUN_SPEED * (0.3 / 0.7)
 const WALK_RUN_THRESHOLD := 20.0
 # EQEmu's GetRaceGenderDefaultHeight defines HLM as a seven-foot actor in the
@@ -20,12 +20,12 @@ const WALK_RUN_THRESHOLD := 20.0
 const PLAYER_SERVER_SIZE := 7.0
 # eqoxide's reference-client collision radius is one EQ world unit.  Keep the
 # collision body's standing span equal to the HLM's native rendered height.
-const PLAYER_COLLISION_RADIUS := 1.0
+const PLAYER_COLLISION_RADIUS := EqWorldSpace.EQ_COLLISION_RADIUS
 const PLAYER_COLLISION_HEIGHT := PLAYER_SERVER_SIZE
-const COLLISION_LAYER_TERRAIN := 1
-const COLLISION_LAYER_WORLD_OBJECTS := 2
-const COLLISION_LAYER_TARGET_PICK := 4
-const PLAYER_WORLD_COLLISION_MASK := COLLISION_LAYER_TERRAIN | COLLISION_LAYER_WORLD_OBJECTS
+const COLLISION_LAYER_TERRAIN := EqWorldSpace.COLLISION_LAYER_TERRAIN
+const COLLISION_LAYER_WORLD_OBJECTS := EqWorldSpace.COLLISION_LAYER_WORLD_OBJECTS
+const COLLISION_LAYER_TARGET_PICK := EqWorldSpace.COLLISION_LAYER_TARGET_PICK
+const PLAYER_WORLD_COLLISION_MASK := EqWorldSpace.WORLD_COLLISION_MASK
 const PLAYER_MAX_SLOPE_ANGLE := deg_to_rad(60.0)
 const PLAYER_FLOOR_SNAP_DISTANCE := 0.5
 const PLAYER_SAFE_MARGIN := 0.05
@@ -36,9 +36,9 @@ const PLAYER_STEP_UP_HEIGHT := 2.0
 # eqoxide's reference client uses these native EQ world-unit values.  Do not
 # substitute Godot's project gravity: this zone is already normalized to EQ
 # world units.
-const EQ_GRAVITY := 120.0
-const EQ_MAX_FALL_SPEED := 128.0
-const EQ_JUMP_VELOCITY := 31.0
+const EQ_GRAVITY := EqWorldSpace.EQ_GRAVITY
+const EQ_MAX_FALL_SPEED := EqWorldSpace.EQ_MAX_FALL_SPEED
+const EQ_JUMP_VELOCITY := EqWorldSpace.EQ_JUMP_VELOCITY
 const EQ_SWIM_SPEED := 35.0
 const EQ_SWIM_BUOYANCY_RATE := 30.0
 const EQ_SWIM_FLOAT_DEPTH := 2.0
@@ -128,6 +128,7 @@ var wallet := {"platinum": 0, "gold": 0, "silver": 0, "copper": 0}
 var authored_water_triangles: Array[PackedVector3Array] = []
 
 func _ready() -> void:
+	EqWorldSpace.run_contract_tests()
 	zone = _load_zone()
 	item_definitions = _load_item_definitions()
 	merchant_definitions = _load_merchant_definitions()
@@ -800,8 +801,8 @@ func _build_zone_objects() -> void:
 		placement.name = "%s_%d" % [model_name, line_number]
 		# Lantern writes raw EQ placement data. The Halas zone's root transform
 		# mirrors X, so instance positions and headings must be mirrored too.
-		placement.position = Vector3(-float(values[1]), float(values[2]), float(values[3]))
-		placement.rotation.y = deg_to_rad(-float(values[5]))
+		placement.position = EqWorldSpace.halas_lantern_prop_position(float(values[1]), float(values[2]), float(values[3]))
+		placement.rotation.y = EqWorldSpace.halas_lantern_prop_yaw(float(values[5]))
 		placement.scale = Vector3(float(values[7]), float(values[8]), float(values[9]))
 		var object := scene.instantiate() as Node3D
 		object.name = "Visual"
@@ -989,7 +990,7 @@ func _normalize_player_model_to_height(visual: Node3D, target_height: float) -> 
 			highest_point = maxf(highest_point, point.y)
 	var raw_height := highest_point - lowest_point
 	assert(raw_height > 0.001, "Unable to measure HLM placeholder height")
-	var visual_scale := target_height / raw_height
+	var visual_scale := EqWorldSpace.visual_scale_for_height(raw_height, target_height)
 	visual.scale = Vector3.ONE * visual_scale
 	visual.position.y = -lowest_point * visual_scale
 

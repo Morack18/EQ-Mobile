@@ -30,6 +30,11 @@ evidence labels, provenance boundary, and the required
 [deviation registry](docs/deviation-registry.md). New systems must follow it
 before choosing a source value or behavior.
 
+Spatial conversions and native-unit physics are governed by
+[docs/world-mathematics.md](docs/world-mathematics.md). New zones must declare
+and validate their own world-space contract; Halas math is not implicit global
+behavior.
+
 ## Current workspace
 
 - Engine: Godot 4.7 project (`project.godot`), Mobile renderer and Jolt 3D

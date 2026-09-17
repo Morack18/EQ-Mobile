@@ -6,10 +6,9 @@ extends Node3D
 ## every static Halas source spawn gives (-y, elevation, x).
 
 const WALK_SPEED := 2.35
-const HEADING_UNITS_PER_TURN := 512.0
 const TERRAIN_SNAP_TOLERANCE := 6.0
 const TERRAIN_CAST_HEIGHT := 12.0
-const TARGET_PICK_COLLISION_LAYER := 4
+const TARGET_PICK_COLLISION_LAYER := EqWorldSpace.COLLISION_LAYER_TARGET_PICK
 const TARGET_TINT := Color(0.97, 0.32, 0.29, 1.0)
 # eqoxide's entity_model_matrix_heading documents that exported glTF character
 # models face +X. Godot's look_at uses -Z as forward, so rotate the visual
@@ -395,7 +394,7 @@ func _normalize_model_to_height(visual: Node3D, target_height: float) -> void:
 			highest_point = maxf(highest_point, point.y)
 	var raw_height := highest_point - lowest_point
 	assert(raw_height > 0.001, "Unable to measure character model height")
-	var visual_scale := target_height / raw_height
+	var visual_scale := EqWorldSpace.visual_scale_for_height(raw_height, target_height)
 	visual.scale = Vector3.ONE * visual_scale
 	visual.position.y = -lowest_point * visual_scale
 
@@ -466,8 +465,7 @@ func _validate_static_facing() -> void:
 		if not actor.patrol.is_empty():
 			continue
 		static_count += 1
-		var heading := (actor.spawn_heading_eq / HEADING_UNITS_PER_TURN) * TAU
-		var expected := static_heading_expected_forward(heading, actor.model_name)
+		var expected := static_heading_expected_forward(actor.spawn_heading_eq, actor.model_name)
 		# The source GLB faces +X; this is deliberately not Node3D's -Z axis.
 		var actual := actor.visual.global_transform.basis * Vector3.RIGHT
 		actual.y = 0.0
@@ -539,7 +537,7 @@ func _terrain_agrees(space_state: PhysicsDirectSpaceState3D, source: Vector3) ->
 		source + Vector3.UP * TERRAIN_CAST_HEIGHT,
 		source - Vector3.UP * TERRAIN_CAST_HEIGHT
 	)
-	query.collision_mask = 1
+	query.collision_mask = EqWorldSpace.COLLISION_LAYER_TERRAIN
 	var hit := space_state.intersect_ray(query)
 	return not hit.is_empty() and absf(((hit.position as Vector3).y) - source.y) <= TERRAIN_SNAP_TOLERANCE
 
@@ -549,7 +547,7 @@ func _snap_to_agreeing_terrain(space_state: PhysicsDirectSpaceState3D, source: V
 		source + Vector3.UP * TERRAIN_CAST_HEIGHT,
 		source - Vector3.UP * TERRAIN_CAST_HEIGHT
 	)
-	query.collision_mask = 1
+	query.collision_mask = EqWorldSpace.COLLISION_LAYER_TERRAIN
 	var hit := space_state.intersect_ray(query)
 	if hit.is_empty():
 		_terrain_unmatched_count += 1
@@ -563,13 +561,13 @@ func _snap_to_agreeing_terrain(space_state: PhysicsDirectSpaceState3D, source: V
 
 
 static func eq_to_world(position_eq: Array) -> Vector3:
-	return Vector3(-float(position_eq[1]), float(position_eq[2]), float(position_eq[0]))
+	return EqWorldSpace.halas_server_position(position_eq)
 
 
 static func static_heading_to_yaw(heading_eq: float, model_name: String) -> float:
 	if heading_eq < 0.0:
 		return 0.0
-	var yaw := PI * 0.5 - (heading_eq / HEADING_UNITS_PER_TURN) * TAU
+	var yaw := EqWorldSpace.heading_to_godot_yaw(heading_eq)
 	# Skoni (HLF, spawn2 10041) verifies that this one exported family is flipped
 	# 180° relative to HLM/Barbarian/Human/Wolf exports. Keep that correction at
 	# the data-derived family boundary instead of rotating unrelated NPCs.
@@ -577,8 +575,8 @@ static func static_heading_to_yaw(heading_eq: float, model_name: String) -> floa
 		yaw += PI
 	return yaw
 
-static func static_heading_expected_forward(heading: float, model_name: String) -> Vector3:
-	var forward := Vector3(-cos(heading), 0.0, -sin(heading))
+static func static_heading_expected_forward(heading_eq: float, model_name: String) -> Vector3:
+	var forward := EqWorldSpace.heading_forward(heading_eq)
 	if model_name.begins_with("hlf_"):
 		forward = -forward
 	return forward
