@@ -4,6 +4,8 @@ extends Control
 signal trade_requested
 signal closed
 
+var merchant_name_label: Label
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var shade := ColorRect.new()
@@ -19,11 +21,10 @@ func _ready() -> void:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 12)
 	panel.add_child(content)
-	var name_label := Label.new()
-	name_label.name = "MerchantName"
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 22)
-	content.add_child(name_label)
+	merchant_name_label = Label.new()
+	merchant_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	merchant_name_label.add_theme_font_size_override("font_size", 22)
+	content.add_child(merchant_name_label)
 	var prompt := Label.new()
 	prompt.text = "What would you like to do?"
 	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -41,7 +42,7 @@ func _ready() -> void:
 	content.add_child(cancel)
 
 func show_for_merchant(merchant_name: String) -> void:
-	get_node("MerchantName").text = merchant_name
+	merchant_name_label.text = merchant_name
 
 func _style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
