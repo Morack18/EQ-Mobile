@@ -8,6 +8,7 @@
   "classes": {
     "1": {
       "key": "warrior",
+      "identity_key": "eqemu:class:1",
       "display_name": "Warrior",
       "starter_ability_ids": ["training_strike"],
       "attack_profile": {

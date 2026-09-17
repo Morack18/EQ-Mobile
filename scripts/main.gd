@@ -1446,7 +1446,8 @@ func _sanitized_inventory(saved_inventory: Variant) -> Array[Dictionary]:
 	# Migrate the former fixture item_id → quantity map without dropping rewards.
 	if saved_inventory is Dictionary:
 		for legacy_key in saved_inventory:
-			var item_key := "fixture:training_spark_fragment" if str(legacy_key) == "training_spark_fragment" else str(legacy_key)
+			var legacy_text := str(legacy_key)
+			var item_key := "fixture:item:training_spark_fragment" if legacy_text in ["training_spark_fragment", "fixture:training_spark_fragment"] else legacy_text
 			_append_loaded_item(restored, item_key, int(saved_inventory[legacy_key]), null)
 	elif saved_inventory is Array:
 		for instance in saved_inventory:

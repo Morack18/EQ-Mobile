@@ -5,7 +5,8 @@
     "note": "These placeholder items are not EverQuest content."
   },
   "items": {
-    "fixture:training_spark_fragment": {
+    "fixture:item:training_spark_fragment": {
+      "key": "fixture:item:training_spark_fragment",
       "name": "Training Spark Fragment",
       "description": "A harmless original fixture reward for the offline loot loop.",
       "item_class": 0,

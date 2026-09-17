@@ -1,5 +1,17 @@
 {
   "id": "halas",
+  "key": "eqm:zone:halas",
+  "schema_id": "eqm.zone_definition",
+  "schema_version": 1,
+  "source_refs": {
+    "peq_zone": { "table_row_id": 160, "zone_id": 29, "version": 0, "short_name": "halas" },
+    "client_geometry": "client:zone_geometry:halas"
+  },
+  "era_metadata": {
+    "era_profile": "original_classic_pre_kunark",
+    "design_target": "classic_p1999",
+    "review_state": "current_unreviewed_peq"
+  },
   "display_name": "Halas",
   "geometry_scene": "res://assets/imported/halas/halas.glb",
   "geometry_scale": 10.0,
@@ -43,7 +55,7 @@
       "aggro_range": 8.0,
       "attack_range": 1.7,
       "attack_cooldown": 1.4,
-      "loot": [{ "item_id": "fixture:training_spark_fragment", "quantity": 1 }],
+      "loot": [{ "item_id": "fixture:item:training_spark_fragment", "quantity": 1 }],
       "xp_reward": 1000
     }
   }

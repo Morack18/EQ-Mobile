@@ -35,6 +35,10 @@ Spatial conversions and native-unit physics are governed by
 and validate their own world-space contract; Halas math is not implicit global
 behavior.
 
+Stable definition keys, source identities, runtime instances, and generated-data
+validation are governed by [docs/identity-contract.md](docs/identity-contract.md).
+Runtime systems must consume those neutral contracts rather than SQL layouts.
+
 ## Current workspace
 
 - Engine: Godot 4.7 project (`project.godot`), Mobile renderer and Jolt 3D

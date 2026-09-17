@@ -9,6 +9,10 @@ Before selecting a source rule or importing gameplay data, follow
 evidence, provenance, and deviation policy. Record deliberate differences only
 in `docs/deviation-registry.md`.
 
+For new data definitions, references, importers, or save-state links, follow
+`docs/identity-contract.md`; source IDs, definition keys, and runtime instances
+are distinct concepts.
+
 Do not use, recreate, repair, or rely on secondary-worker infrastructure for
 this project, including Antigravity, Gemini delegation, Cline workers, worker
 queues, detached jobs, polling, or worker timeout/recovery procedures.
