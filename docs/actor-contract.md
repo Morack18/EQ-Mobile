@@ -96,9 +96,28 @@ Current generic movement states are project-owned descriptive states:
 The actor state describes simulation/runtime state. Scene nodes remain
 presentation objects and are not canonical gameplay entities.
 
+The existing Halas patrol implementation remains a zone-specific
+presentation compatibility path in this phase. Every successfully built Halas
+NPC now has a generic domain actor, and its presentation position, facing, and
+current patrol velocity are mirrored into that actor each frame.
+
+The presentation patrol remains authoritative until that rule is migrated to a
+generic controller/AI system. Save restoration therefore does not push mirrored
+Halas actor positions back into presentation patrol nodes.
+
 ## Target and combat state
 
 Actors carry a stable target entity ID.
+
+For the local player, `GameplayEntity.target_entity_id` is the canonical
+runtime target. Halas selection remains presentation/interaction context;
+selecting an NPC writes that NPC's stable runtime entity ID to the player
+actor. Clearing Halas selection explicitly restores the existing Training
+Spark fixture as the default target when that fixture exists, instead of
+relying on an implicit fallback in `main.gd`.
+
+Because targets are intentionally transient rather than persisted, startup
+restores that same project-owned default after save loading.
 
 Current generic combat states are:
 
@@ -197,6 +216,14 @@ because the generic actor model can represent those systems.
 The Training Spark remains a project-owned fixture with its existing explicit
 fixture combat values.
 
+Every Halas NPC successfully built by `HalasNpcPopulation` is registered
+with `Simulation` immediately and bound to its presentation node. Target
+selection therefore selects an existing actor; it does not create an actor on
+demand.
+
+Unsupported or unrendered source rows do not receive fabricated runtime actors.
+The domain roster follows the presentation roster that was actually built.
+
 ## Source review
 
 Local EQEmu source review of the common `Mob` abstraction (`zone/mob.h`) shows
@@ -224,7 +251,7 @@ as duplicate save authorities.
 
 Phase 5 passes when:
 
-1. player and NPC runtime objects both use `GameplayEntity`;
+1. player and every built Halas NPC runtime object use `GameplayEntity`;
 2. race, gender, class, level, stats, resources, spatial state, target, combat,
    lifecycle, faction, attachments, effects, controller, and appearance all
    have a generic representation;

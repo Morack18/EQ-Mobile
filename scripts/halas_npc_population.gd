@@ -17,6 +17,7 @@ var _content: Dictionary = {}
 var _models_path := ""
 var _model_scenes: Dictionary[String, PackedScene] = {}
 var _actors: Array[NpcActor] = []
+var _actors_by_spawn2: Dictionary = {}
 var _source_positions: Array = []
 var _spawn_source_positions: Array = []
 var _patrol_source_positions: Array = []
@@ -36,6 +37,7 @@ class NpcActor:
 	var patrol_targets: Array[Vector3] = []
 	var patrol_index := 0
 	var pause_remaining := 0.0
+	var movement_velocity := Vector3.ZERO
 	var spawn2_id := 0
 	var npc_type_id := 0
 	var display_name := ""
@@ -171,7 +173,36 @@ func _build_population(content: Dictionary) -> void:
 			_patrol_source_positions.append(point.position_eq)
 			actor.patrol_targets.append(eq_to_world(point.position_eq))
 		_actors.append(actor)
+		_actors_by_spawn2[actor.spawn2_id] = actor
 
+
+func actor_targets() -> Array[Dictionary]:
+	var targets: Array[Dictionary] = []
+
+	for actor in _actors:
+		targets.append(
+			_target_dictionary(
+				actor
+			)
+		)
+
+	return targets
+
+
+func movement_velocity_for_spawn(
+	spawn2_id: int
+) -> Vector3:
+	var actor := (
+		_actors_by_spawn2.get(
+			spawn2_id
+		)
+		as NpcActor
+	)
+
+	if actor == null:
+		return Vector3.ZERO
+
+	return actor.movement_velocity
 
 func nearest_target(origin: Vector3, view_forward: Vector3, max_distance: float = 200.0) -> Dictionary:
 	var forward := view_forward
@@ -415,34 +446,113 @@ func _set_animation(actor: NpcActor, clip: String) -> void:
 		actor.animator.play(clip)
 
 
-func _update_patrol(actor: NpcActor, delta: float) -> void:
+func _update_patrol(
+	actor: NpcActor,
+	delta: float
+) -> void:
+	actor.movement_velocity = Vector3.ZERO
+
 	if actor.patrol.is_empty():
-		_set_animation(actor, "idle")
+		_set_animation(
+			actor,
+			"idle"
+		)
 		return
+
 	if actor.pause_remaining > 0.0:
-		actor.pause_remaining = maxf(0.0, actor.pause_remaining - delta)
-		actor.visual.position.y = actor.visual_ground_y
-		_set_animation(actor, "idle")
+		actor.pause_remaining = maxf(
+			0.0,
+			actor.pause_remaining - delta
+		)
+		actor.visual.position.y = (
+			actor.visual_ground_y
+		)
+		_set_animation(
+			actor,
+			"idle"
+		)
 		return
-	var point: Dictionary = actor.patrol[actor.patrol_index]
-	var target := actor.patrol_targets[actor.patrol_index]
-	var offset := target - actor.node.position
+
+	var point: Dictionary = actor.patrol[
+		actor.patrol_index
+	]
+	var target := actor.patrol_targets[
+		actor.patrol_index
+	]
+	var offset := (
+		target
+		- actor.node.position
+	)
 	offset.y = 0.0
+
 	var distance := offset.length()
+
 	if distance <= 0.12:
 		actor.node.position = target
-		actor.node.rotation.y = static_heading_to_yaw(float(point.heading_eq), actor.model_name) if float(point.heading_eq) >= 0.0 else actor.node.rotation.y
-		actor.pause_remaining = float(point.get("pause_seconds", 0))
-		actor.patrol_index = (actor.patrol_index + 1) % actor.patrol.size()
-		actor.visual.position.y = actor.visual_ground_y
-		_set_animation(actor, "idle")
-		return
-	var direction := offset / distance
-	actor.node.position += direction * minf(distance, WALK_SPEED * delta)
-	actor.node.look_at(actor.node.global_position + direction, Vector3.UP)
-	actor.visual.position.y = actor.visual_ground_y
-	_set_animation(actor, "walk")
 
+		if float(
+			point.heading_eq
+		) >= 0.0:
+			actor.node.rotation.y = (
+				static_heading_to_yaw(
+					float(
+						point.heading_eq
+					),
+					actor.model_name
+				)
+			)
+
+		actor.pause_remaining = float(
+			point.get(
+				"pause_seconds",
+				0
+			)
+		)
+		actor.patrol_index = (
+			(actor.patrol_index + 1)
+			% actor.patrol.size()
+		)
+		actor.visual.position.y = (
+			actor.visual_ground_y
+		)
+		_set_animation(
+			actor,
+			"idle"
+		)
+		return
+
+	var direction := (
+		offset
+		/ distance
+	)
+	var travel_distance := minf(
+		distance,
+		WALK_SPEED * delta
+	)
+
+	actor.node.position += (
+		direction
+		* travel_distance
+	)
+
+	if delta > 0.0:
+		actor.movement_velocity = (
+			direction
+			* (travel_distance / delta)
+		)
+
+	actor.node.look_at(
+		actor.node.global_position
+		+ direction,
+		Vector3.UP
+	)
+	actor.visual.position.y = (
+		actor.visual_ground_y
+	)
+	_set_animation(
+		actor,
+		"walk"
+	)
 
 func _validate_static_facing() -> void:
 	var static_count := 0

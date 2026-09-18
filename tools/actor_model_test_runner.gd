@@ -10,8 +10,8 @@ func _init() -> void:
 	_test_effect_container_and_simulation_timer()
 	_test_controller_attachment_drives_behavior()
 	_test_removed_target_cleanup()
+	_test_halas_bulk_definition_mapping()
 	_test_halas_source_mapping()
-
 	if _failures.is_empty():
 		print(
 			"PASS: Phase 5 generic actor contract, resources, state, "
@@ -442,6 +442,119 @@ func _test_removed_target_cleanup() -> void:
 	)
 
 
+func _test_halas_bulk_definition_mapping() -> void:
+	var targets: Array = [
+		{
+			"spawn2_id": 31001,
+			"npc_type_id": 41001,
+			"name": "First Halas NPC",
+			"race_id": 90,
+			"race_ref": "eqemu:race:90",
+			"gender_id": 0,
+			"class": 1,
+			"class_ref": "eqemu:class:1",
+			"level": 3,
+			"model_name": "hlm_s0_h0",
+			"texture": 0,
+			"face": 0,
+			"source_size": 7.0,
+			"source_hp": 25,
+			"source_mana": 0,
+		},
+		{
+			"spawn2_id": 31002,
+			"npc_type_id": 41002,
+			"name": "Second Halas NPC",
+			"race_id": 90,
+			"race_ref": "eqemu:race:90",
+			"gender_id": 1,
+			"class": 9,
+			"class_ref": "eqemu:class:9",
+			"level": 4,
+			"model_name": "hlf_s0_h0",
+			"texture": 0,
+			"face": 0,
+			"source_size": 7.0,
+			"source_hp": 30,
+			"source_mana": 10,
+		},
+	]
+
+	var definitions := (
+		HalasEntityAdapter
+		.neutral_definitions_from_targets(
+			targets
+		)
+	)
+
+	_expect(
+		definitions.size() == 2,
+		"Bulk Halas mapping did not preserve the roster."
+	)
+
+	var simulation := Simulation.new(
+		SimulationClock.new(),
+		SimulationRng.new(201)
+	)
+
+	for definition in definitions:
+		simulation.add_entity(
+			EntityFactory.create(
+				definition
+			),
+			true,
+			false
+		)
+
+	var first := simulation.entity(
+		"halas:spawn:31001"
+	)
+	var second := simulation.entity(
+		"halas:spawn:31002"
+	)
+
+	_expect(
+		first != null
+		and second != null,
+		"Bulk Halas mapping did not create distinct actors."
+	)
+
+	if first == null or second == null:
+		return
+
+	_expect(
+		first.definition_id
+		== "peq:npc:41001"
+		and second.definition_id
+		== "peq:npc:41002",
+		"Bulk Halas actors lost definition identity."
+	)
+
+	_expect(
+		first.level == 3
+		and second.level == 4
+		and first.class_id == 1
+		and second.class_id == 9,
+		"Bulk Halas actors lost structural identity."
+	)
+
+	_expect(
+		not first.combat_enabled
+		and not second.combat_enabled,
+		"Bulk Halas mapping activated unreviewed combat."
+	)
+
+	_expect(
+		is_equal_approx(
+			first.max_health,
+			1.0
+		)
+		and is_equal_approx(
+			second.max_health,
+			1.0
+		),
+		"Bulk Halas mapping promoted source HP into gameplay."
+	)
 func _test_halas_source_mapping() -> void:
 	var source_npc := {
 		"id": 29000,

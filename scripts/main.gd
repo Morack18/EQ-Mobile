@@ -65,6 +65,7 @@ var ui_layer: CanvasLayer
 var merchant_panel: MerchantBrowsePanel
 var merchant_interaction_popup: MerchantInteractionPopup
 var halas_population: HalasNpcPopulation
+var halas_spawn_entity_ids: Dictionary = {}
 
 var selected_halas_target: Dictionary = {}
 var selected_entity_id := ""
@@ -187,8 +188,32 @@ func _configure_simulation() -> void:
 	if bool(zone.get("enable_training_npc", false)):
 		simulation.add_entity(EntityFactory.create(_training_entity_definition()), true, false)
 		autonomous_entity_ids.append(TRAINING_ENTITY_ID)
+	_restore_default_player_target()
 	simulation.drain_events()
 
+
+func _restore_default_player_target() -> void:
+	if simulation == null:
+		return
+
+	var training := simulation.entity(
+		TRAINING_ENTITY_ID
+	)
+
+	if (
+		training != null
+		and training.lifecycle
+		!= GameplayEntity.Lifecycle.REMOVED
+	):
+		simulation.set_target(
+			PLAYER_ENTITY_ID,
+			TRAINING_ENTITY_ID
+		)
+		return
+
+	simulation.clear_target(
+		PLAYER_ENTITY_ID
+	)
 
 func _training_entity_definition() -> Dictionary:
 	var spawn := _spawn_data()
@@ -404,17 +429,84 @@ func _has_world_line_of_sight(origin: Vector3, destination: Vector3) -> bool:
 
 
 func _sync_domain_from_views() -> void:
-	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
-	if player_entity != null and player_entity.lifecycle in [GameplayEntity.Lifecycle.ACTIVE, GameplayEntity.Lifecycle.DYING]:
-		view_registry.sync_to_domain(player_entity)
-	var training_entity := simulation.entity(TRAINING_ENTITY_ID)
-	if training_entity != null and training_entity.is_active():
-		view_registry.sync_to_domain(training_entity)
-	if not selected_entity_id.is_empty() and selected_entity_id != TRAINING_ENTITY_ID:
-		var selected_entity := simulation.entity(selected_entity_id)
-		if selected_entity != null and selected_entity.is_active():
-			view_registry.sync_to_domain(selected_entity)
+	var player_entity := simulation.entity(
+		PLAYER_ENTITY_ID
+	)
 
+	if (
+		player_entity != null
+		and player_entity.lifecycle in [
+			GameplayEntity.Lifecycle.ACTIVE,
+			GameplayEntity.Lifecycle.DYING,
+		]
+	):
+		view_registry.sync_to_domain(
+			player_entity
+		)
+
+	var training_entity := simulation.entity(
+		TRAINING_ENTITY_ID
+	)
+
+	if (
+		training_entity != null
+		and training_entity.is_active()
+	):
+		view_registry.sync_to_domain(
+			training_entity
+		)
+
+	if halas_population == null:
+		return
+
+	for spawn2_variant in (
+		halas_spawn_entity_ids
+	):
+		var spawn2_id := int(
+			spawn2_variant
+		)
+		var entity_id := str(
+			halas_spawn_entity_ids[
+				spawn2_variant
+			]
+		)
+		var actor := simulation.entity(
+			entity_id
+		)
+
+		if (
+			actor == null
+			or not actor.is_active()
+		):
+			continue
+
+		# Halas patrol remains a presentation
+		# compatibility path. Mirror its pose
+		# into the generic actor contract.
+		view_registry.sync_to_domain(
+			actor
+		)
+
+		var velocity := (
+			halas_population
+			.movement_velocity_for_spawn(
+				spawn2_id
+			)
+		)
+		var planar_speed_squared := (
+			Vector2(
+				velocity.x,
+				velocity.z
+			)
+			.length_squared()
+		)
+
+		actor.set_movement_state(
+			GameplayEntity.MOVEMENT_MOVING
+			if planar_speed_squared > 0.0001
+			else GameplayEntity.MOVEMENT_IDLE,
+			velocity
+		)
 
 func _consume_simulation_events() -> void:
 	for event_variant in simulation.drain_events():
@@ -472,11 +564,17 @@ func _entity_display_name(entity_id: String) -> String:
 
 
 func _current_target_entity_id() -> String:
-	if not selected_entity_id.is_empty():
-		return selected_entity_id
-	var training := simulation.entity(TRAINING_ENTITY_ID)
-	return TRAINING_ENTITY_ID if training != null else ""
+	if simulation == null:
+		return ""
 
+	var player_entity := simulation.entity(
+		PLAYER_ENTITY_ID
+	)
+
+	if player_entity == null:
+		return ""
+
+	return player_entity.target_entity_id
 
 func _move_player(delta: float) -> void:
 	var keyboard := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -1079,15 +1177,143 @@ func _build_npc() -> void:
 
 
 func _build_npc_population() -> void:
-	var models_path := str(zone.get("npc_model_directory", ""))
-	var npc_content := content_service.npc_dataset()
-	if npc_content.is_empty() or models_path.is_empty():
-		return
-	halas_population = HalasNpcPopulation.new()
-	halas_population.name = "ClassicHalasPopulation"
-	halas_population.configure(npc_content, models_path)
-	add_child(halas_population)
+	var models_path := str(
+		zone.get(
+			"npc_model_directory",
+			""
+		)
+	)
+	var npc_content := (
+		content_service.npc_dataset()
+	)
 
+	if (
+		npc_content.is_empty()
+		or models_path.is_empty()
+	):
+		return
+
+	halas_population = (
+		HalasNpcPopulation.new()
+	)
+	halas_population.name = (
+		"ClassicHalasPopulation"
+	)
+	halas_population.configure(
+		npc_content,
+		models_path
+	)
+	add_child(
+		halas_population
+	)
+
+	_register_halas_domain_actors()
+
+
+func _register_halas_domain_actors() -> void:
+	assert(
+		halas_population != null,
+		"Halas population must exist "
+		+ "before actor registration"
+	)
+
+	halas_spawn_entity_ids.clear()
+
+	var targets: Array[Dictionary] = (
+		halas_population.actor_targets()
+	)
+	var definitions: Array[Dictionary] = (
+		HalasEntityAdapter
+		.neutral_definitions_from_targets(
+			targets
+		)
+	)
+
+	assert(
+		definitions.size()
+		== targets.size(),
+		"Halas actor definition count "
+		+ "must match presentation roster"
+	)
+
+	for index in range(
+		targets.size()
+	):
+		var target: Dictionary = (
+			targets[index]
+		)
+		var definition: Dictionary = (
+			definitions[index]
+		)
+		var spawn2_id := int(
+			target.get(
+				"spawn2_id",
+				0
+			)
+		)
+
+		assert(
+			spawn2_id > 0,
+			"Halas runtime actor "
+			+ "requires a spawn2 ID"
+		)
+
+		var entity_id := str(
+			definition.get(
+				"entity_id",
+				""
+			)
+		)
+
+		assert(
+			not entity_id.is_empty(),
+			"Halas runtime actor "
+			+ "requires an entity ID"
+		)
+		assert(
+			simulation.entity(
+				entity_id
+			) == null,
+			"Duplicate Halas runtime "
+			+ "actor: %s"
+			% entity_id
+		)
+
+		var entity := (
+			EntityFactory.create(
+				definition
+			)
+		)
+
+		simulation.add_entity(
+			entity,
+			true,
+			false
+		)
+
+		var node_variant: Variant = (
+			target.get(
+				"node"
+			)
+		)
+
+		assert(
+			node_variant is Node3D,
+			"Halas runtime actor "
+			+ "requires a view node"
+		)
+
+		view_registry.bind(
+			entity_id,
+			node_variant as Node3D
+		)
+		view_registry.sync_to_domain(
+			entity
+		)
+
+		halas_spawn_entity_ids[
+			spawn2_id
+		] = entity_id
 
 func _build_camera() -> void:
 	camera_pivot = Node3D.new()
@@ -1207,36 +1433,76 @@ func _target_halas_npc_at_screen(screen_position: Vector2) -> Dictionary:
 	return target
 
 
-func _select_halas_target(target: Dictionary) -> void:
-	selected_halas_target = target
-	selected_entity_id = HalasEntityAdapter.runtime_entity_id(int(target.get("spawn2_id", 0)))
-	var entity := simulation.entity(selected_entity_id)
-	if entity == null:
-		entity = EntityFactory.create(HalasEntityAdapter.neutral_definition_from_target(target))
-		simulation.add_entity(entity, true, false)
-	var node_variant: Variant = target.get("node")
-	if node_variant is Node3D:
-		view_registry.bind(selected_entity_id, node_variant)
-		view_registry.sync_to_domain(entity)
-
-	simulation.set_target(
-		PLAYER_ENTITY_ID,
-		selected_entity_id
+func _select_halas_target(
+	target: Dictionary
+) -> void:
+	var entity_id := (
+		HalasEntityAdapter.runtime_entity_id(
+			int(
+				target.get(
+					"spawn2_id",
+					0
+				)
+			)
+		)
 	)
-	halas_population.set_selected_spawn(int(target.get("spawn2_id", 0)))
-	status_text = _selected_npc_interaction_summary(target)
+	var entity := simulation.entity(
+		entity_id
+	)
 
+	if entity == null:
+		push_error(
+			"Halas presentation target "
+			+ "has no registered domain "
+			+ "actor: "
+			+ entity_id
+		)
+		_clear_halas_selection()
+		return
+
+	selected_halas_target = target
+	selected_entity_id = entity_id
+
+	view_registry.sync_to_domain(
+		entity
+	)
+
+	if not simulation.set_target(
+		PLAYER_ENTITY_ID,
+		entity_id
+	):
+		push_error(
+			"Unable to assign player "
+			+ "target: "
+			+ entity_id
+		)
+		_clear_halas_selection()
+		return
+
+	halas_population.set_selected_spawn(
+		int(
+			target.get(
+				"spawn2_id",
+				0
+			)
+		)
+	)
+	status_text = (
+		_selected_npc_interaction_summary(
+			target
+		)
+	)
 
 func _clear_halas_selection() -> void:
 	selected_halas_target = {}
 	selected_entity_id = ""
 
-	if simulation != null:
-		simulation.clear_target(PLAYER_ENTITY_ID)
+	_restore_default_player_target()
 
 	if halas_population != null:
-		halas_population.set_selected_spawn(-1)
-
+		halas_population.set_selected_spawn(
+			-1
+		)
 
 func _update_npc_long_press(delta: float) -> void:
 	if npc_press_touch < 0 or npc_press_target.is_empty():
@@ -1376,6 +1642,7 @@ func _load_save() -> void:
 	if not bool(result.get("ok", true)):
 		status_text = "Save data was ignored: %s" % str(result.get("error", "invalid save"))
 
+	_restore_default_player_target()
 
 func _save_game() -> void:
 	if simulation == null or player == null:

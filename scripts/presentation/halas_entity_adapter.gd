@@ -6,6 +6,24 @@ static func runtime_entity_id(spawn2_id: int) -> String:
 	return "halas:spawn:%d" % spawn2_id
 
 
+static func neutral_definitions_from_targets(
+	targets: Array
+) -> Array[Dictionary]:
+	var definitions: Array[Dictionary] = []
+
+	for target_variant in targets:
+		if not target_variant is Dictionary:
+			continue
+
+		var target: Dictionary = target_variant
+		definitions.append(
+			neutral_definition_from_target(
+				target
+			)
+		)
+
+	return definitions
+
 static func neutral_definition_from_target(
 	target: Dictionary
 ) -> Dictionary:
