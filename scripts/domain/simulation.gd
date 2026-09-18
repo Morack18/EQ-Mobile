@@ -102,6 +102,9 @@ func schedule_spawn(entity_id: String, delay_seconds: float) -> bool:
 
 
 func cancel_scheduled_spawn(entity_id: String) -> bool:
+	if is_paused():
+		return false
+
 	return timers.cancel(_spawn_timer_key(entity_id))
 
 
@@ -115,6 +118,12 @@ func request_attack(
 	profile: Dictionary,
 	context: Dictionary = {}
 ) -> Dictionary:
+	if is_paused():
+		return {
+			"success": false,
+			"reason": "simulation_paused",
+		}
+
 	_emit(GameplayEvent.Type.ATTACK_REQUESTED, attacker_id, target_id, {
 		"profile_id": str(profile.get("id", profile.get("display_name", "primary"))),
 	})
@@ -181,6 +190,9 @@ func cooldown_remaining(entity_id: String, cooldown_group: String) -> float:
 
 
 func claim_ai_think(entity_id: String, interval_seconds: float) -> bool:
+	if is_paused():
+		return false
+
 	if interval_seconds <= 0.0:
 		return true
 
@@ -202,6 +214,9 @@ func apply_timed_effect(
 	duration_seconds: float,
 	payload: Dictionary = {}
 ) -> bool:
+	if is_paused():
+		return false
+
 	var target := entity(target_id)
 	if target == null or not target.is_active():
 		return false
@@ -224,6 +239,9 @@ func apply_timed_effect(
 
 
 func remove_timed_effect(target_id: String, effect_id: String) -> bool:
+	if is_paused():
+		return false
+
 	var record_key := _effect_record_key(target_id, effect_id)
 	var existed := _timed_effects.has(record_key)
 
@@ -275,6 +293,12 @@ func begin_spell_cast(
 	recast_seconds: float = 0.0,
 	payload: Dictionary = {}
 ) -> Dictionary:
+	if is_paused():
+		return {
+			"success": false,
+			"reason": "simulation_paused",
+		}
+
 	var caster := entity(entity_id)
 	if caster == null or not caster.is_active():
 		return {"success": false, "reason": "caster_inactive"}
@@ -320,6 +344,12 @@ func spell_cast_ready(entity_id: String) -> bool:
 
 
 func complete_spell_cast(entity_id: String) -> Dictionary:
+	if is_paused():
+		return {
+			"success": false,
+			"reason": "simulation_paused",
+		}
+
 	if not _active_spell_casts.has(entity_id):
 		return {"success": false, "reason": "not_casting"}
 	if not spell_cast_ready(entity_id):
@@ -361,6 +391,9 @@ func complete_spell_cast(entity_id: String) -> Dictionary:
 
 
 func interrupt_spell_cast(entity_id: String) -> bool:
+	if is_paused():
+		return false
+
 	if not _active_spell_casts.has(entity_id):
 		return false
 
@@ -382,8 +415,11 @@ func spell_recast_remaining(entity_id: String, recast_group: String) -> float:
 	return remaining_seconds
 
 
-func schedule_merchant_restock(merchant_ref: String, delay_seconds: float) -> bool:
-	if merchant_ref.is_empty():
+func schedule_merchant_restock(
+	merchant_ref: String,
+	delay_seconds: float
+) -> bool:
+	if is_paused() or merchant_ref.is_empty():
 		return false
 
 	timers.start(
@@ -410,6 +446,9 @@ func merchant_restock_due(merchant_ref: String) -> bool:
 
 
 func consume_merchant_restock_due(merchant_ref: String) -> bool:
+	if is_paused():
+		return false
+
 	if not merchant_restock_due(merchant_ref):
 		return false
 
@@ -418,6 +457,9 @@ func consume_merchant_restock_due(merchant_ref: String) -> bool:
 
 
 func heal(source_id: String, target_id: String, amount: float) -> float:
+	if is_paused():
+		return 0.0
+
 	var target := entity(target_id)
 	if target == null or not target.is_active() or amount <= 0.0:
 		return 0.0
@@ -438,6 +480,9 @@ func heal(source_id: String, target_id: String, amount: float) -> float:
 
 
 func grant_item(source_id: String, item_key: String, amount: int) -> bool:
+	if is_paused():
+		return false
+
 	if not inventory.add_item(item_key, amount):
 		return false
 
@@ -449,6 +494,9 @@ func grant_item(source_id: String, item_key: String, amount: int) -> bool:
 
 
 func remove_item(source_id: String, item_key: String, amount: int) -> bool:
+	if is_paused():
+		return false
+
 	if not inventory.remove_item(item_key, amount):
 		return false
 
@@ -459,7 +507,18 @@ func remove_item(source_id: String, item_key: String, amount: int) -> bool:
 	return true
 
 
-func change_faction(source_id: String, faction_ref: String, delta: int) -> Dictionary:
+func change_faction(
+	source_id: String,
+	faction_ref: String,
+	delta: int
+) -> Dictionary:
+	if is_paused():
+		return {
+			"changed": false,
+			"reason": "simulation_paused",
+			"faction_ref": faction_ref,
+		}
+
 	var change := faction.change_value(faction_ref, delta)
 	if bool(change.get("changed", false)):
 		_emit(
@@ -516,26 +575,33 @@ func advance(delta_seconds: float) -> void:
 
 
 func remove_entity(entity_id: String) -> bool:
+	if is_paused():
+		return false
+
 	var current := entity(entity_id)
+
 	if current == null or not current.remove():
 		return false
 
-	cancel_scheduled_spawn(entity_id)
-	interrupt_spell_cast(entity_id)
+	# All entity-owned generic timers use category|owner|timer.
+	# Clearing by stable runtime entity ID removes cooldown, initial spawn,
+	# AI, timed-effect, cast, and recast deadlines without teaching entity
+	# lifecycle code about every timer category individually.
+	timers.cancel_owner(entity_id)
+
+	_active_spell_casts.erase(entity_id)
 
 	for record_key in _timed_effects.keys():
 		var record_variant: Variant = _timed_effects[record_key]
+
 		if not record_variant is Dictionary:
+			_timed_effects.erase(record_key)
 			continue
 
 		var record: Dictionary = record_variant
-		if str(record.get("target_entity_id", "")) != entity_id:
-			continue
 
-		remove_timed_effect(
-			entity_id,
-			str(record.get("effect_id", ""))
-		)
+		if str(record.get("target_entity_id", "")) == entity_id:
+			_timed_effects.erase(record_key)
 
 	_emit(
 		GameplayEvent.Type.DESPAWN,
@@ -543,6 +609,7 @@ func remove_entity(entity_id: String) -> bool:
 		"",
 		{"reason": "removed"}
 	)
+
 	return true
 
 
@@ -588,17 +655,34 @@ func restore_snapshot(
 
 	var snapshot: Dictionary = snapshot_value
 
+	var was_paused := clock.is_paused()
+
 	clock.set_elapsed_seconds(
 		float(snapshot.get("clock_elapsed_seconds", 0.0))
 	)
-	clock.set_paused(false)
+	clock.set_paused(was_paused)
 
-	var rng_state = snapshot.get("rng", {})
-	if rng_state is Dictionary:
-		rng.restore(
-			int(rng_state.get("seed", rng.initial_seed())),
-			int(rng_state.get("state", 0))
+	var rng_state_variant: Variant = snapshot.get("rng", {})
+
+	if rng_state_variant is Dictionary:
+		var rng_state: Dictionary = rng_state_variant
+		var seed_value := int(
+			rng_state.get(
+				"seed",
+				rng.initial_seed()
+			)
 		)
+
+		if rng_state.has("state"):
+			rng.restore(
+				seed_value,
+				int(rng_state.get("state", 0))
+			)
+		else:
+			# Legacy data may provide a seed but no captured generator state.
+			# Restart deterministically from that seed rather than inventing
+			# state zero.
+			rng.set_seed(seed_value)
 
 	var saved_identity = snapshot.get("player_identity", {})
 	if saved_identity is Dictionary and not saved_identity.is_empty():
@@ -674,12 +758,18 @@ func wallet_total_copper() -> int:
 
 
 func credit_copper(amount: int) -> void:
+	if is_paused():
+		return
+
 	_set_wallet_total_copper(
 		wallet_total_copper() + maxi(0, amount)
 	)
 
 
 func debit_copper(amount: int) -> bool:
+	if is_paused():
+		return false
+
 	if amount < 0 or wallet_total_copper() < amount:
 		return false
 
