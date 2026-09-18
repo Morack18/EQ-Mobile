@@ -581,8 +581,7 @@ func _migrate_legacy_save(
 			"rng": {
 				"seed": int(
 					context.get("rng_seed", 1)
-				),
-				"state": 0,
+				)
 			},
 			"player_entity_id": player_entity_id,
 			"player_identity": {

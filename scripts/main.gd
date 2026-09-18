@@ -240,6 +240,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func toggle_auto_attack() -> void:
+	if simulation != null and simulation.is_paused():
+		return
 	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
 	if player_entity == null or not player_entity.is_active():
 		return
@@ -275,6 +277,8 @@ func _request_player_attack(profile: Dictionary) -> Dictionary:
 
 
 func try_training_strike() -> void:
+	if simulation != null and simulation.is_paused():
+		return
 	var ability := _ability_definition("training_strike")
 	if ability.is_empty():
 		status_text = "Training Strike is unavailable."
