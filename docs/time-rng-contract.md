@@ -55,13 +55,19 @@ Stable timer keys follow:
 
 Current categories are:
 
-cooldown
-spawn
-ai
-effect
-cast
-recast
-merchant_restock
+- `cooldown`
+- `spawn`
+- `ai`
+- `effect`
+- `cast`
+- `recast`
+- `merchant_restock`
+
+When a gameplay entity is permanently removed,
+`SimulationTimerBank.cancel_owner()` clears generic timers owned by that
+runtime entity ID. Timed-effect metadata and active-cast metadata for that
+entity are also removed. Timers owned by unrelated identifiers, such as
+merchant restock timers, remain intact.
 
 New gameplay systems should normally extend this timer model instead of
 introducing engine Timer nodes, independent tick counters, or wall-clock
@@ -71,7 +77,7 @@ Presentation-only timing such as camera interpolation, animation presentation,
 touch gestures, and autosave cadence may continue to use frame delta when it
 does not determine simulation state.
 
-Attack timers
+## Attack timers
 
 Attack and ability recovery use the cooldown category.
 
@@ -81,7 +87,7 @@ successfully performed.
 
 Cooldowns therefore stop whenever simulation time stops.
 
-Initial spawn timers
+## Initial spawn timers
 
 Entities registered without immediate spawning may use
 Simulation.schedule_spawn().
@@ -92,7 +98,7 @@ SPAWN gameplay event when it becomes active.
 No classic spawn delay is invented by this architecture. Content or a
 source-backed spawn system must provide the duration.
 
-Death and respawn timers
+## Death and respawn timers
 
 Existing death and respawn lifecycle state remains owned by GameplayEntity,
 but lifecycle deadlines are calculated exclusively from the canonical
@@ -106,7 +112,7 @@ respawn_remaining
 As a result, respawn and death-state timing have the same pause and offline
 semantics as the generic timer bank.
 
-AI think/update timers
+## AI think/update timers
 
 Simulation.claim_ai_think() provides a deterministic per-entity AI cadence.
 
@@ -117,7 +123,7 @@ If the field is absent or zero, the current every-frame behavior remains
 unchanged. This provides timer architecture without inventing an unsupported
 classic-EQ AI interval.
 
-Buff and debuff duration framework
+## Buff and debuff duration framework
 
 Simulation.apply_timed_effect() provides the duration foundation for buffs,
 debuffs, and other temporary entity effects.
@@ -152,7 +158,7 @@ beneficial/detrimental spell classification.
 
 Those rules require source-backed implementation later.
 
-Spell cast and recast framework
+## Spell cast and recast framework
 
 The simulation provides:
 
@@ -172,7 +178,7 @@ Spell resolution itself is deliberately separate from timing. Future spell
 systems can consume the completion result without creating another clock or
 timer convention.
 
-Merchant restock architecture
+## Merchant restock architecture
 
 Merchant stock does not currently require active restocking.
 
@@ -186,7 +192,7 @@ consume_merchant_restock_due
 Actual inventory mutation and classic restock values remain future,
 source-backed work.
 
-Pause behavior
+## Pause behavior
 
 Explicit simulation pause freezes gameplay time.
 
@@ -212,36 +218,38 @@ recast timers do not recover;
 
 merchant restock timers do not progress.
 
+Public runtime gameplay mutation APIs on `Simulation` reject
+mutation while the canonical simulation clock is paused. This domain-level
+guard is authoritative even if presentation code invokes a gameplay method
+directly.
+
 Presentation/UI systems may remain active if a future pause menu requires them,
 but they must not advance gameplay state.
 
-Android suspend and resume
+## Android suspend and resume
 
 RuntimeLifecycleBridge listens for Godot application pause and resume
 notifications.
 
 On application pause:
 
-the canonical simulation clock is paused;
-
-the current simulation is synchronously saved;
-
-gameplay process callbacks are disabled;
-
-gameplay physics callbacks are disabled.
+- the canonical simulation clock is paused;
+- the current simulation is synchronously saved;
+- gameplay process callbacks are disabled;
+- gameplay physics callbacks are disabled;
+- unhandled gameplay input is disabled.
 
 On application resume:
 
-gameplay processing is restored;
-
-gameplay physics processing is restored;
-
-the canonical simulation clock resumes from the same simulation time.
+- gameplay processing is restored;
+- gameplay physics processing is restored;
+- unhandled gameplay input is restored;
+- the canonical simulation clock resumes from the same simulation time.
 
 Android may terminate a suspended process, so saving on the pause notification
 provides a recovery point for a later launch.
 
-Offline elapsed-time rule
+## Offline elapsed-time rule
 
 EQ Mobile explicitly uses:
 
@@ -277,7 +285,7 @@ Any future feature that intentionally progresses while offline must be an
 explicitly documented exception rather than changing canonical simulation
 semantics globally.
 
-Deterministic randomness
+## Deterministic randomness
 
 SimulationRng is the canonical gameplay RNG service.
 
@@ -293,16 +301,17 @@ data.
 
 Deterministic tests inject a fixed seed.
 
-Save state preserves both:
+Schema-v3 saves persist both the RNG seed and exact RNG state.
 
-seed
-state
+Migrated legacy saves preserve the configured seed but omit `state` when no
+historical generator state was captured. An explicit RNG state value of `0`
+is valid saved data and does not mean "missing".
 
 The persistence layer serializes those 64-bit values as decimal strings at the
 JSON boundary, preventing loss of deterministic continuation through JSON
 number precision.
 
-Persistence
+## Persistence
 
 Save schema version 3 preserves:
 
@@ -329,7 +338,7 @@ Older saves that used absolute wall-clock cooldown timestamps are converted
 once during legacy migration. After migration, gameplay timers are entirely
 simulation-relative.
 
-Foundation gate
+## Foundation gate
 
 New gameplay code should not introduce independent gameplay clocks, timer
 semantics, or RNG instances without an explicit architectural reason.

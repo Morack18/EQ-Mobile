@@ -590,7 +590,9 @@ func remove_entity(entity_id: String) -> bool:
 	_active_spell_casts.erase(entity_id)
 
 	for record_key in _timed_effects.keys():
-		var record_variant: Variant = _timed_effects[record_key]
+		var record_variant: Variant = _timed_effects[
+			record_key
+		]
 
 		if not record_variant is Dictionary:
 			_timed_effects.erase(record_key)
@@ -600,7 +602,10 @@ func remove_entity(entity_id: String) -> bool:
 
 		if (
 			str(
-				record.get("target_entity_id", "")
+				record.get(
+					"target_entity_id",
+					""
+				)
 			)
 			== entity_id
 		):

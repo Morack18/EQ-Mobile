@@ -401,7 +401,7 @@ func _test_legacy_save_migration() -> void:
 
 	_expect(
 		int(envelope.get("schema_version", 0)) == PersistenceService.SAVE_SCHEMA_VERSION,
-		"legacy migration upgrades to schema version 2"
+		"legacy migration upgrades to the current save schema"
 	)
 	_expect(
 		str(envelope.get("zone_key", "")) == "eqm:zone:test",
