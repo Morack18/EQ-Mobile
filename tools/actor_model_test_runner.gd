@@ -5,6 +5,8 @@ var _failures: Array[String] = []
 
 func _init() -> void:
 	_test_shared_actor_contract()
+	_test_stats_and_attachment_contract()
+	_test_halas_attachment_mapping()
 	_test_resources_and_runtime_snapshot()
 	_test_heading_movement_target_and_lifecycle()
 	_test_effect_container_and_simulation_timer()
@@ -162,6 +164,215 @@ func _test_shared_actor_contract() -> void:
 		"Actor attachment containers were not retained."
 	)
 
+
+func _test_stats_and_attachment_contract() -> void:
+	var actor := EntityFactory.create({
+		"entity_id": "test:attachments",
+		"definition_id": "fixture:actor:attachments",
+		"base_stats": {
+			"strength": 75,
+		},
+		"derived_stats": {
+			"armor_class": 12.5,
+		},
+		"faction_identity": {
+			"npc_faction_ref": "peq:npc_faction:94",
+		},
+	})
+
+	_expect(
+		is_equal_approx(
+			actor.base_stat_value(
+				"strength"
+			),
+			75.0
+		),
+		"Base-stat accessor failed."
+	)
+	_expect(
+		is_equal_approx(
+			actor.derived_stat_value(
+				"armor_class"
+			),
+			12.5
+		),
+		"Derived-stat accessor failed."
+	)
+
+	_expect(
+		actor.set_base_stat_value(
+			"stamina",
+			81.0
+		)
+		and actor.set_derived_stat_value(
+			"attack",
+			22.0
+		),
+		"Stat mutation rejected valid IDs."
+	)
+
+	_expect(
+		is_equal_approx(
+			actor.base_stat_value(
+				"stamina"
+			),
+			81.0
+		)
+		and is_equal_approx(
+			actor.derived_stat_value(
+				"attack"
+			),
+			22.0
+		),
+		"Stat mutation was not retained."
+	)
+
+	_expect(
+		actor.attachment_kind(
+			actor.faction_identity
+		)
+		== GameplayEntity.ATTACHMENT_FACTION_IDENTITY,
+		"Faction attachment kind was not normalized."
+	)
+	_expect(
+		actor.faction_reference()
+		== "peq:npc_faction:94",
+		"Faction reference accessor failed."
+	)
+	_expect(
+		actor.attachment_kind(
+			actor.inventory_attachment
+		)
+		== GameplayEntity.ATTACHMENT_NONE
+		and actor.attachment_kind(
+			actor.equipment_attachment
+		)
+		== GameplayEntity.ATTACHMENT_NONE,
+		"Empty attachments were not normalized."
+	)
+
+	var simulation := Simulation.new(
+		SimulationClock.new(),
+		SimulationRng.new(301)
+	)
+	simulation.player_entity_id = (
+		"test:attachment_player"
+	)
+
+	var player := EntityFactory.create({
+		"entity_id": "test:attachment_player",
+		"definition_id": "fixture:player:attachments",
+		"kind": "player",
+	})
+
+	simulation.add_entity(
+		player,
+		false,
+		false
+	)
+
+	_expect(
+		player.attachment_kind(
+			player.faction_identity
+		)
+		== GameplayEntity.ATTACHMENT_PLAYER_FACTION,
+		"Player faction service attachment was not bound."
+	)
+	_expect(
+		player.attachment_kind(
+			player.inventory_attachment
+		)
+		== GameplayEntity.ATTACHMENT_PLAYER_INVENTORY,
+		"Player inventory service attachment was not bound."
+	)
+	_expect(
+		player.attachment_kind(
+			player.equipment_attachment
+		)
+		== GameplayEntity.ATTACHMENT_PLAYER_EQUIPMENT_PENDING,
+		"Pending player equipment state is not explicit."
+	)
+
+
+func _test_halas_attachment_mapping() -> void:
+	var source_npc := {
+		"id": 49001,
+		"key": "peq:npc:49001",
+		"name": "Attachment Merchant",
+		"race": 90,
+		"race_ref": "eqemu:race:90",
+		"gender": 0,
+		"class": 41,
+		"class_ref": "eqemu:class:41",
+		"level": 10,
+		"texture": 0,
+		"face": 0,
+		"size": 7.0,
+		"merchant_id": 77,
+		"merchant_ref": "peq:merchant:77",
+		"npc_faction_id": 1337,
+		"npc_faction_ref": "peq:npc_faction:1337",
+	}
+
+	var actor := EntityFactory.create(
+		HalasEntityAdapter
+		.neutral_definition_from_source_npc(
+			source_npc,
+			39001,
+			Vector3.ZERO
+		)
+	)
+
+	_expect(
+		actor.attachment_kind(
+			actor.inventory_attachment
+		)
+		== GameplayEntity.ATTACHMENT_MERCHANT_CATALOG,
+		"Halas merchant association was not attached."
+	)
+	_expect(
+		int(
+			actor.inventory_attachment.get(
+				"merchant_id",
+				0
+			)
+		) == 77
+		and str(
+			actor.inventory_attachment.get(
+				"merchant_ref",
+				""
+			)
+		) == "peq:merchant:77",
+		"Halas merchant identity was lost."
+	)
+	_expect(
+		bool(
+			actor.inventory_attachment.get(
+				"read_only",
+				false
+			)
+		)
+		and not actor.inventory_attachment.has(
+			"entries"
+		),
+		"Merchant catalog became actor-owned inventory."
+	)
+	_expect(
+		actor.attachment_kind(
+			actor.equipment_attachment
+		)
+		== GameplayEntity.ATTACHMENT_SOURCE_EQUIPMENT_UNREVIEWED,
+		"Halas equipment source boundary was lost."
+	)
+	_expect(
+		actor.attachment_kind(
+			actor.faction_identity
+		)
+		== GameplayEntity.ATTACHMENT_FACTION_IDENTITY
+		and actor.faction_reference()
+		== "peq:npc_faction:1337",
+		"Halas faction attachment was not normalized."
+	)
 
 func _test_resources_and_runtime_snapshot() -> void:
 	var actor := EntityFactory.create({

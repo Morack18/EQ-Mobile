@@ -1,6 +1,15 @@
 class_name GameplayEntity
 extends RefCounted
 
+const ATTACHMENT_NONE := "none"
+const ATTACHMENT_FACTION_IDENTITY := "faction_identity"
+const ATTACHMENT_PLAYER_FACTION := "player_faction_state"
+const ATTACHMENT_PLAYER_INVENTORY := "player_inventory_state"
+const ATTACHMENT_PLAYER_EQUIPMENT_PENDING := "player_equipment_unimplemented"
+const ATTACHMENT_MERCHANT_CATALOG := "merchant_catalog_reference"
+const ATTACHMENT_SOURCE_INVENTORY_UNREVIEWED := "source_inventory_unreviewed"
+const ATTACHMENT_SOURCE_EQUIPMENT_UNREVIEWED := "source_equipment_unreviewed"
+
 enum Lifecycle {
 	CREATED,
 	SPAWNED,
@@ -198,7 +207,22 @@ func configure(definition: Dictionary) -> void:
 
 	rewards = _dictionary_copy(definition.get("rewards", {}))
 	metadata = _dictionary_copy(definition.get("metadata", {}))
-
+	faction_identity = _normalized_attachment(
+		faction_identity,
+		ATTACHMENT_FACTION_IDENTITY
+	)
+	inventory_attachment = _normalized_attachment(
+		inventory_attachment,
+		ATTACHMENT_NONE
+	)
+	equipment_attachment = _normalized_attachment(
+		equipment_attachment,
+		ATTACHMENT_NONE
+	)
+	controller_attachment = _normalized_attachment(
+		controller_attachment,
+		ATTACHMENT_NONE
+	)
 
 func spawn(now_seconds: float, override_position: Variant = null) -> bool:
 	if lifecycle not in [
@@ -399,6 +423,119 @@ func time_until_respawn(now_seconds: float) -> float:
 		respawn_at_seconds - now_seconds
 	)
 
+
+func base_stat_value(
+	stat_id: String,
+	default_value: float = 0.0
+) -> float:
+	return _numeric_stat_value(
+		base_stats,
+		stat_id,
+		default_value
+	)
+
+
+func derived_stat_value(
+	stat_id: String,
+	default_value: float = 0.0
+) -> float:
+	return _numeric_stat_value(
+		derived_stats,
+		stat_id,
+		default_value
+	)
+
+
+func set_base_stat_value(
+	stat_id: String,
+	value: float
+) -> bool:
+	if stat_id.is_empty():
+		return false
+
+	base_stats[stat_id] = value
+	return true
+
+
+func set_derived_stat_value(
+	stat_id: String,
+	value: float
+) -> bool:
+	if stat_id.is_empty():
+		return false
+
+	derived_stats[stat_id] = value
+	return true
+
+
+func attachment_kind(
+	attachment: Dictionary
+) -> String:
+	return str(
+		attachment.get(
+			"kind",
+			ATTACHMENT_NONE
+		)
+	)
+
+
+func faction_reference() -> String:
+	var npc_ref := str(
+		faction_identity.get(
+			"npc_faction_ref",
+			""
+		)
+	)
+
+	if not npc_ref.is_empty():
+		return npc_ref
+
+	return str(
+		faction_identity.get(
+			"faction_ref",
+			""
+		)
+	)
+
+
+func _numeric_stat_value(
+	container: Dictionary,
+	stat_id: String,
+	default_value: float
+) -> float:
+	var value: Variant = container.get(
+		stat_id,
+		default_value
+	)
+	var value_type := typeof(value)
+
+	if (
+		value_type != TYPE_INT
+		and value_type != TYPE_FLOAT
+	):
+		return default_value
+
+	return float(value)
+
+
+func _normalized_attachment(
+	attachment: Dictionary,
+	nonempty_default_kind: String
+) -> Dictionary:
+	var result := attachment.duplicate(
+		true
+	)
+
+	if result.has("kind"):
+		return result
+
+	result["kind"] = (
+		ATTACHMENT_NONE
+		if result.is_empty()
+		else nonempty_default_kind
+	)
+
+	return result
 
 func runtime_snapshot(now_seconds: float) -> Dictionary:
 	return {

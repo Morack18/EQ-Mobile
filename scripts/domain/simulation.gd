@@ -64,6 +64,11 @@ func add_entity(entity_value: GameplayEntity, spawn_now: bool = true, emit_spawn
 	entities[entity_value.entity_id] = entity_value
 
 	if entity_value.entity_id == player_entity_id:
+		_bind_player_actor_attachments(
+			entity_value
+		)
+
+	if entity_value.entity_id == player_entity_id:
 		entity_value.level = progression.level
 
 	if spawn_now:
@@ -75,6 +80,22 @@ func add_entity(entity_value: GameplayEntity, spawn_now: bool = true, emit_spawn
 			})
 	return entity_value
 
+
+func _bind_player_actor_attachments(
+	actor: GameplayEntity
+) -> void:
+	actor.faction_identity = {
+		"kind": GameplayEntity.ATTACHMENT_PLAYER_FACTION,
+		"owner_entity_id": actor.entity_id,
+	}
+	actor.inventory_attachment = {
+		"kind": GameplayEntity.ATTACHMENT_PLAYER_INVENTORY,
+		"owner_entity_id": actor.entity_id,
+	}
+	actor.equipment_attachment = {
+		"kind": GameplayEntity.ATTACHMENT_PLAYER_EQUIPMENT_PENDING,
+		"owner_entity_id": actor.entity_id,
+	}
 
 func entity(entity_id: String) -> GameplayEntity:
 	return entities.get(entity_id) as GameplayEntity

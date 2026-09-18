@@ -299,7 +299,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		hud.handle_touch(event.index, event.position, event.pressed)
 		if event.pressed:
 			var touch_target := _target_halas_npc_at_screen(event.position)
-			if not touch_target.is_empty() and int(touch_target.get("merchant_id", 0)) > 0:
+			var touch_actor := _halas_entity_for_target(
+				touch_target
+			)
+			if (
+				not touch_target.is_empty()
+				and _actor_has_merchant_catalog(
+					touch_actor
+				)
+			):
 				npc_press_touch = event.index
 				npc_press_position = event.position
 				npc_press_target = touch_target
@@ -1523,111 +1531,376 @@ func _cancel_npc_long_press(touch_index: int) -> void:
 	npc_press_elapsed = 0.0
 
 
-func _open_merchant_interaction(target: Dictionary) -> void:
-	if int(target.get("merchant_id", 0)) <= 0:
+func _halas_entity_for_target(
+	target: Dictionary
+) -> GameplayEntity:
+	if (
+		simulation == null
+		or target.is_empty()
+	):
+		return null
+
+	var spawn2_id := int(
+		target.get(
+			"spawn2_id",
+			0
+		)
+	)
+
+	if spawn2_id <= 0:
+		return null
+
+	return simulation.entity(
+		HalasEntityAdapter.runtime_entity_id(
+			spawn2_id
+		)
+	)
+
+
+func _selected_halas_entity() -> GameplayEntity:
+	if (
+		simulation == null
+		or selected_entity_id.is_empty()
+	):
+		return null
+
+	var actor := simulation.entity(
+		selected_entity_id
+	)
+
+	if (
+		actor == null
+		or actor.kind != "npc"
+	):
+		return null
+
+	return actor
+
+
+func _actor_has_merchant_catalog(
+	actor: GameplayEntity
+) -> bool:
+	if actor == null:
+		return false
+
+	if (
+		actor.attachment_kind(
+			actor.inventory_attachment
+		)
+		!= GameplayEntity.ATTACHMENT_MERCHANT_CATALOG
+	):
+		return false
+
+	return (
+		int(
+			actor.inventory_attachment.get(
+				"merchant_id",
+				0
+			)
+		) > 0
+		or not str(
+			actor.inventory_attachment.get(
+				"merchant_ref",
+				""
+			)
+		).is_empty()
+	)
+
+func _open_merchant_interaction(
+	target: Dictionary
+) -> void:
+	var actor := _halas_entity_for_target(
+		target
+	)
+
+	if not _actor_has_merchant_catalog(
+		actor
+	):
 		return
-	var standing := str(_resolve_npc_faction(target).get("standing", "Unresolved"))
-	if not MerchantPolicy.can_browse(standing):
-		status_text = "%s will not trade with you." % str(target.get("name", "This merchant"))
+
+	var standing := str(
+		_actor_faction_reaction(
+			actor
+		).get(
+			"standing",
+			"Unresolved"
+		)
+	)
+
+	if not MerchantPolicy.can_browse(
+		standing
+	):
+		status_text = (
+			"%s will not trade with you."
+			% actor.display_name
+		)
 		return
+
 	if merchant_interaction_popup != null:
 		merchant_interaction_popup.queue_free()
-	merchant_interaction_popup = preload("res://scripts/merchant_interaction_popup.gd").new()
-	merchant_interaction_popup.trade_requested.connect(func():
-		merchant_interaction_popup.queue_free()
-		merchant_interaction_popup = null
-		open_selected_merchant()
+
+	merchant_interaction_popup = preload(
+		"res://scripts/merchant_interaction_popup.gd"
+	).new()
+
+	merchant_interaction_popup.trade_requested.connect(
+		func():
+			merchant_interaction_popup.queue_free()
+			merchant_interaction_popup = null
+			open_selected_merchant()
 	)
-	merchant_interaction_popup.closed.connect(func(): merchant_interaction_popup = null)
-	ui_layer.add_child(merchant_interaction_popup)
-	merchant_interaction_popup.show_for_merchant(str(target.get("name", "Merchant")))
+	merchant_interaction_popup.closed.connect(
+		func():
+			merchant_interaction_popup = null
+	)
 
+	ui_layer.add_child(
+		merchant_interaction_popup
+	)
+	merchant_interaction_popup.show_for_merchant(
+		actor.display_name
+	)
 
-func _selected_npc_interaction_summary(target: Dictionary) -> String:
+func _selected_npc_interaction_summary(
+	target: Dictionary
+) -> String:
+	var actor := _halas_entity_for_target(
+		target
+	)
+
+	if actor == null:
+		return "Selected NPC has no runtime actor."
+
 	var details: Array[String] = []
-	if str(target.get("merchant_state", "none")) == "candidate":
-		details.append("merchant candidate")
-	if str(target.get("loot_state", "none")) == "reference_only":
-		details.append("loot reference")
-	var reaction := _resolve_npc_faction(target)
-	if str(reaction.get("standing", "Unresolved")) == "Unresolved":
-		details.append("faction unresolved")
+
+	if _actor_has_merchant_catalog(
+		actor
+	):
+		details.append(
+			"merchant candidate"
+		)
+
+	if str(
+		target.get(
+			"loot_state",
+			"none"
+		)
+	) == "reference_only":
+		details.append(
+			"loot reference"
+		)
+
+	var reaction := _actor_faction_reaction(
+		actor
+	)
+	var standing := str(
+		reaction.get(
+			"standing",
+			"Unresolved"
+		)
+	)
+
+	if standing == "Unresolved":
+		details.append(
+			"faction unresolved"
+		)
 	else:
-		details.append(str(reaction.get("standing", "Indifferently")))
+		details.append(
+			standing
+		)
+
 	if details.is_empty():
-		details.append("faction indifferent")
-	var summary := "You target %s (Lv %d) — %s; combat disabled pending review." % [
-		str(target.get("name", "Unknown")),
-		int(target.get("level", 1)),
+		details.append(
+			"faction indifferent"
+		)
+
+	var summary := (
+		"You target %s (Lv %d) — %s; "
+		+ "combat disabled pending review."
+	) % [
+		actor.display_name,
+		actor.level,
 		", ".join(details),
 	]
-	if str(target.get("merchant_state", "none")) == "candidate":
-		var preview := _merchant_preview(target)
+
+	if _actor_has_merchant_catalog(
+		actor
+	):
+		var preview := (
+			_merchant_preview_for_actor(
+				actor
+			)
+		)
+
 		if not preview.is_empty():
-			summary += "\n%s" % preview
+			summary += (
+				"
+%s"
+				% preview
+			)
+
 	return summary
 
+func _actor_faction_reaction(
+	actor: GameplayEntity
+) -> Dictionary:
+	if actor == null:
+		return simulation.faction_reaction(
+			""
+		)
 
-func _resolve_npc_faction(target: Dictionary) -> Dictionary:
-	var bundle_ref := str(target.get("npc_faction_ref", ""))
-	if bundle_ref.is_empty() and int(target.get("npc_faction_id", 0)) > 0:
-		bundle_ref = "peq:npc_faction:%d" % int(target.get("npc_faction_id", 0))
-	return simulation.faction_reaction(bundle_ref)
-
-
-func _merchant_listings_for(target: Dictionary) -> Array:
-	return content_service.merchant_listings(
-		str(target.get("merchant_ref", "")),
-		int(target.get("merchant_id", 0))
+	return simulation.faction_reaction(
+		actor.faction_reference()
 	)
 
+func _merchant_listings_for_actor(
+	actor: GameplayEntity
+) -> Array:
+	if not _actor_has_merchant_catalog(
+		actor
+	):
+		return []
 
-func _merchant_preview(target: Dictionary) -> String:
-	var listings := _merchant_listings_for(target)
+	return content_service.merchant_listings(
+		str(
+			actor.inventory_attachment.get(
+				"merchant_ref",
+				""
+			)
+		),
+		int(
+			actor.inventory_attachment.get(
+				"merchant_id",
+				0
+			)
+		)
+	)
+
+func _merchant_preview_for_actor(
+	actor: GameplayEntity
+) -> String:
+	var listings := (
+		_merchant_listings_for_actor(
+			actor
+		)
+	)
+
 	if listings.is_empty():
 		return "Shop inventory is unavailable."
+
 	var names: Array[String] = []
-	for listing in listings.slice(0, 3):
-		names.append(str(listing.get("item_name", "Unknown item")))
+
+	for listing in listings.slice(
+		0,
+		3
+	):
+		names.append(
+			str(
+				listing.get(
+					"item_name",
+					"Unknown item"
+				)
+			)
+		)
+
 	return "Shop stock (%d): %s%s — browsing only." % [
 		listings.size(),
 		", ".join(names),
-		"…" if listings.size() > names.size() else "",
+		"…"
+		if listings.size() > names.size()
+		else "",
 	]
 
-
 func _selected_merchant_is_browseable() -> bool:
-	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
-		return false
-	var reaction := _resolve_npc_faction(selected_halas_target)
-	return MerchantPolicy.can_browse(str(reaction.get("standing", "Unresolved")))
+	var actor := _selected_halas_entity()
 
+	if not _actor_has_merchant_catalog(
+		actor
+	):
+		return false
+
+	var reaction := _actor_faction_reaction(
+		actor
+	)
+
+	return MerchantPolicy.can_browse(
+		str(
+			reaction.get(
+				"standing",
+				"Unresolved"
+			)
+		)
+	)
 
 func open_selected_merchant() -> void:
-	if simulation != null and simulation.is_paused():
+	if (
+		simulation != null
+		and simulation.is_paused()
+	):
 		return
-	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
-		status_text = "Select a merchant to browse their stock."
+
+	var actor := _selected_halas_entity()
+
+	if not _actor_has_merchant_catalog(
+		actor
+	):
+		status_text = (
+			"Select a merchant to browse their stock."
+		)
 		return
-	var reaction := _resolve_npc_faction(selected_halas_target)
-	var standing := str(reaction.get("standing", "Unresolved"))
-	if not MerchantPolicy.can_browse(standing):
-		status_text = "%s will not trade with you (%s)." % [
-			str(selected_halas_target.get("name", "Merchant")),
-			standing,
-		]
+
+	var reaction := _actor_faction_reaction(
+		actor
+	)
+	var standing := str(
+		reaction.get(
+			"standing",
+			"Unresolved"
+		)
+	)
+
+	if not MerchantPolicy.can_browse(
+		standing
+	):
+		status_text = (
+			"%s will not trade with you (%s)."
+			% [
+				actor.display_name,
+				standing,
+			]
+		)
 		return
-	var listings := _merchant_listings_for(selected_halas_target)
+
+	var listings := (
+		_merchant_listings_for_actor(
+			actor
+		)
+	)
+
 	if listings.is_empty():
-		status_text = "This merchant has no available stock."
+		status_text = (
+			"This merchant has no available stock."
+		)
 		return
+
 	if merchant_panel != null:
 		merchant_panel.queue_free()
-	merchant_panel = preload("res://scripts/merchant_browse_panel.gd").new()
-	merchant_panel.closed.connect(func(): merchant_panel = null)
-	ui_layer.add_child(merchant_panel)
-	merchant_panel.show_merchant(str(selected_halas_target.get("name", "Merchant")), listings)
 
+	merchant_panel = preload(
+		"res://scripts/merchant_browse_panel.gd"
+	).new()
+	merchant_panel.closed.connect(
+		func():
+			merchant_panel = null
+	)
+
+	ui_layer.add_child(
+		merchant_panel
+	)
+	merchant_panel.show_merchant(
+		actor.display_name,
+		listings
+	)
 
 func _load_save() -> void:
 	var player_fixture := content_service.player_fixture_definition()

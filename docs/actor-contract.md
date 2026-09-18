@@ -169,6 +169,31 @@ attachment point.
 from `controller_attachment`. The legacy metadata lookup remains only as a
 compatibility path for existing Phase 3 fixtures while they are migrated.
 
+### Attachment kinds and ownership
+
+Faction, inventory, equipment, and controller attachments have stable `kind`
+values. Empty attachment points normalize to `none`.
+
+The local player actor is bound by `Simulation` to lightweight descriptors for
+the player faction and inventory services. Those descriptors identify the
+association; they do not duplicate faction standings or inventory entries.
+
+Player equipment is explicitly marked as unimplemented rather than pretending
+an equipment subsystem already exists.
+
+An imported Halas merchant uses its inventory attachment as a read-only
+merchant-catalog association. Merchant stock remains owned by `ContentService`;
+stock entries are not copied into the actor.
+
+Imported equipment remains `source_equipment_unreviewed`. This gives equipment
+a generic architectural attachment point without activating or inventing
+source equipment rules.
+
+`main.gd` resolves selected Halas level, faction, and merchant associations
+through the registered `GameplayEntity`. The Halas target dictionary remains
+presentation/source-interaction context rather than a second runtime identity
+authority.
+
 ## Effects
 
 The actor effect container mirrors active effects attached to that actor.

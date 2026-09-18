@@ -104,8 +104,8 @@ static func neutral_definition_from_target(
 				)
 			),
 		},
-		"inventory_attachment": {},
-		"equipment_attachment": {},
+		"inventory_attachment": _source_inventory_attachment(target),
+		"equipment_attachment": _source_equipment_attachment(),
 		"controller_attachment": {
 			"kind": "halas_population_presentation",
 		},
@@ -217,8 +217,8 @@ static func neutral_definition_from_source_npc(
 				)
 			),
 		},
-		"inventory_attachment": {},
-		"equipment_attachment": {},
+		"inventory_attachment": _source_inventory_attachment(npc_type),
+		"equipment_attachment": _source_equipment_attachment(),
 		"controller_attachment": {},
 		"appearance": {
 			"texture": int(
@@ -328,6 +328,43 @@ static func neutral_definition_from_source_npc(
 
 	return definition
 
+
+static func _source_inventory_attachment(
+	source: Dictionary
+) -> Dictionary:
+	var merchant_id := int(
+		source.get(
+			"merchant_id",
+			0
+		)
+	)
+	var merchant_ref := str(
+		source.get(
+			"merchant_ref",
+			""
+		)
+	)
+
+	if (
+		merchant_id <= 0
+		and merchant_ref.is_empty()
+	):
+		return {
+			"kind": GameplayEntity.ATTACHMENT_SOURCE_INVENTORY_UNREVIEWED,
+		}
+
+	return {
+		"kind": GameplayEntity.ATTACHMENT_MERCHANT_CATALOG,
+		"merchant_id": merchant_id,
+		"merchant_ref": merchant_ref,
+		"read_only": true,
+	}
+
+
+static func _source_equipment_attachment() -> Dictionary:
+	return {
+		"kind": GameplayEntity.ATTACHMENT_SOURCE_EQUIPMENT_UNREVIEWED,
+	}
 
 static func _source_metadata(
 	target: Dictionary
