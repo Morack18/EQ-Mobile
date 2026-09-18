@@ -583,24 +583,8 @@ func remove_entity(entity_id: String) -> bool:
 	if current == null or not current.remove():
 		return false
 
-	# Clear entity-owned timers
-	_timed_effects.erase(current.entity_id)
-	_active_spell_casts.erase(current.entity_id)
-	timers.cancel_owner(current.entity_id)
-
-	_emit(
-		GameplayEvent.Type.DESPAWN,
-		current.entity_id,
-		"",
-		{"reason": "removed"}
-	)
-
-	return true
-
-	# All entity-owned generic timers use category|owner|timer.
-	# Clearing by stable runtime entity ID removes cooldown, initial spawn,
-	# AI, timed-effect, cast, and recast deadlines without teaching entity
-	# lifecycle code about every timer category individually.
+	# Generic gameplay timers use category|owner|timer.
+	# Removing an entity clears every timer owned by its runtime entity ID.
 	timers.cancel_owner(entity_id)
 
 	_active_spell_casts.erase(entity_id)
@@ -614,7 +598,12 @@ func remove_entity(entity_id: String) -> bool:
 
 		var record: Dictionary = record_variant
 
-		if str(record.get("target_entity_id", "")) == entity_id:
+		if (
+			str(
+				record.get("target_entity_id", "")
+			)
+			== entity_id
+		):
 			_timed_effects.erase(record_key)
 
 	_emit(

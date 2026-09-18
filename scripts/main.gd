@@ -208,6 +208,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if simulation != null and simulation.is_paused():
+		return
+
 	if event is InputEventKey and event.keycode == KEY_SPACE:
 		_set_jump_held(event.pressed and not event.echo)
 		return
