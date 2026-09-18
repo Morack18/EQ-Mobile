@@ -41,6 +41,14 @@ class NpcActor:
 	var display_name := ""
 	var level := 1
 	var class_id := 0
+	var class_ref := ""
+	var race_id := 0
+	var race_ref := ""
+	var gender_id := 0
+	var texture := 0
+	var face := 0
+	var source_size := 0.0
+	var source_mana := 0
 	var merchant_id := 0
 	var npc_faction_id := 0
 	var loottable_id := 0
@@ -131,6 +139,14 @@ func _build_population(content: Dictionary) -> void:
 		actor.display_name = str(npc_type.name).replace("_", " ")
 		actor.level = int(npc_type.get("level", 1))
 		actor.class_id = int(npc_type.get("class", 0))
+		actor.class_ref = str(npc_type.get("class_ref", ""))
+		actor.race_id = int(npc_type.get("race", 0))
+		actor.race_ref = str(npc_type.get("race_ref", ""))
+		actor.gender_id = int(npc_type.get("gender", 0))
+		actor.texture = int(npc_type.get("texture", 0))
+		actor.face = int(npc_type.get("face", 0))
+		actor.source_size = float(npc_type.get("size", 0.0))
+		actor.source_mana = int(npc_type.get("mana", 0))
 		# Source combat/loot values are retained for provenance and inspection only.
 		# They do not authorize the generic simulation to enable imported combat.
 		actor.merchant_id = int(npc_type.get("merchant_id", 0))
@@ -201,6 +217,16 @@ func _target_dictionary(actor: NpcActor) -> Dictionary:
 		"name": actor.display_name,
 		"level": actor.level,
 		"class": actor.class_id,
+		"class_id": actor.class_id,
+		"class_ref": actor.class_ref,
+		"race_id": actor.race_id,
+		"race_ref": actor.race_ref,
+		"gender_id": actor.gender_id,
+		"model_name": actor.model_name,
+		"texture": actor.texture,
+		"face": actor.face,
+		"source_size": actor.source_size,
+		"source_mana": actor.source_mana,
 		"merchant_id": actor.merchant_id,
 		"npc_faction_id": actor.npc_faction_id,
 		"loottable_id": actor.loottable_id,

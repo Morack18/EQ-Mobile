@@ -3,14 +3,25 @@
   "schema_version": 1,
   "key": "fixture:player:local",
   "evidence": "temporary_fixture_default",
-  "note": "Project-owned offline-slice player state. Replace health/inventory tuning when reviewed character-stat rules are implemented.",
+  "note": "Project-owned offline-slice player state. Replace health/inventory/stat tuning when reviewed character rules are implemented.",
   "max_health": 100.0,
+  "max_mana": 0.0,
+  "max_endurance": 0.0,
   "combat_size": 7.0,
   "inventory_capacity": 8,
   "identity": {
     "class_id": 1,
+    "class_ref": "eqemu:class:1",
     "race_id": 2,
+    "race_ref": "eqemu:race:2",
+    "gender_id": 0,
     "deity_id": 396
+  },
+  "base_stats": {},
+  "appearance": {
+    "model_path": "res://assets/imported/halas/characters/hlm_s0_h0.glb",
+    "model_name": "HLMPlaceholder",
+    "note": "Presentation placeholder intentionally remains independent from gameplay race identity."
   },
   "inventory_item_aliases": {
     "training_spark_fragment": "fixture:item:training_spark_fragment",

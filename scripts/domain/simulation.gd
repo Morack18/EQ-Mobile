@@ -62,6 +62,10 @@ func add_entity(entity_value: GameplayEntity, spawn_now: bool = true, emit_spawn
 	assert(not entity_value.entity_id.is_empty(), "Gameplay entity has no stable ID")
 	assert(not entities.has(entity_value.entity_id), "Duplicate gameplay entity ID: %s" % entity_value.entity_id)
 	entities[entity_value.entity_id] = entity_value
+
+	if entity_value.entity_id == player_entity_id:
+		entity_value.level = progression.level
+
 	if spawn_now:
 		entity_value.spawn(clock.now_seconds())
 		entity_value.activate()
@@ -76,14 +80,51 @@ func entity(entity_id: String) -> GameplayEntity:
 	return entities.get(entity_id) as GameplayEntity
 
 
+func set_target(actor_id: String, target_id: String) -> bool:
+	if is_paused():
+		return false
+
+	var actor := entity(actor_id)
+	var target := entity(target_id)
+
+	if (
+		actor == null
+		or target == null
+		or not actor.is_active()
+		or not target.is_active()
+	):
+		return false
+
+	actor.set_target_entity(target_id)
+	return true
+
+
+func clear_target(actor_id: String) -> bool:
+	if is_paused():
+		return false
+
+	var actor := entity(actor_id)
+	if actor == null:
+		return false
+
+	actor.clear_target()
+	if actor.combat_state != GameplayEntity.COMBAT_CASTING:
+		actor.set_combat_state(GameplayEntity.COMBAT_IDLE)
+	return true
+
+
 func sync_entity_pose(entity_id: String, position_value: Vector3, facing_value: Vector3) -> void:
 	var target := entity(entity_id)
 	if target == null or target.lifecycle == GameplayEntity.Lifecycle.REMOVED:
 		return
 	target.position = position_value
-	var flat_facing := Vector3(facing_value.x, 0.0, facing_value.z)
+	var flat_facing := Vector3(
+		facing_value.x,
+		0.0,
+		facing_value.z
+	)
 	if flat_facing.length_squared() > 0.000001:
-		target.facing = flat_facing.normalized()
+		target.set_facing(flat_facing)
 
 
 func is_paused() -> bool:
@@ -134,6 +175,12 @@ func request_attack(
 
 	var attacker := entity(attacker_id)
 	var target := entity(target_id)
+
+	attacker.set_target_entity(target_id)
+	attacker.set_combat_state(
+		GameplayEntity.COMBAT_ENGAGED
+	)
+
 	var cooldown_group := str(profile.get("cooldown_group", ""))
 	var cooldown_seconds := _profile_cooldown_seconds(profile)
 
@@ -164,14 +211,19 @@ func request_attack(
 
 
 func profile_is_learned(attacker_id: String, profile: Dictionary) -> bool:
+	var attacker := entity(attacker_id)
+	if attacker == null:
+		return false
+
 	if attacker_id != player_entity_id:
 		return true
-	if progression.level < int(profile.get("required_level", 1)):
+
+	if attacker.level < int(profile.get("required_level", 1)):
 		return false
 
 	var allowed_classes = profile.get("allowed_class_ids", [])
 	if allowed_classes is Array and not allowed_classes.is_empty():
-		return int(player_identity.get("class_id", -1)) in allowed_classes
+		return attacker.class_id in allowed_classes
 
 	return true
 
@@ -229,6 +281,7 @@ func apply_timed_effect(
 	record["target_entity_id"] = target_id
 	record["effect_id"] = effect_id
 	_timed_effects[record_key] = record
+	target.attach_effect(effect_id, record)
 
 	timers.start(
 		_effect_timer_key(target_id, effect_id),
@@ -244,9 +297,13 @@ func remove_timed_effect(target_id: String, effect_id: String) -> bool:
 
 	var record_key := _effect_record_key(target_id, effect_id)
 	var existed := _timed_effects.has(record_key)
+	var target := entity(target_id)
 
 	_timed_effects.erase(record_key)
 	timers.cancel(_effect_timer_key(target_id, effect_id))
+
+	if target != null:
+		target.remove_effect(effect_id)
 
 	return existed
 
@@ -321,6 +378,10 @@ func begin_spell_cast(
 		maxf(0.0, cast_seconds)
 	)
 
+	caster.set_combat_state(
+		GameplayEntity.COMBAT_CASTING
+	)
+
 	return {
 		"success": true,
 		"reason": "",
@@ -382,6 +443,14 @@ func complete_spell_cast(entity_id: String) -> Dictionary:
 	if cast.get("payload", {}) is Dictionary:
 		payload = cast.get("payload", {}).duplicate(true)
 
+	var caster := entity(entity_id)
+	if caster != null:
+		caster.set_combat_state(
+			GameplayEntity.COMBAT_ENGAGED
+			if not caster.target_entity_id.is_empty()
+			else GameplayEntity.COMBAT_IDLE
+		)
+
 	return {
 		"success": true,
 		"reason": "",
@@ -399,6 +468,15 @@ func interrupt_spell_cast(entity_id: String) -> bool:
 
 	_active_spell_casts.erase(entity_id)
 	timers.cancel(_cast_timer_key(entity_id))
+
+	var caster := entity(entity_id)
+	if caster != null:
+		caster.set_combat_state(
+			GameplayEntity.COMBAT_ENGAGED
+			if not caster.target_entity_id.is_empty()
+			else GameplayEntity.COMBAT_IDLE
+		)
+
 	return true
 
 
@@ -583,6 +661,8 @@ func remove_entity(entity_id: String) -> bool:
 	if current == null or not current.remove():
 		return false
 
+	_clear_target_references_to(entity_id)
+
 	# Generic gameplay timers use category|owner|timer.
 	# Removing an entity clears every timer owned by its runtime entity ID.
 	timers.cancel_owner(entity_id)
@@ -619,6 +699,20 @@ func remove_entity(entity_id: String) -> bool:
 	)
 
 	return true
+
+
+func _clear_target_references_to(target_id: String) -> void:
+	for actor_id in entities:
+		var actor := entity(str(actor_id))
+		if actor == null or actor.target_entity_id != target_id:
+			continue
+
+		actor.clear_target()
+
+		if actor.combat_state != GameplayEntity.COMBAT_CASTING:
+			actor.set_combat_state(
+				GameplayEntity.COMBAT_IDLE
+			)
 
 
 func drain_events() -> Array:
@@ -753,6 +847,11 @@ func restore_snapshot(
 				restore_position
 			)
 
+	var player_actor := entity(player_entity_id)
+	if player_actor != null:
+		player_actor.level = progression.level
+
+	_rebuild_entity_effect_containers()
 	_event_queue.clear()
 
 
@@ -1025,6 +1124,11 @@ func _grant_death_rewards_once(
 		return
 
 	var result := progression.award_xp(xp_reward)
+
+	var player_actor := entity(player_entity_id)
+	if player_actor != null:
+		player_actor.level = progression.level
+
 	var awarded := int(result.get("awarded", 0))
 
 	if awarded > 0:
@@ -1101,6 +1205,36 @@ func _expire_timed_effects() -> void:
 		):
 			_timed_effects.erase(record_key)
 			timers.cancel(timer_key)
+
+			var target := entity(target_id)
+			if target != null:
+				target.remove_effect(effect_id)
+
+
+func _rebuild_entity_effect_containers() -> void:
+	for entity_id in entities:
+		var current := entity(str(entity_id))
+		if current != null:
+			current.clear_effects()
+
+	for record_key in _timed_effects:
+		var record_variant: Variant = _timed_effects[record_key]
+		if not record_variant is Dictionary:
+			continue
+
+		var record: Dictionary = record_variant
+		var target := entity(
+			str(record.get("target_entity_id", ""))
+		)
+		var effect_id := str(
+			record.get("effect_id", "")
+		)
+
+		if target != null and not effect_id.is_empty():
+			target.attach_effect(
+				effect_id,
+				record
+			)
 
 
 func _restore_legacy_cooldowns(saved_cooldowns: Variant) -> void:

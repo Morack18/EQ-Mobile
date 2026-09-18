@@ -33,7 +33,7 @@ func sync_to_domain(entity: GameplayEntity) -> void:
 	forward.y = 0.0
 	entity.position = node.global_position
 	if forward.length_squared() > 0.000001:
-		entity.facing = forward.normalized()
+		entity.set_facing(forward)
 
 
 func apply_from_domain(entity: GameplayEntity, apply_position: bool = true) -> void:

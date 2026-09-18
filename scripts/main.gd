@@ -133,18 +133,51 @@ func _configure_simulation() -> void:
 		player_fixture.get("identity", {}),
 		player_fixture.get("inventory_item_aliases", {})
 	)
+	var player_identity: Dictionary = player_fixture.get(
+		"identity",
+		{}
+	)
+
 	var player_entity := EntityFactory.create({
 		"entity_id": PLAYER_ENTITY_ID,
 		"definition_id": str(player_fixture.get("key", "fixture:player:local")),
 		"kind": "player",
 		"display_name": "Player",
+		"race_id": int(player_identity.get("race_id", 0)),
+		"race_ref": str(player_identity.get("race_ref", "")),
+		"gender_id": int(player_identity.get("gender_id", 0)),
+		"class_id": int(player_identity.get("class_id", 0)),
+		"class_ref": str(player_identity.get("class_ref", "")),
+		"level": simulation.progression.level,
+		"base_stats": player_fixture.get("base_stats", {}).duplicate(true),
+		"derived_stats": {},
 		"spawn_position": _array_to_vector3(zone.get("player_spawn", [0.0, 0.0, 0.0])),
 		"combat_size": float(player_fixture.get("combat_size", 7.0)),
 		"max_health": float(player_fixture.get("max_health", 100.0)),
+		"max_mana": float(player_fixture.get("max_mana", 0.0)),
+		"max_endurance": float(player_fixture.get("max_endurance", 0.0)),
 		"combat_enabled": true,
 		"hostile": false,
 		"death_delay_seconds": float(zone.get("player_respawn_seconds", 2.5)),
 		"respawn_seconds": 0.0,
+		"faction_identity": {
+			"kind": "player_standings",
+		},
+		"inventory_attachment": {
+			"kind": "simulation_inventory",
+			"owner_entity_id": PLAYER_ENTITY_ID,
+		},
+		"equipment_attachment": {
+			"kind": "reserved",
+			"owner_entity_id": PLAYER_ENTITY_ID,
+		},
+		"controller_attachment": {
+			"kind": "local_player",
+		},
+		"appearance": player_fixture.get(
+			"appearance",
+			{}
+		).duplicate(true),
 		"metadata": {
 			"identity": player_fixture.get("identity", {}).duplicate(true),
 			"evidence": str(player_fixture.get("evidence", "temporary_fixture_default")),
@@ -165,17 +198,28 @@ func _training_entity_definition() -> Dictionary:
 		"definition_id": str(archetype.get("key", "fixture:npc:training_spark")),
 		"kind": "npc",
 		"display_name": str(archetype.get("name", "Training Spark")),
+		"level": maxi(1, int(archetype.get("level", 1))),
+		"base_stats": {},
+		"derived_stats": {},
 		"spawn_position": _array_to_vector3(spawn.get("position", [0.0, 0.0, 0.0])),
 		"combat_size": float(archetype.get("combat_size", 1.0)),
 		"max_health": float(archetype.get("max_health", 1.0)),
+		"max_mana": 0.0,
+		"max_endurance": 0.0,
 		"combat_enabled": true,
 		"hostile": true,
 		"death_delay_seconds": float(archetype.get("death_delay_seconds", 0.0)),
 		"respawn_seconds": float(spawn.get("respawn_seconds", -1.0)),
 		"rewards": archetype.get("rewards", {}).duplicate(true),
-		"metadata": {
+		"controller_attachment": {
+			"kind": "simple_npc_behavior",
 			"behavior": archetype.get("behavior", {}).duplicate(true),
 			"combat_profile": archetype.get("combat", {}).duplicate(true),
+		},
+		"appearance": {
+			"kind": "procedural_training_fixture",
+		},
+		"metadata": {
 			"evidence": str(archetype.get("evidence", "temporary_fixture_default")),
 		},
 	}
@@ -203,6 +247,10 @@ func _physics_process(delta: float) -> void:
 	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
 	if player_entity == null or not player_entity.is_active():
 		player.velocity = Vector3.ZERO
+		if player_entity != null:
+			player_entity.set_movement_state(
+				GameplayEntity.MOVEMENT_IDLE
+			)
 		return
 	_move_player(delta)
 
@@ -317,7 +365,12 @@ func _attack_failure_text(reason: String, target_id: String) -> String:
 
 
 func _class_definition() -> Dictionary:
-	var class_id := int(simulation.player_identity.get("class_id", 1))
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	var class_id := (
+		player_entity.class_id
+		if player_entity != null
+		else int(simulation.player_identity.get("class_id", 1))
+	)
 	return content_service.player_class_catalog().get("classes", {}).get(str(class_id), {})
 
 
@@ -459,6 +512,34 @@ func _move_player(delta: float) -> void:
 		player.move_and_slide()
 	_update_locomotion_animation(swimming)
 	_clamp_player_to_zone_bounds()
+
+	var player_entity := simulation.entity(PLAYER_ENTITY_ID)
+	if player_entity != null:
+		var actual_velocity := player.get_real_velocity()
+
+		if swimming:
+			player_entity.set_movement_state(
+				GameplayEntity.MOVEMENT_SWIMMING,
+				actual_velocity
+			)
+		elif not player.is_on_floor():
+			player_entity.set_movement_state(
+				GameplayEntity.MOVEMENT_AIRBORNE,
+				actual_velocity
+			)
+		elif Vector2(
+			actual_velocity.x,
+			actual_velocity.z
+		).length() > 0.01:
+			player_entity.set_movement_state(
+				GameplayEntity.MOVEMENT_MOVING,
+				actual_velocity
+			)
+		else:
+			player_entity.set_movement_state(
+				GameplayEntity.MOVEMENT_IDLE
+			)
+
 	jump_pressed = false
 
 
@@ -542,7 +623,10 @@ func _update_simulation_npcs(delta: float) -> void:
 		var actor := simulation.entity(entity_id)
 		if actor == null:
 			continue
-		var profile: Dictionary = actor.metadata.get("combat_profile", {})
+		var profile: Dictionary = actor.controller_attachment.get(
+			"combat_profile",
+			actor.metadata.get("combat_profile", {})
+		)
 		var context := {"line_of_sight": true}
 		if actor.is_active() and player_entity.is_active() and bool(profile.get("requires_los", false)):
 			context["line_of_sight"] = _has_world_line_of_sight(
@@ -890,10 +974,24 @@ func _build_player() -> void:
 	collision_shape.shape = capsule
 	collision_shape.position.y = entity.combat_size * 0.5
 	player.add_child(collision_shape)
-	var player_scene := load("res://assets/imported/halas/characters/hlm_s0_h0.glb") as PackedScene
-	assert(player_scene != null, "Missing animated HLM placeholder player model")
+	var player_model_path := str(
+		entity.appearance.get(
+			"model_path",
+			"res://assets/imported/halas/characters/hlm_s0_h0.glb"
+		)
+	)
+	var player_scene := load(player_model_path) as PackedScene
+	assert(
+		player_scene != null,
+		"Missing player appearance model: %s" % player_model_path
+	)
 	player_visual = player_scene.instantiate() as Node3D
-	player_visual.name = "HLMPlaceholder"
+	player_visual.name = str(
+		entity.appearance.get(
+			"model_name",
+			"HLMPlaceholder"
+		)
+	)
 	player_visual.rotation.y = CHARACTER_MODEL_FACING_OFFSET
 	player.add_child(player_visual)
 	player_animator = _animation_player_below(player_visual)
@@ -1043,7 +1141,7 @@ func _update_hud() -> void:
 	var target_line := _target_status_line()
 	hud.set_status("%s\nLevel %d    HP %.0f / %.0f    %s\n%s\n%s\n%s" % [
 		status_text,
-		simulation.progression.level,
+		player_entity.level,
 		player_entity.health,
 		player_entity.max_health,
 		target_line,
@@ -1066,8 +1164,10 @@ func _target_status_line() -> String:
 		if entity.lifecycle == GameplayEntity.Lifecycle.DEAD:
 			return "%s: respawns in %.0fs" % [entity.display_name, entity.time_until_respawn(simulation_clock.now_seconds())]
 		return "%s: %s" % [entity.display_name, GameplayEntity.lifecycle_name(entity.lifecycle)]
-	var level := int(selected_halas_target.get("level", 1))
-	return "Target: %s (Lv %d)" % [entity.display_name, level]
+	return "Target: %s (Lv %d)" % [
+		entity.display_name,
+		entity.level,
+	]
 
 
 func _target_nearest_halas_npc() -> void:
@@ -1118,6 +1218,11 @@ func _select_halas_target(target: Dictionary) -> void:
 	if node_variant is Node3D:
 		view_registry.bind(selected_entity_id, node_variant)
 		view_registry.sync_to_domain(entity)
+
+	simulation.set_target(
+		PLAYER_ENTITY_ID,
+		selected_entity_id
+	)
 	halas_population.set_selected_spawn(int(target.get("spawn2_id", 0)))
 	status_text = _selected_npc_interaction_summary(target)
 
@@ -1125,6 +1230,10 @@ func _select_halas_target(target: Dictionary) -> void:
 func _clear_halas_selection() -> void:
 	selected_halas_target = {}
 	selected_entity_id = ""
+
+	if simulation != null:
+		simulation.clear_target(PLAYER_ENTITY_ID)
+
 	if halas_population != null:
 		halas_population.set_selected_spawn(-1)
 
