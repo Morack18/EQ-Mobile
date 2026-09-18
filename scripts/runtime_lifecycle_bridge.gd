@@ -1,4 +1,3 @@
-gdscript
 class_name RuntimeLifecycleBridge
 extends Node
 

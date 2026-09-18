@@ -1,4 +1,3 @@
-gdscript
 class_name PersistenceService
 extends RefCounted
 

@@ -1,4 +1,3 @@
-gdscript
 class_name Simulation
 extends RefCounted
 
@@ -92,6 +91,9 @@ func is_paused() -> bool:
 
 
 func schedule_spawn(entity_id: String, delay_seconds: float) -> bool:
+	if clock.is_paused():
+		return false
+
 	var target := entity(entity_id)
 	if target == null or target.lifecycle != GameplayEntity.Lifecycle.CREATED:
 		return false

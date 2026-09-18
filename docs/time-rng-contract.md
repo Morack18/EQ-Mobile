@@ -1,4 +1,3 @@
-Markdown
 # EQ Mobile — Time, Timer, and Randomness Contract
 
 ## Scope
@@ -52,6 +51,7 @@ Stable timer keys follow:
 
 ```text
 <category>|<owner>|<timer>
+```
 
 Current categories are:
 

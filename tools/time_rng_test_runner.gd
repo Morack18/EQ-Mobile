@@ -1,4 +1,3 @@
-```gdscript
 extends SceneTree
 
 
