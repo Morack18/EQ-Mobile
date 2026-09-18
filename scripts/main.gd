@@ -478,6 +478,8 @@ func _update_locomotion_animation(swimming: bool) -> void:
 
 
 func _set_jump_held(pressed: bool) -> void:
+	if simulation != null and simulation.is_paused():
+		return
 	if pressed and not jump_held:
 		jump_pressed = true
 	jump_held = pressed
@@ -1224,6 +1226,8 @@ func _selected_merchant_is_browseable() -> bool:
 
 
 func open_selected_merchant() -> void:
+	if simulation != null and simulation.is_paused():
+		return
 	if selected_halas_target.is_empty() or int(selected_halas_target.get("merchant_id", 0)) <= 0:
 		status_text = "Select a merchant to browse their stock."
 		return
