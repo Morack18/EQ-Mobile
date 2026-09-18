@@ -1,10 +1,9 @@
-gdscript
 class_name SimpleNpcBehaviorSystem
 extends RefCounted
 
 ## Generic deterministic chase-and-attack behavior for simple autonomous actors.
-## Content supplies the movement/aggro profile and attack profile; combat rules
-## remain in Simulation so this behavior cannot award damage, death, loot, or XP.
+## Content supplies movement/aggro and combat profiles. Damage, death, rewards,
+## timing, and randomness remain owned by Simulation and its services.
 
 
 func update_entity(
@@ -29,10 +28,7 @@ func update_entity(
 		return {"state": "inactive"}
 
 	var behavior: Dictionary = actor.metadata.get("behavior", {})
-	var attack_profile: Dictionary = actor.metadata.get(
-		"combat_profile",
-		{}
-	)
+	var attack_profile: Dictionary = actor.metadata.get("combat_profile", {})
 
 	if behavior.is_empty() or attack_profile.is_empty():
 		return {"state": "idle"}
@@ -49,10 +45,7 @@ func update_entity(
 
 	if (
 		think_interval_seconds > 0.0
-		and not simulation.claim_ai_think(
-			actor_id,
-			think_interval_seconds
-		)
+		and not simulation.claim_ai_think(actor_id, think_interval_seconds)
 	):
 		return {
 			"state": "waiting",
@@ -61,10 +54,7 @@ func update_entity(
 
 	var effective_delta := delta
 	if think_interval_seconds > 0.0:
-		effective_delta = maxf(
-			delta,
-			think_interval_seconds
-		)
+		effective_delta = maxf(delta, think_interval_seconds)
 
 	var offset := target.position - actor.position
 	var distance := offset.length()
@@ -82,11 +72,7 @@ func update_entity(
 	)
 
 	if distance > attack_range:
-		var flat_direction := Vector3(
-			offset.x,
-			0.0,
-			offset.z
-		)
+		var flat_direction := Vector3(offset.x, 0.0, offset.z)
 
 		if flat_direction.length_squared() > 0.000001:
 			flat_direction = flat_direction.normalized()
@@ -95,9 +81,7 @@ func update_entity(
 				distance,
 				maxf(
 					0.0,
-					float(
-						behavior.get("move_speed", 0.0)
-					)
+					float(behavior.get("move_speed", 0.0))
 				) * maxf(0.0, effective_delta)
 			)
 
@@ -110,12 +94,7 @@ func update_entity(
 		attack_profile.get("cooldown_group", "")
 	)
 
-	if (
-		simulation.cooldown_remaining(
-			actor_id,
-			cooldown_group
-		) > 0.0
-	):
+	if simulation.cooldown_remaining(actor_id, cooldown_group) > 0.0:
 		return {"state": "cooldown"}
 
 	var result := simulation.request_attack(

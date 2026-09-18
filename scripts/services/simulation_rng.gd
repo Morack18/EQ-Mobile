@@ -25,8 +25,7 @@ func state() -> int:
 func restore(seed_value: int, state_value: int) -> void:
 	_initial_seed = seed_value
 	_rng.seed = seed_value
-	if state_value != 0:
-		_rng.state = state_value
+	_rng.state = state_value
 
 
 func snapshot() -> Dictionary:

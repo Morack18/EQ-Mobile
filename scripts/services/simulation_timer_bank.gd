@@ -1,4 +1,3 @@
-gdscript
 class_name SimulationTimerBank
 extends RefCounted
 
@@ -22,6 +21,22 @@ func cancel(timer_key: String) -> bool:
 	return true
 
 
+func cancel_owner(owner_id: String) -> int:
+	if owner_id.is_empty():
+		return 0
+
+	var removed := 0
+	for timer_key_variant in _deadlines.keys():
+		var timer_key := str(timer_key_variant)
+		var parts := timer_key.split("|", true, 2)
+		if parts.size() != 3 or parts[1] != owner_id:
+			continue
+		_deadlines.erase(timer_key_variant)
+		removed += 1
+
+	return removed
+
+
 func clear() -> void:
 	_deadlines.clear()
 
@@ -33,6 +48,7 @@ func has_timer(timer_key: String) -> bool:
 func remaining(timer_key: String) -> float:
 	if not _deadlines.has(timer_key):
 		return 0.0
+
 	return maxf(
 		0.0,
 		float(_deadlines[timer_key]) - _clock.now_seconds()
@@ -45,19 +61,28 @@ func is_ready(timer_key: String) -> bool:
 
 func snapshot_remaining() -> Dictionary:
 	var result: Dictionary = {}
-	for timer_key in _deadlines:
-		result[str(timer_key)] = remaining(str(timer_key))
+
+	for timer_key_variant in _deadlines:
+		var timer_key := str(timer_key_variant)
+		result[timer_key] = remaining(timer_key)
+
 	return result
 
 
 func restore_remaining(snapshot_value: Variant) -> void:
 	_deadlines.clear()
+
 	if not snapshot_value is Dictionary:
 		return
 
 	var snapshot: Dictionary = snapshot_value
-	for timer_key in snapshot:
-		var key := str(timer_key)
-		if key.is_empty():
+
+	for timer_key_variant in snapshot:
+		var timer_key := str(timer_key_variant)
+		if timer_key.is_empty():
 			continue
-		start(key, maxf(0.0, float(snapshot[timer_key])))
+
+		start(
+			timer_key,
+			maxf(0.0, float(snapshot[timer_key_variant]))
+		)

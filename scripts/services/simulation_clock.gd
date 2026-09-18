@@ -1,4 +1,3 @@
-gdscript
 class_name SimulationClock
 extends RefCounted
 
@@ -35,6 +34,6 @@ func reset() -> void:
 
 
 func real_world_unix_ms() -> int:
-	# Real-world time is intentionally isolated here. Gameplay timing uses
-	# now_seconds(); wall-clock time is only for metadata and legacy migration.
+	# Wall-clock time is intentionally isolated here. Gameplay timing uses
+	# now_seconds(); real-world time is metadata or legacy-migration input only.
 	return int(Time.get_unix_time_from_system() * 1000.0)
