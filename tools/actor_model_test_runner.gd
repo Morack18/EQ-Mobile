@@ -3,12 +3,34 @@ extends SceneTree
 var _failures: Array[String] = []
 
 
+class PauseIntegrationGame:
+	extends Node
+
+	var simulation_clock := SimulationClock.new()
+	var runtime_paused := false
+	var save_count := 0
+	var save_saw_frozen_state := false
+
+	func _set_runtime_paused(
+		paused: bool
+	) -> void:
+		runtime_paused = paused
+
+	func _save_game() -> void:
+		save_count += 1
+		save_saw_frozen_state = (
+			runtime_paused
+			and simulation_clock.is_paused()
+		)
+
+
 func _init() -> void:
 	_test_shared_actor_contract()
 	_test_stats_and_attachment_contract()
 	_test_halas_attachment_mapping()
 	_test_resources_and_runtime_snapshot()
 	_test_heading_movement_target_and_lifecycle()
+	_test_runtime_pause_freezes_halas_bridge()
 	_test_effect_container_and_simulation_timer()
 	_test_controller_attachment_drives_behavior()
 	_test_removed_target_cleanup()
@@ -477,6 +499,118 @@ func _test_heading_movement_target_and_lifecycle() -> void:
 		"Dying transition did not clear transient actor state."
 	)
 
+
+func _test_runtime_pause_freezes_halas_bridge() -> void:
+	var population := HalasNpcPopulation.new()
+	var actor := (
+		HalasNpcPopulation.NpcActor.new()
+	)
+
+	actor.node = Node3D.new()
+	actor.visual = Node3D.new()
+	actor.spawn2_id = 99001
+	actor.pause_remaining = 5.0
+	actor.patrol.append({
+		"heading_eq": -1.0,
+		"pause_seconds": 0.0,
+	})
+	actor.patrol_targets.append(
+		Vector3.ZERO
+	)
+	actor.movement_velocity = Vector3(
+		2.0,
+		0.0,
+		0.0
+	)
+
+	population._actors.append(
+		actor
+	)
+	population._actors_by_spawn2[
+		actor.spawn2_id
+	] = actor
+
+	population.set_runtime_paused(
+		true
+	)
+	population._process(
+		2.0
+	)
+
+	_expect(
+		population.is_runtime_paused(),
+		"Halas population did not enter runtime pause."
+	)
+	_expect(
+		is_equal_approx(
+			actor.pause_remaining,
+			5.0
+		),
+		"Paused Halas patrol timer advanced."
+	)
+	_expect(
+		population.movement_velocity_for_spawn(
+			actor.spawn2_id
+		) == Vector3.ZERO,
+		"Paused Halas actor retained mirrored movement velocity."
+	)
+
+	population.set_runtime_paused(
+		false
+	)
+	population._process(
+		2.0
+	)
+
+	_expect(
+		not population.is_runtime_paused()
+		and is_equal_approx(
+			actor.pause_remaining,
+			3.0
+		),
+		"Halas patrol did not resume from frozen state."
+	)
+
+	actor.node.free()
+	actor.visual.free()
+	population.free()
+
+	var game := PauseIntegrationGame.new()
+	var bridge := RuntimeLifecycleBridge.new()
+
+	get_root().add_child(
+		game
+	)
+	game.add_child(
+		bridge
+	)
+
+	bridge.set_simulation_paused(
+		true
+	)
+
+	_expect(
+		game.simulation_clock.is_paused()
+		and game.runtime_paused,
+		"Lifecycle bridge did not freeze domain and presentation together."
+	)
+	_expect(
+		game.save_count == 1
+		and game.save_saw_frozen_state,
+		"Lifecycle bridge saved before runtime state was fully frozen."
+	)
+
+	bridge.set_simulation_paused(
+		false
+	)
+
+	_expect(
+		not game.simulation_clock.is_paused()
+		and not game.runtime_paused,
+		"Lifecycle bridge did not resume domain and presentation together."
+	)
+
+	game.queue_free()
 
 func _test_effect_container_and_simulation_timer() -> void:
 	var clock := SimulationClock.new()

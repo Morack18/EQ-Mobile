@@ -234,7 +234,9 @@ notifications.
 On application pause:
 
 - the canonical simulation clock is paused;
-- the current simulation is synchronously saved;
+- presentation compatibility paths that mirror into gameplay state are frozen;
+- Halas patrol reports zero movement while frozen and does not advance patrol position or pause timers;
+- the current simulation is synchronously saved only after those runtime paths are frozen;
 - gameplay process callbacks are disabled;
 - gameplay physics callbacks are disabled;
 - unhandled gameplay input is disabled.

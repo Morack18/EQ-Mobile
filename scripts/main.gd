@@ -1349,6 +1349,14 @@ func _build_hud() -> void:
 	ui_layer.add_child(hud)
 
 
+func _set_runtime_paused(
+	paused: bool
+) -> void:
+	if halas_population != null:
+		halas_population.set_runtime_paused(
+			paused
+		)
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and simulation != null:
 		_save_game()

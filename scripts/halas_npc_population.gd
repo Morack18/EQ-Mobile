@@ -24,6 +24,7 @@ var _patrol_source_positions: Array = []
 var _terrain_validated := false
 var _terrain_snapped_count := 0
 var _terrain_unmatched_count := 0
+var _runtime_paused := false
 
 
 class NpcActor:
@@ -77,17 +78,50 @@ func _ready() -> void:
 	_validate_static_facing()
 
 
-func _process(delta: float) -> void:
-	for actor in _actors:
-		_update_patrol(actor, delta)
+func set_runtime_paused(
+	paused: bool
+) -> void:
+	if _runtime_paused == paused:
+		return
 
+	_runtime_paused = paused
+
+	if not paused:
+		return
+
+	# Patrol is currently a presentation compatibility path whose
+	# pose is mirrored into GameplayEntity. Stop all reported
+	# movement before the simulation is saved or suspended.
+	for actor in _actors:
+		actor.movement_velocity = Vector3.ZERO
+		_set_animation(
+			actor,
+			"idle"
+		)
+
+
+func is_runtime_paused() -> bool:
+	return _runtime_paused
+
+func _process(delta: float) -> void:
+	if _runtime_paused:
+		return
+
+	for actor in _actors:
+		_update_patrol(
+			actor,
+			delta
+		)
 
 func _physics_process(_delta: float) -> void:
+	if _runtime_paused:
+		return
+
 	if _terrain_validated:
 		return
+
 	_terrain_validated = true
 	_validate_terrain_placement()
-
 
 func _build_population(content: Dictionary) -> void:
 	var npc_types: Dictionary = {}
