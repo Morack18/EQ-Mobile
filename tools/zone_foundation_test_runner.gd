@@ -1,5 +1,7 @@
 extends SceneTree
 
+const NpcSizeContractScript = preload("res://scripts/domain/npc_size_contract.gd")
+
 var _failures: Array[String] = []
 
 
@@ -9,6 +11,7 @@ func _init() -> void:
     _test_optional_zone_content_contract()
     _test_main_startup_uses_zone_catalog()
     _test_zone_world_space_contract()
+    _test_npc_size_contract()
     _test_generic_populated_zone_presentation()
     _test_zone_spawn_resolver()
     _test_spawn_point_state_round_trip()
@@ -540,6 +543,78 @@ func _test_zone_world_space_contract() -> void:
             "main.gd still owns a Halas-specific world rule: %s"
             % forbidden
         )
+
+
+func _test_npc_size_contract() -> void:
+    var service := ContentService.new()
+    service.configure({
+        "eqemu_default_heights":
+            "res://data/eqemu_default_heights.json",
+    })
+    _expect(
+        service.load_all(),
+        "EQEmu default-height content did not load: %s"
+        % service.last_error
+    )
+    if not service.last_error.is_empty():
+        return
+
+    var heights := service.npc_default_heights()
+    _expect(
+        is_equal_approx(NpcSizeContractScript.default_size(heights, 42, 2), 4.0)
+        and is_equal_approx(NpcSizeContractScript.effective_size(3.0, heights, 42, 2), 3.0),
+        "Explicit NPC source size did not override the generic race default."
+    )
+    _expect(
+        is_equal_approx(NpcSizeContractScript.effective_size(0.0, heights, 42, 2), 4.0),
+        "Zero NPC source size did not use the race/gender default."
+    )
+    _expect(
+        is_equal_approx(NpcSizeContractScript.default_size(heights, 497, 1), 9.0)
+        and is_equal_approx(NpcSizeContractScript.default_size(heights, 497, 0), 10.0)
+        and is_equal_approx(NpcSizeContractScript.default_size(heights, 497, 2), 10.0),
+        "NPC default height did not select female only for gender 1."
+    )
+    _expect(
+        is_equal_approx(NpcSizeContractScript.default_size(heights, 999999, 0), 6.0),
+        "Unknown NPC race did not use the EQEmu default size of 6."
+    )
+    _expect(
+        is_equal_approx(NpcSizeContractScript.effective_size(99.0, heights, 49, 0), 5.0)
+        and is_equal_approx(NpcSizeContractScript.effective_size(99.0, heights, 158, 0), 15.0),
+        "EQEmu fixed LavaDragon/Wurm NPC sizes were not retained."
+    )
+
+    var normalized_scale := NpcSizeContractScript.presentation_scale(
+        10.0, 3.0, 4.0, "normalized_height"
+    )
+    var native_scale := NpcSizeContractScript.presentation_scale(
+        40.0, 12.0, 6.0, "native_units"
+    )
+    _expect(
+        is_equal_approx(normalized_scale, 0.3)
+        and is_equal_approx(NpcSizeContractScript.rendered_height(10.0, normalized_scale), 3.0),
+        "Normalized-height NPC presentation did not render to effective EQ size."
+    )
+    _expect(
+        is_equal_approx(native_scale, 2.0)
+        and is_equal_approx(NpcSizeContractScript.rendered_height(40.0, native_scale), 80.0),
+        "Native-units NPC presentation did not retain raw dimensions by effective/default ratio."
+    )
+
+    var presentation := ZoneNpcPopulation.new()
+    var actor_node := Node3D.new()
+    var nameplate := presentation._add_nameplate(actor_node, "Scale Probe", 80.0)
+    presentation._add_target_pick_area(actor_node, 80.0, 7001)
+    var pick_area := actor_node.get_node("TargetPick") as Area3D
+    var pick_shape := pick_area.get_child(0) as CollisionShape3D
+    var capsule := pick_shape.shape as CapsuleShape3D
+    _expect(
+        is_equal_approx(nameplate.position.y, 80.35)
+        and is_equal_approx(capsule.height, 80.0),
+        "NPC presentation geometry did not use rendered height independently of effective size."
+    )
+    actor_node.free()
 
 
 func _test_generic_populated_zone_presentation() -> void:

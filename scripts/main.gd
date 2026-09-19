@@ -9,6 +9,7 @@ const GLOBAL_CONTENT_PATHS := {
 	"items": "res://data/items.json",
 	"player_classes": "res://data/player_classes.json",
 	"player_fixture": "res://data/player_fixture.json",
+	"eqemu_default_heights": "res://data/eqemu_default_heights.json",
 }
 
 # Presentation/world constants. Gameplay health, damage, cooldown, progression,
@@ -1857,7 +1858,8 @@ func _build_npc_population() -> void:
 		resolved_zone_spawns,
 		zone_runtime_state,
 		zone_world_space,
-		_npc_presentation_profile()
+		_npc_presentation_profile(),
+		content_service.npc_default_heights()
 	)
 	active_zone_presentation.add_child(
 		zone_npc_population

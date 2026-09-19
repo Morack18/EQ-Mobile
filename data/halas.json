@@ -137,7 +137,8 @@
       {
         "race_id": 73,
         "model_name": "hferry",
-        "default_size": 6.0
+        "default_size": 6.0,
+        "scale_mode": "native_units"
       }
     ]
   },

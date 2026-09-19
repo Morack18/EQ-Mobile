@@ -45,6 +45,9 @@ def main() -> int:
     player = load_json(
         "data/player_fixture.json"
     )
+    default_heights = load_json(
+        "data/eqemu_default_heights.json"
+    )
 
     main_source = (
         ROOT / "scripts/main.gd"
@@ -154,6 +157,7 @@ def main() -> int:
         float(row.get("size", 0.0)) > 0.0
         for row in source["npc_types"]
     )
+    height_records = default_heights.get("heights", {})
 
     player_race = int(
         player.get(
@@ -229,11 +233,12 @@ def main() -> int:
         ),
         Finding(
             "npc_scale",
-            "YELLOW",
+            "GREEN",
             (
                 f"{explicit_sizes}/{len(source['npc_types'])} "
                 "NPC types have explicit positive source size; "
-                f"review state={review_state}."
+                f"EQEmu race/gender fallback records={len(height_records)}; "
+                "effective size and rendered scale are independently probed."
             ),
         ),
         Finding(

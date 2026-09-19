@@ -67,6 +67,13 @@ func npc_dataset() -> Dictionary:
 	return dataset.duplicate(true)
 
 
+func npc_default_heights() -> Dictionary:
+	var document: Dictionary = _documents.get("eqemu_default_heights", {})
+	var heights: Dictionary = document.get("heights", {}) as Dictionary
+	assert(not heights.is_empty(), "EQEmu default-height content has not been loaded")
+	return heights.duplicate(true)
+
+
 func world_object_dataset() -> Dictionary:
 	var document: Dictionary = _documents.get(
 		"world_objects",

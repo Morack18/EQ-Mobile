@@ -8,12 +8,14 @@ extends Node3D
 
 const TARGET_PICK_COLLISION_LAYER := EqWorldSpace.COLLISION_LAYER_TARGET_PICK
 const TARGET_TINT := Color(0.97, 0.32, 0.29, 1.0)
+const NpcSizeContractScript = preload("res://scripts/domain/npc_size_contract.gd")
 
 var _content: Dictionary = {}
 var _resolved_spawns: Dictionary = {}
 var _zone_runtime_state: ZoneRuntimeState
 var _zone_world_space: ZoneWorldSpace
 var _presentation_profile: Dictionary = {}
+var _npc_default_heights: Dictionary = {}
 var _models_path := ""
 var _model_scenes: Dictionary[String, PackedScene] = {}
 var _actors: Array[NpcActor] = []
@@ -53,6 +55,12 @@ class NpcActor:
 	var texture := 0
 	var face := 0
 	var source_size := 0.0
+	var default_size := 6.0
+	var effective_size := 6.0
+	var rendered_height := 6.0
+	var raw_model_height := 0.0
+	var presentation_scale := 1.0
+	var scale_mode := "normalized_height"
 	var source_mana := 0
 	var merchant_id := 0
 	var npc_faction_id := 0
@@ -74,7 +82,8 @@ func configure(
 	resolved_spawns: Dictionary,
 	zone_runtime_state: ZoneRuntimeState,
 	zone_world_space: ZoneWorldSpace,
-	presentation_profile: Dictionary = {}
+	presentation_profile: Dictionary = {},
+	npc_default_heights: Dictionary = {}
 ) -> void:
 	_content = content.duplicate(true)
 	_resolved_spawns = resolved_spawns.duplicate(true)
@@ -83,6 +92,7 @@ func configure(
 	_presentation_profile = (
 		presentation_profile.duplicate(true)
 	)
+	_npc_default_heights = npc_default_heights.duplicate(true)
 	_models_path = models_path
 
 
@@ -330,12 +340,21 @@ func _build_population(content: Dictionary) -> void:
 		actor_node.rotation.y = _server_heading_to_yaw(float(spawn.heading_eq))
 		add_child(actor_node)
 
-		var target_height := (
-			_npc_target_height(
-				npc_type,
-				model_descriptor
-			)
+		var source_size := float(npc_type.get("size", 0.0))
+		var race_id := int(npc_type.get("race", 0))
+		var gender_id := int(npc_type.get("gender", 0))
+		var default_size: float = NpcSizeContractScript.default_size(
+			_npc_default_heights,
+			race_id,
+			gender_id
 		)
+		var effective_size: float = NpcSizeContractScript.effective_size(
+			source_size,
+			_npc_default_heights,
+			race_id,
+			gender_id
+		)
+		var scale_mode := _presentation_scale_mode(model_descriptor)
 
 		var visual: Node3D
 		var animator: AnimationPlayer
@@ -343,7 +362,7 @@ func _build_population(content: Dictionary) -> void:
 		if model_name.is_empty():
 			visual = (
 				_placeholder_visual(
-					target_height
+					effective_size
 				)
 			)
 		else:
@@ -362,11 +381,19 @@ func _build_population(content: Dictionary) -> void:
 
 		# Model bounds use global transforms, so the visual must belong to the
 		# active scene tree before height normalization inspects child meshes.
+		var rendered_height := effective_size
+		var raw_model_height := effective_size
+		var presentation_scale := 1.0
 		if not model_name.is_empty():
-			_normalize_model_to_height(
+			var scale_result: Dictionary = _scale_model_for_presentation(
 				visual,
-				target_height
+				effective_size,
+				default_size,
+				scale_mode
 			)
+			raw_model_height = float(scale_result["raw_height"])
+			presentation_scale = float(scale_result["scale"])
+			rendered_height = float(scale_result["rendered_height"])
 			animator = (
 				_animation_player_below(
 					visual
@@ -390,10 +417,10 @@ func _build_population(content: Dictionary) -> void:
 			_add_nameplate(
 				actor_node,
 				str(npc_type.name),
-				target_height
+				rendered_height
 			)
 		)
-		_add_target_pick_area(actor_node, target_height, int(spawn.spawn2_id))
+		_add_target_pick_area(actor_node, rendered_height, int(spawn.spawn2_id))
 
 		var actor := NpcActor.new()
 		actor.node = actor_node
@@ -407,12 +434,18 @@ func _build_population(content: Dictionary) -> void:
 		actor.level = int(npc_type.get("level", 1))
 		actor.class_id = int(npc_type.get("class", 0))
 		actor.class_ref = str(npc_type.get("class_ref", ""))
-		actor.race_id = int(npc_type.get("race", 0))
+		actor.race_id = race_id
 		actor.race_ref = str(npc_type.get("race_ref", ""))
-		actor.gender_id = int(npc_type.get("gender", 0))
+		actor.gender_id = gender_id
 		actor.texture = int(npc_type.get("texture", 0))
 		actor.face = int(npc_type.get("face", 0))
-		actor.source_size = float(npc_type.get("size", 0.0))
+		actor.source_size = source_size
+		actor.default_size = default_size
+		actor.effective_size = effective_size
+		actor.rendered_height = rendered_height
+		actor.raw_model_height = raw_model_height
+		actor.presentation_scale = presentation_scale
+		actor.scale_mode = scale_mode
 		actor.source_mana = int(npc_type.get("mana", 0))
 		# Source combat/loot values are retained for provenance and inspection only.
 		# They do not authorize the generic simulation to enable imported combat.
@@ -559,6 +592,12 @@ func _target_dictionary(actor: NpcActor) -> Dictionary:
 		"texture": actor.texture,
 		"face": actor.face,
 		"source_size": actor.source_size,
+		"default_size": actor.default_size,
+		"effective_size": actor.effective_size,
+		"rendered_height": actor.rendered_height,
+		"raw_model_height": actor.raw_model_height,
+		"presentation_scale": actor.presentation_scale,
+		"scale_mode": actor.scale_mode,
 		"source_mana": actor.source_mana,
 		"merchant_id": actor.merchant_id,
 		"npc_faction_id": actor.npc_faction_id,
@@ -855,32 +894,13 @@ func _appearance_model(
 	]
 
 
-func _npc_target_height(
-	npc_type: Dictionary,
-	model_descriptor: Dictionary
-) -> float:
-	var source_size := float(
-		npc_type.get(
-			"size",
-			0.0
-		)
+func _presentation_scale_mode(model_descriptor: Dictionary) -> String:
+	var mode := str(model_descriptor.get("scale_mode", "normalized_height"))
+	assert(
+		mode in ["normalized_height", "native_units"],
+		"Unsupported NPC presentation scale mode: %s" % mode
 	)
-
-	if source_size > 0.0:
-		return source_size
-
-	return maxf(
-		0.01,
-		float(
-			model_descriptor.get(
-				"default_size",
-				_presentation_profile.get(
-					"default_height",
-					1.0
-				)
-			)
-		)
-	)
+	return mode
 
 
 func _placeholder_visual(
@@ -936,7 +956,12 @@ func _add_nameplate(actor_node: Node3D, npc_name: String, target_height: float) 
 	return nameplate
 
 
-func _normalize_model_to_height(visual: Node3D, target_height: float) -> void:
+func _scale_model_for_presentation(
+	visual: Node3D,
+	effective_size: float,
+	default_size: float,
+	scale_mode: String
+) -> Dictionary:
 	var lowest_point := INF
 	var highest_point := -INF
 	for mesh_instance in _mesh_instances_below(visual):
@@ -950,9 +975,19 @@ func _normalize_model_to_height(visual: Node3D, target_height: float) -> void:
 			highest_point = maxf(highest_point, point.y)
 	var raw_height := highest_point - lowest_point
 	assert(raw_height > 0.001, "Unable to measure character model height")
-	var visual_scale := EqWorldSpace.visual_scale_for_height(raw_height, target_height)
+	var visual_scale := NpcSizeContractScript.presentation_scale(
+		raw_height,
+		effective_size,
+		default_size,
+		scale_mode
+	)
 	visual.scale = Vector3.ONE * visual_scale
 	visual.position.y = -lowest_point * visual_scale
+	return {
+		"raw_height": raw_height,
+		"scale": visual_scale,
+		"rendered_height": NpcSizeContractScript.rendered_height(raw_height, visual_scale),
+	}
 
 
 func _mesh_instances_below(node: Node) -> Array[MeshInstance3D]:

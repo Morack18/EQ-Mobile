@@ -254,6 +254,14 @@ static func neutral_definition_from_target(
 						0.0
 					)
 				),
+			"default_size":
+				float(target.get("default_size", 6.0)),
+			"effective_size":
+				float(target.get("effective_size", 0.0)),
+			"rendered_height":
+				float(target.get("rendered_height", 0.0)),
+			"scale_mode":
+				str(target.get("scale_mode", "normalized_height")),
 		},
 
 		"rewards":

@@ -46,6 +46,13 @@ copy of reference implementation code.
   citizen 7.
 - `resources/EQEmu-master/zone/npc.cpp` confirms NPC initialization applies
   that race/gender default when source size is non-positive.
+- `data/eqemu_default_heights.json` is a generated, shared content document
+  containing the EQEmu race/gender defaults. `NpcSizeContract` consumes it
+  through `ContentService`, keeps source/effective/rendered values distinct,
+  and preserves fixed LavaDragon (49 → 5) and Wurm (158 → 15) rules. Renderer
+  descriptors select normalized-height versus native-units scaling; the Halas
+  ferry is a native-units fixture because its imported raw height is 10.166
+  units rather than a character-mesh height.
 
 ## Client rendering and movement — eqoxide
 

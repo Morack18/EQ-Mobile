@@ -29,7 +29,7 @@ YELLOW until reviewed classic/P1999 evidence promotes or corrects it.
 | 1 | Static/non-NPC model transforms | GREEN | Lantern manifest/GLBs are preserved; runtime consumes source position, complete `RotX`/`RotY`/`RotZ` orientation, and all three source scale fields. |
 | 2 | NPC spawn/patrol position and elevation | GREEN | Mapped Spawn2 and grid waypoint coordinates remain canonical; terrain checks are diagnostic only. |
 | 3 | NPC source heading and rendered facing | GREEN | Source heading vectors map through each zone axis contract; visual offsets are presentation-only. |
-| 4 | NPC source size and rendered scale | YELLOW | Source sizes are preserved and normalization is source-backed; PEQ values remain unreviewed for P1999. |
+| 4 | NPC source size and rendered scale | GREEN | Generic EQEmu source/default/fixed-size resolution drives independent rendered geometry; Halas is a validation fixture. |
 | 5 | Player model, scale, collision body, spawn/safe point | RED | Gameplay race is Barbarian while presentation is HLM placeholder; spawn is project-authored. |
 | 6 | NPC roster, appearance, patrols, source statistics | YELLOW | Classic-filtered deterministic PEQ snapshot; reviewed P1999 overlay still empty. |
 | 7 | Player/NPC movement and controller constants | YELLOW | Mixture of source-backed, conflicting-reference, and project-selected values. |
@@ -126,6 +126,35 @@ Source basis: supplied EQEmu review of `common/misc_functions.cpp:FixHeading`,
 classified as `confirmed_source_behavior` for this implementation contract.
 
 Category 3 is GREEN.
+
+## Category 4 — NPC source size and rendered scale
+
+`NpcSizeContract` keeps `source_size`, `effective_size`, and
+`rendered_height` separate. Positive source size wins, otherwise the shared
+EQEmu race/gender default-height document is used, with an unknown-race
+fallback of 6. EQEmu's fixed LavaDragon (race 49, 5) and Wurm (race 158, 15)
+rules are retained before either branch.
+
+Presentation descriptors choose either `normalized_height`, which scales a raw
+mesh to effective EQ size, or `native_units`, which applies the
+effective/default-size ratio while preserving native mesh proportions.
+Nameplates and pick capsules use rendered height. The content service owns the
+default-height document; presentation never reads it from disk.
+
+The reusable foundation test covers source overrides, zero fallback,
+gender-specific defaults, unknown races, fixed races, both scale modes, and
+presentation geometry. `npc_size_fidelity_probe.gd` validates Halas only as a
+fixture: all 68 source types retain the 61×7, 5×6, 2×3 source-size distribution
+and both sled dogs render at their explicit size of 3. The imported ferry's raw
+height is 10.166 units against its default size of 6, so it is explicitly
+classified as a generic `native_units` descriptor rather than normalized as a
+character mesh.
+
+Source basis: supplied EQEmu review of
+`common/races.cpp:GetRaceGenderDefaultHeight` and `zone/npc.cpp`; classified
+as `confirmed_source_behavior` for this implementation contract.
+
+Category 4 is GREEN.
 
 ## Promotion rule
 
