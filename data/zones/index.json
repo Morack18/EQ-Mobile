@@ -1,0 +1,14 @@
+{
+  "default_zone_key": "eqm:zone:halas",
+  "schema_id": "eqm.zone_catalog",
+  "schema_version": 1,
+  "zones": {
+    "eqm:zone:halas": {
+      "definition": "res://data/halas.json"
+    },
+    "eqm:zone:phase6_transition_fixture": {
+      "definition": "res://data/zones/phase6_transition_fixture.json",
+      "fixture": true
+    }
+  }
+}

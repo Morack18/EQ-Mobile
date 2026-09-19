@@ -1,0 +1,8 @@
+{
+  "key": "eqm:transitions:halas",
+  "review_state": "architecture_only_no_reviewed_import",
+  "schema_id": "eqm.zone_transition_dataset",
+  "schema_version": 1,
+  "transitions": [],
+  "zone_ref": "eqm:zone:halas"
+}

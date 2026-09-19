@@ -4,7 +4,12 @@
   "schema_id": "eqm.zone_definition",
   "schema_version": 1,
   "source_refs": {
-    "peq_zone": { "table_row_id": 160, "zone_id": 29, "version": 0, "short_name": "halas" },
+    "peq_zone": {
+      "table_row_id": 160,
+      "zone_id": 29,
+      "version": 0,
+      "short_name": "halas"
+    },
     "client_geometry": "client:zone_geometry:halas"
   },
   "era_metadata": {
@@ -17,12 +22,22 @@
   "geometry_scale": 10.0,
   "world_space_contract": {
     "unit": "one Godot world unit equals one native EQ world unit after geometry_scale",
-    "server_axis_map": [-2, 3, 1],
+    "server_axis_map": [
+      -2,
+      3,
+      1
+    ],
     "server_position": "[x,y,elevation] -> [-y,elevation,x]",
     "server_heading": "0..512 -> Godot yaw pi/2 - heading*tau/512",
     "lantern_prop_position": "[x,y,z] -> [-x,y,z]",
-    "lantern_prop_axis_map": [-1, 2, 3],
-    "lantern_prop_heading": "degrees -> negative Godot yaw"
+    "lantern_prop_axis_map": [
+      -1,
+      2,
+      3
+    ],
+    "lantern_prop_heading": "degrees -> negative Godot yaw",
+    "server_heading_units_per_turn": 512.0,
+    "lantern_prop_heading_degrees_sign": -1.0
   },
   "object_instances": "res://data/halas_objects.json",
   "object_model_directory": "res://assets/imported/halas/objects",
@@ -36,15 +51,25 @@
     "era_cap_basis": "original_classic_pre_kunark"
   },
   "player_spawn_revision": 6,
-  "bounds": { "half_extent": 820.0 },
-  "player_spawn": [-13.0, 4.38, -10.0],
+  "bounds": {
+    "half_extent": 820.0
+  },
+  "player_spawn": [
+    -13.0,
+    4.38,
+    -10.0
+  ],
   "spawns": [
     {
       "id": "training_spark",
       "key": "fixture:spawn:training_spark",
       "definition_ref": "fixture:npc:training_spark",
       "archetype": "training_spark",
-      "position": [3.0, 1.0, -4.0],
+      "position": [
+        3.0,
+        1.0,
+        -4.0
+      ],
       "respawn_seconds": 12.0
     }
   ],
@@ -71,9 +96,65 @@
         "requires_los": true
       },
       "rewards": {
-        "items": [{ "item_key": "fixture:item:training_spark_fragment", "quantity": 1 }],
+        "items": [
+          {
+            "item_key": "fixture:item:training_spark_fragment",
+            "quantity": 1
+          }
+        ],
         "xp": 1000
       }
     }
-  }
+  },
+  "safe_point": {
+    "kind": "zone_safe_point",
+    "position": [
+      -13.0,
+      4.38,
+      -10.0
+    ],
+    "heading_eq": 0.0,
+    "evidence": "current_eq_mobile_runtime_spawn"
+  },
+  "content_refs": {
+    "npc_population": "res://data/halas_npcs.json",
+    "merchant_catalog": "res://data/halas_merchants_source.json",
+    "faction_catalog": "res://data/halas_factions_source.json",
+    "item_catalog": "res://data/halas_items_source.json",
+    "world_objects": "res://data/halas_world_objects.json",
+    "transitions": "res://data/halas_transitions.json"
+  },
+  "environment": {
+    "evidence": "current_eq_mobile_runtime_presentation",
+    "directional_light": {
+      "rotation_degrees": [
+        -52.0,
+        -28.0,
+        0.0
+      ],
+      "energy": 1.2
+    },
+    "background_color": "9fb9c5",
+    "ambient_light_color": "bfd7c8",
+    "ambient_light_energy": 0.65,
+    "water": {
+      "material_name_contains": [
+        "halaswater"
+      ],
+      "surface_fallbacks": [
+        {
+          "mesh_surface_count": 62,
+          "water_surface_indices": [
+            58,
+            61
+          ],
+          "surface_height_indices": [
+            58
+          ]
+        }
+      ],
+      "enabled": true
+    }
+  },
+  "zone_state_schema_version": 1
 }

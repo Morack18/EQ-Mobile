@@ -643,6 +643,21 @@ func _test_save_schema_migration() -> void:
 		== PersistenceService.OFFLINE_ELAPSED_POLICY
 	)
 
+	var migrated_store := ZoneStateStore.new()
+
+	_expect(
+		migrated_store.restore(
+			migrated_state.get(
+				"zone_states",
+				{}
+			)
+		)
+		and migrated_store.has_zone(
+			"eqm:zone:test"
+		),
+		"v2 migration creates current multi-zone runtime state"
+	)
+
 	var migrated_simulation: Dictionary = migrated_state[
 		"simulation"
 	]
@@ -665,13 +680,23 @@ func _test_save_schema_migration() -> void:
 	var exact_seed: int = 9007199254740997
 	var exact_state: int = 9007199254741999
 
-	var version_three := {
+	var current_schema := {
 		"schema_version": PersistenceService.SAVE_SCHEMA_VERSION,
 		"zone_key": "eqm:zone:test",
 		"zone_legacy_id": "test",
 		"player_spawn_revision": 1,
 		"saved_unix_ms": 0,
 		"offline_elapsed_policy": PersistenceService.OFFLINE_ELAPSED_POLICY,
+		"zone_states": {
+			"schema_version":
+				ZoneStateStore.SCHEMA_VERSION,
+			"zones": {
+				"eqm:zone:test":
+					ZoneRuntimeState.new(
+						"eqm:zone:test"
+					).snapshot(),
+			},
+		},
 		"simulation": {
 			"clock_elapsed_seconds": 0.0,
 			"rng": {
@@ -687,15 +712,24 @@ func _test_save_schema_migration() -> void:
 
 	var round_trip := service.deserialize_envelope(
 		service.serialize_envelope(
-			version_three
+			current_schema
 		),
 		"eqm:zone:test",
 		"test"
 	)
 
 	_expect(
-		bool(round_trip.get("ok", false))
+		bool(round_trip.get("ok", false)),
+		"current save schema exact-RNG round trip succeeds"
 	)
+
+	if not bool(
+		round_trip.get(
+			"ok",
+			false
+		)
+	):
+		return
 
 	var round_trip_state: Dictionary = round_trip[
 		"state"
@@ -1178,6 +1212,16 @@ func _test_offline_freeze() -> void:
 			- 120000,
 		"offline_elapsed_policy":
 			PersistenceService.OFFLINE_ELAPSED_POLICY,
+		"zone_states": {
+			"schema_version":
+				ZoneStateStore.SCHEMA_VERSION,
+			"zones": {
+				"eqm:zone:test":
+					ZoneRuntimeState.new(
+						"eqm:zone:test"
+					).snapshot(),
+			},
+		},
 		"simulation": source.snapshot(),
 	}
 

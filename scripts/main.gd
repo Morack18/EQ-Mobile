@@ -1,17 +1,14 @@
 extends Node3D
 
-const ZONE_KEY := "eqm:zone:halas"
 const PLAYER_ENTITY_ID := "player:local"
 const TRAINING_ENTITY_ID := "fixture:spawn:training_spark"
-const CONTENT_PATHS := {
-	"zone": "res://data/halas.json",
+
+# These definitions are application-wide. Zone-owned content is resolved from
+# the selected ZoneDefinition through ZoneDefinitionLoader.
+const GLOBAL_CONTENT_PATHS := {
 	"items": "res://data/items.json",
-	"peq_items": "res://data/halas_items_source.json",
 	"player_classes": "res://data/player_classes.json",
 	"player_fixture": "res://data/player_fixture.json",
-	"merchants": "res://data/halas_merchants_source.json",
-	"factions": "res://data/halas_factions_source.json",
-	"npcs": "res://data/halas_npcs.json",
 }
 
 # Presentation/world constants. Gameplay health, damage, cooldown, progression,
@@ -44,6 +41,8 @@ const NPC_LONG_PRESS_SECONDS := 0.55
 const NPC_LONG_PRESS_CANCEL_DISTANCE := 28.0
 const CHARACTER_MODEL_FACING_OFFSET := PI * 0.5
 
+var zone_definition_loader: ZoneDefinitionLoader
+var current_zone_key := ""
 var content_service: ContentService
 var persistence_service: PersistenceService
 var simulation_clock: SimulationClock
@@ -54,6 +53,14 @@ var npc_behavior_system := SimpleNpcBehaviorSystem.new()
 var autonomous_entity_ids: Array[String] = []
 
 var zone: Dictionary
+var zone_world_space: ZoneWorldSpace
+var zone_host: ZoneHost
+var zone_presentation_host: ZonePresentationHost
+var active_zone_presentation: ActiveZonePresentation
+var zone_runtime_state: ZoneRuntimeState
+var zone_state_store: ZoneStateStore
+var zone_spawn_resolver: ZoneSpawnResolver
+var resolved_zone_spawns: Dictionary = {}
 var player: CharacterBody3D
 var player_visual: Node3D
 var player_animator: AnimationPlayer
@@ -79,8 +86,9 @@ var joystick_vector := Vector2.ZERO
 var look_stick := Vector2.ZERO
 var jump_held := false
 var jump_pressed := false
-var status_text := "Explore classic Halas."
+var status_text := "Explore."
 var autosave_elapsed := 0.0
+var pending_save_read: Dictionary = {}
 
 var object_scenes: Dictionary[String, PackedScene] = {}
 var normalized_prop_meshes: Dictionary[Mesh, ArrayMesh] = {}
@@ -98,6 +106,9 @@ func _ready() -> void:
 	EqWorldSpace.run_contract_tests()
 	_configure_services()
 	_configure_simulation()
+	_prepare_save_read()
+	_resolve_zone_spawns()
+	_prepare_zone_presentation()
 	_build_world()
 	_build_zone_objects()
 	_build_npc_population()
@@ -106,23 +117,141 @@ func _ready() -> void:
 		_build_npc()
 	_build_camera()
 	_build_hud()
-	_load_save()
+	_restore_simulation_save()
 	_apply_domain_state_to_views()
 	_update_hud()
 
 
 func _configure_services() -> void:
+	zone_definition_loader = ZoneDefinitionLoader.new()
+
+	assert(
+		zone_definition_loader.load_catalog(),
+		zone_definition_loader.last_error
+	)
+
+	current_zone_key = (
+		zone_definition_loader.default_zone_key()
+	)
+
+	assert(
+		not current_zone_key.is_empty(),
+		"Zone catalog has no default zone key"
+	)
+
+	zone = zone_definition_loader.load_zone(
+		current_zone_key
+	)
+
+	assert(
+		not zone.is_empty(),
+		zone_definition_loader.last_error
+	)
+
+	var zone_definition_path := (
+		zone_definition_loader.zone_definition_path(
+			current_zone_key
+		)
+	)
+
+	assert(
+		not zone_definition_path.is_empty(),
+		zone_definition_loader.last_error
+	)
+
+	var content_paths: Dictionary = (
+		GLOBAL_CONTENT_PATHS.duplicate(true)
+	)
+
+	content_paths["zone"] = (
+		zone_definition_path
+	)
+
+	var zone_content_paths: Dictionary = (
+		zone_definition_loader.runtime_content_paths(
+			zone
+		)
+	)
+
+	for content_key_variant in zone_content_paths:
+		var content_key := str(
+			content_key_variant
+		)
+		content_paths[content_key] = str(
+			zone_content_paths[
+				content_key_variant
+			]
+		)
+
 	content_service = ContentService.new()
-	content_service.configure(CONTENT_PATHS)
-	assert(content_service.load_all(), content_service.last_error)
-	zone = content_service.zone_definition(ZONE_KEY)
+	content_service.configure(
+		content_paths
+	)
+
+	assert(
+		content_service.load_all(),
+		content_service.last_error
+	)
+
+	# ContentService owns the runtime copy after all cross-dataset validation
+	# succeeds. The loader remains responsible for catalog selection and schema
+	# validation.
+	zone = content_service.zone_definition(
+		current_zone_key
+	)
+
+	zone_world_space = ZoneWorldSpace.new(
+		zone
+	)
+
+	assert(
+		zone_world_space.is_valid(),
+		zone_world_space.last_error
+	)
+
+	status_text = "Explore %s." % str(
+		zone.get(
+			"display_name",
+			zone.get(
+				"id",
+				"the zone"
+			)
+		)
+	)
+
 	simulation_clock = SimulationClock.new()
-	var runtime_seed := int(simulation_clock.real_world_unix_ms() & 0x7fffffff)
-	simulation_rng = SimulationRng.new(runtime_seed)
-	persistence_service = PersistenceService.new(PersistenceService.DEFAULT_SAVE_PATH, simulation_clock)
+	var runtime_seed := int(
+		simulation_clock.real_world_unix_ms()
+		& 0x7fffffff
+	)
+	simulation_rng = SimulationRng.new(
+		runtime_seed
+	)
+	persistence_service = PersistenceService.new(
+		PersistenceService.DEFAULT_SAVE_PATH,
+		simulation_clock
+	)
 
 
 func _configure_simulation() -> void:
+	zone_host = ZoneHost.new()
+	assert(
+		zone_host.prepare_definition(
+			zone,
+			false
+		),
+		zone_host.last_error
+	)
+	zone_runtime_state = (
+		zone_host.active_runtime_state
+	)
+	zone_state_store = (
+		zone_host.state_store
+	)
+	zone_spawn_resolver = (
+		zone_host.spawn_resolver
+	)
+
 	var player_fixture := content_service.player_fixture_definition()
 	simulation = Simulation.new(simulation_clock, simulation_rng)
 	simulation.configure_player_state(
@@ -780,32 +909,306 @@ func _camera_focus_position() -> Vector3:
 	return player.global_position + Vector3.UP * (height * 0.5)
 
 
+func _resolve_zone_spawns() -> void:
+	assert(
+		zone_host != null,
+		"ZoneHost must exist before spawn resolution"
+	)
+	assert(
+		zone_host.resolve_spawns(
+			content_service.npc_dataset()
+		),
+		zone_host.last_error
+	)
+
+	# Compatibility aliases remain temporarily while presentation/world
+	# construction is migrated out of main.gd in later slices.
+	zone_runtime_state = (
+		zone_host.active_runtime_state
+	)
+	zone_state_store = (
+		zone_host.state_store
+	)
+	zone_spawn_resolver = (
+		zone_host.spawn_resolver
+	)
+	resolved_zone_spawns = (
+		zone_host.resolved_spawns
+	)
+
+
+
+func _prepare_zone_presentation() -> void:
+	assert(
+		zone_host != null,
+		"ZoneHost must exist before presentation is prepared"
+	)
+	assert(
+		zone_host.is_prepared(),
+		"ZoneHost must have an active runtime before presentation is prepared"
+	)
+
+	if zone_presentation_host == null:
+		zone_presentation_host = (
+			ZonePresentationHost.new()
+		)
+		zone_presentation_host.name = (
+			"ZonePresentationHost"
+		)
+		add_child(
+			zone_presentation_host
+		)
+
+	active_zone_presentation = (
+		zone_presentation_host.begin_zone(
+			current_zone_key
+		)
+	)
+
+	assert(
+		active_zone_presentation != null,
+		"Unable to create active-zone presentation root"
+	)
+	assert(
+		active_zone_presentation.zone_key
+		== current_zone_key,
+		"Active-zone presentation key does not match current zone"
+	)
+
+	# These are presentation-build caches, not durable zone state. Reset them
+	# whenever a fresh active-zone root is created so no future zone can inherit
+	# geometry/water/prop artifacts from the previously active zone.
+	object_scenes.clear()
+	normalized_prop_meshes.clear()
+	two_sided_prop_materials.clear()
+	prop_collision_shapes.clear()
+
+	zone_prop_instance_count = 0
+	zone_prop_mesh_count = 0
+	zone_prop_collision_count = 0
+	zone_prop_collision_shape_count = 0
+	zone_prop_load_failures.clear()
+	authored_water_triangles.clear()
+
+
 func _build_world() -> void:
-	var geometry_path := str(zone.get("geometry_scene", ""))
+	var geometry_path := str(
+		zone.get(
+			"geometry_scene",
+			""
+		)
+	)
+
 	if not geometry_path.is_empty():
-		var geometry_scene := load(geometry_path) as PackedScene
-		assert(geometry_scene != null, "Unable to import zone geometry: %s" % geometry_path)
-		var geometry := geometry_scene.instantiate()
+		var geometry_scene := (
+			load(
+				geometry_path
+			) as PackedScene
+		)
+
+		assert(
+			geometry_scene != null,
+			"Unable to import zone geometry: %s"
+			% geometry_path
+		)
+
+		var geometry := (
+			geometry_scene.instantiate()
+		)
 		geometry.name = "ZoneGeometry"
-		geometry.scale = Vector3.ONE * float(zone.get("geometry_scale", 1.0))
-		add_child(geometry)
-		_build_zone_collision(geometry)
-		assert(not authored_water_triangles.is_empty(), "Halas water surface was not found in the imported zone mesh")
+		geometry.scale = (
+			Vector3.ONE
+			* float(
+				zone.get(
+					"geometry_scale",
+					1.0
+				)
+			)
+		)
+
+		active_zone_presentation.add_child(
+			geometry
+		)
+		_build_zone_collision(
+			geometry
+		)
+
+		if _zone_water_enabled():
+			assert(
+				not authored_water_triangles.is_empty(),
+				"Zone %s declares authored water, but no water surface was found"
+				% current_zone_key
+			)
 	else:
 		_build_placeholder_ground()
-	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-52.0, -28.0, 0.0)
-	light.light_energy = 1.2
-	add_child(light)
+
+	_build_zone_environment()
+
+
+func _build_zone_environment() -> void:
+	var definition := (
+		_zone_environment_definition()
+	)
+
+	var light_variant: Variant = (
+		definition.get(
+			"directional_light",
+			{}
+		)
+	)
+
+	if (
+		light_variant is Dictionary
+		and not (
+			light_variant as Dictionary
+		).is_empty()
+	):
+		var light_definition: Dictionary = (
+			light_variant as Dictionary
+		)
+
+		var light := DirectionalLight3D.new()
+		light.rotation_degrees = (
+			_vector3_from_zone_value(
+				light_definition.get(
+					"rotation_degrees",
+					[]
+				),
+				"environment.directional_light.rotation_degrees"
+			)
+		)
+		light.light_energy = float(
+			light_definition.get(
+				"energy",
+				1.0
+			)
+		)
+		active_zone_presentation.add_child(
+			light
+		)
+
+	var background_color := str(
+		definition.get(
+			"background_color",
+			""
+		)
+	)
+	var ambient_color := str(
+		definition.get(
+			"ambient_light_color",
+			""
+		)
+	)
+
+	assert(
+		not background_color.is_empty(),
+		"Zone environment requires background_color"
+	)
+	assert(
+		not ambient_color.is_empty(),
+		"Zone environment requires ambient_light_color"
+	)
+
 	var environment := WorldEnvironment.new()
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("9fb9c5")
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("bfd7c8")
-	env.ambient_light_energy = 0.65
+
+	env.background_mode = (
+		Environment.BG_COLOR
+	)
+	env.background_color = Color(
+		background_color
+	)
+	env.ambient_light_source = (
+		Environment.AMBIENT_SOURCE_COLOR
+	)
+	env.ambient_light_color = Color(
+		ambient_color
+	)
+	env.ambient_light_energy = float(
+		definition.get(
+			"ambient_light_energy",
+			0.0
+		)
+	)
+
 	environment.environment = env
-	add_child(environment)
+	active_zone_presentation.add_child(
+		environment
+	)
+
+
+func _zone_environment_definition() -> Dictionary:
+	var environment_variant: Variant = (
+		zone.get(
+			"environment",
+			{}
+		)
+	)
+
+	assert(
+		environment_variant is Dictionary,
+		"Zone environment must be a dictionary"
+	)
+
+	return (
+		environment_variant as Dictionary
+	)
+
+
+func _zone_water_definition() -> Dictionary:
+	var water_variant: Variant = (
+		_zone_environment_definition().get(
+			"water",
+			{}
+		)
+	)
+
+	if not water_variant is Dictionary:
+		return {}
+
+	return (
+		water_variant as Dictionary
+	)
+
+
+func _zone_water_enabled() -> bool:
+	return bool(
+		_zone_water_definition().get(
+			"enabled",
+			false
+		)
+	)
+
+
+func _vector3_from_zone_value(
+	value: Variant,
+	field_name: String
+) -> Vector3:
+	assert(
+		value is Array,
+		"%s must be a three-component array"
+		% field_name
+	)
+
+	var components: Array = value
+
+	assert(
+		components.size() == 3,
+		"%s must contain exactly three components"
+		% field_name
+	)
+
+	return Vector3(
+		float(
+			components[0]
+		),
+		float(
+			components[1]
+		),
+		float(
+			components[2]
+		)
+	)
 
 
 func _build_zone_collision(node: Node) -> void:
@@ -823,11 +1226,25 @@ func _add_zone_terrain_collision(mesh_instance: MeshInstance3D) -> void:
 		var arrays := mesh_instance.mesh.surface_get_arrays(surface_index)
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
-		if _surface_is_halas_water(mesh_instance, surface_index):
-			if _surface_defines_halas_water_surface(mesh_instance, surface_index):
-				_register_water_surface(vertices, indices, mesh_instance.global_transform)
+		if _surface_is_zone_water(
+			mesh_instance,
+			surface_index
+		):
+			if _surface_defines_zone_water_surface(
+				mesh_instance,
+				surface_index
+			):
+				_register_water_surface(
+					vertices,
+					indices,
+					mesh_instance.global_transform
+				)
 		else:
-			_append_triangle_faces(terrain_faces, vertices, indices)
+			_append_triangle_faces(
+				terrain_faces,
+				vertices,
+				indices
+			)
 	if terrain_faces.is_empty():
 		return
 	var shape := ConcavePolygonShape3D.new()
@@ -835,17 +1252,173 @@ func _add_zone_terrain_collision(mesh_instance: MeshInstance3D) -> void:
 	_add_collision_shape(mesh_instance, shape, COLLISION_LAYER_TERRAIN, "TerrainCollision")
 
 
-func _surface_is_halas_water(mesh_instance: MeshInstance3D, surface_index: int) -> bool:
-	var material := mesh_instance.get_active_material(surface_index)
-	if material != null:
-		var identifier := (material.resource_name + " " + material.resource_path).to_lower()
-		if identifier.contains("halaswater"):
+func _surface_is_zone_water(
+	mesh_instance: MeshInstance3D,
+	surface_index: int
+) -> bool:
+	if _surface_material_matches_zone_water(
+		mesh_instance,
+		surface_index
+	):
+		return true
+
+	var fallback := (
+		_matching_zone_water_fallback(
+			mesh_instance
+		)
+	)
+
+	if fallback.is_empty():
+		return false
+
+	return _zone_surface_index_list_contains(
+		fallback.get(
+			"water_surface_indices",
+			[]
+		),
+		surface_index
+	)
+
+
+func _surface_defines_zone_water_surface(
+	mesh_instance: MeshInstance3D,
+	surface_index: int
+) -> bool:
+	var fallback := (
+		_matching_zone_water_fallback(
+			mesh_instance
+		)
+	)
+
+	if not fallback.is_empty():
+		return _zone_surface_index_list_contains(
+			fallback.get(
+				"surface_height_indices",
+				[]
+			),
+			surface_index
+		)
+
+	# A zone without an index fallback may define ordinary water purely by
+	# material identity. In that case the authored water surface itself
+	# supplies swimming height.
+	return _surface_material_matches_zone_water(
+		mesh_instance,
+		surface_index
+	)
+
+
+func _zone_surface_index_list_contains(
+	indices_variant: Variant,
+	surface_index: int
+) -> bool:
+	if not indices_variant is Array:
+		return false
+
+	for configured_index_variant in (
+		indices_variant as Array
+	):
+		if int(
+			configured_index_variant
+		) == surface_index:
 			return true
-	return mesh_instance.mesh.get_surface_count() == 62 and surface_index in [58, 61]
+
+	return false
 
 
-func _surface_defines_halas_water_surface(mesh_instance: MeshInstance3D, surface_index: int) -> bool:
-	return mesh_instance.mesh.get_surface_count() == 62 and surface_index == 58
+func _surface_material_matches_zone_water(
+	mesh_instance: MeshInstance3D,
+	surface_index: int
+) -> bool:
+	var water := _zone_water_definition()
+
+	if not bool(
+		water.get(
+			"enabled",
+			false
+		)
+	):
+		return false
+
+	var patterns_variant: Variant = (
+		water.get(
+			"material_name_contains",
+			[]
+		)
+	)
+
+	if not patterns_variant is Array:
+		return false
+
+	var material := (
+		mesh_instance.get_active_material(
+			surface_index
+		)
+	)
+
+	if material == null:
+		return false
+
+	var identifier := (
+		material.resource_name
+		+ " "
+		+ material.resource_path
+	).to_lower()
+
+	for pattern_variant in (
+		patterns_variant as Array
+	):
+		var pattern := str(
+			pattern_variant
+		).strip_edges().to_lower()
+
+		if (
+			not pattern.is_empty()
+			and identifier.contains(
+				pattern
+			)
+		):
+			return true
+
+	return false
+
+
+func _matching_zone_water_fallback(
+	mesh_instance: MeshInstance3D
+) -> Dictionary:
+	var fallbacks_variant: Variant = (
+		_zone_water_definition().get(
+			"surface_fallbacks",
+			[]
+		)
+	)
+
+	if not fallbacks_variant is Array:
+		return {}
+
+	var surface_count := (
+		mesh_instance.mesh.get_surface_count()
+	)
+
+	for fallback_variant in (
+		fallbacks_variant as Array
+	):
+		if not fallback_variant is Dictionary:
+			continue
+
+		var fallback: Dictionary = (
+			fallback_variant as Dictionary
+		)
+
+		if int(
+			fallback.get(
+				"mesh_surface_count",
+				-1
+			)
+		) == surface_count:
+			return fallback
+
+	return {}
 
 
 func _register_water_surface(vertices: PackedVector3Array, indices: PackedInt32Array, transform: Transform3D) -> void:
@@ -927,7 +1500,7 @@ func _build_placeholder_ground() -> void:
 	plane.size = Vector2(extent * 2.0, extent * 2.0)
 	ground.mesh = plane
 	ground.material_override = _material(Color("355842"))
-	add_child(ground)
+	active_zone_presentation.add_child(ground)
 	for coordinate in [Vector3(-extent, 0.1, -extent), Vector3(extent, 0.1, -extent), Vector3(-extent, 0.1, extent), Vector3(extent, 0.1, extent)]:
 		_add_marker(coordinate)
 
@@ -945,7 +1518,7 @@ func _build_zone_objects() -> void:
 		return
 	var container := Node3D.new()
 	container.name = "ZoneObjects"
-	add_child(container)
+	active_zone_presentation.add_child(container)
 	var line_number := 0
 	while not file.eof_reached():
 		line_number += 1
@@ -960,8 +1533,26 @@ func _build_zone_objects() -> void:
 			continue
 		var placement := Node3D.new()
 		placement.name = "%s_%d" % [model_name, line_number]
-		placement.position = EqWorldSpace.halas_lantern_prop_position(float(values[1]), float(values[2]), float(values[3]))
-		placement.rotation.y = EqWorldSpace.halas_lantern_prop_yaw(float(values[5]))
+		placement.position = (
+			zone_world_space.object_position([
+				float(
+					values[1]
+				),
+				float(
+					values[2]
+				),
+				float(
+					values[3]
+				),
+			])
+		)
+		placement.rotation.y = (
+			zone_world_space.object_heading_yaw(
+				float(
+					values[5]
+				)
+			)
+		)
 		placement.scale = Vector3(float(values[7]), float(values[8]), float(values[9]))
 		var object := scene.instantiate() as Node3D
 		object.name = "Visual"
@@ -1168,10 +1759,14 @@ func _build_npc() -> void:
 	var entity := simulation.entity(TRAINING_ENTITY_ID)
 	if entity == null:
 		return
+	assert(
+		active_zone_presentation != null,
+		"Active-zone presentation is required before training NPC"
+	)
 	npc = Node3D.new()
 	npc.name = "TrainingSpark"
 	npc.position = entity.position
-	add_child(npc)
+	active_zone_presentation.add_child(npc)
 	var body := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.65
@@ -1201,6 +1796,11 @@ func _build_npc_population() -> void:
 	):
 		return
 
+	assert(
+		active_zone_presentation != null,
+		"Active-zone presentation is required before NPC population"
+	)
+
 	halas_population = (
 		HalasNpcPopulation.new()
 	)
@@ -1209,9 +1809,11 @@ func _build_npc_population() -> void:
 	)
 	halas_population.configure(
 		npc_content,
-		models_path
+		models_path,
+		resolved_zone_spawns,
+		zone_runtime_state
 	)
-	add_child(
+	active_zone_presentation.add_child(
 		halas_population
 	)
 
@@ -1266,6 +1868,84 @@ func _register_halas_domain_actors() -> void:
 			+ "requires a spawn2 ID"
 		)
 
+		var spawn_key := (
+			ZoneSpawnResolver.spawn_key_for_id(
+				spawn2_id
+			)
+		)
+		var runtime_spawn_state := (
+			zone_runtime_state.spawn_state(
+				spawn_key
+			)
+		)
+
+		assert(
+			not runtime_spawn_state.is_empty(),
+			"Presentation actor has no generic SpawnPoint state: %s"
+			% spawn_key
+		)
+
+		var selected_definition_ref := str(
+			runtime_spawn_state.get(
+				"selected_definition_ref",
+				""
+			)
+		)
+		var actor_definition_ref := str(
+			definition.get(
+				"definition_id",
+				""
+			)
+		)
+
+		assert(
+			not selected_definition_ref.is_empty()
+			and actor_definition_ref
+			== selected_definition_ref,
+			"Presentation roster diverged from generic SpawnPoint selection "
+			+ "%s: expected %s, got %s"
+			% [
+				spawn_key,
+				selected_definition_ref,
+				actor_definition_ref,
+			]
+		)
+
+		var actor_metadata_variant: Variant = (
+			definition.get(
+				"metadata",
+				{}
+			)
+		)
+		var actor_metadata: Dictionary = (
+			(
+				actor_metadata_variant
+				as Dictionary
+			).duplicate(true)
+			if actor_metadata_variant
+			is Dictionary
+			else {}
+		)
+
+		actor_metadata[
+			"zone_ref"
+		] = current_zone_key
+		actor_metadata[
+			"spawn_point_ref"
+		] = spawn_key
+		actor_metadata[
+			"spawn_group_ref"
+		] = str(
+			runtime_spawn_state.get(
+				"spawn_group_ref",
+				""
+			)
+		)
+
+		definition[
+			"metadata"
+		] = actor_metadata
+
 		var entity_id := str(
 			definition.get(
 				"entity_id",
@@ -1319,9 +1999,577 @@ func _register_halas_domain_actors() -> void:
 			entity
 		)
 
+		zone_runtime_state.occupy_spawn(
+			spawn_key,
+			entity_id,
+			selected_definition_ref
+		)
+
+		var occupied_spawn_state := (
+			zone_runtime_state.spawn_state(
+				spawn_key
+			)
+		)
+
+		assert(
+			str(
+				occupied_spawn_state.get(
+					"state",
+					""
+				)
+			) == ZoneRuntimeState.SPAWN_OCCUPIED
+			and str(
+				occupied_spawn_state.get(
+					"occupant_entity_id",
+					""
+				)
+			) == entity_id
+			and str(
+				occupied_spawn_state.get(
+					"selected_definition_ref",
+					""
+				)
+			) == selected_definition_ref,
+			"Generic SpawnPoint occupancy was not recorded for %s"
+			% spawn_key
+		)
+
 		halas_spawn_entity_ids[
 			spawn2_id
 		] = entity_id
+
+func _release_active_zone_population() -> bool:
+	if simulation == null:
+		return false
+
+	# Clear interaction state while presentation objects are still valid.
+	# This also restores the persistent player's default target.
+	_clear_halas_selection()
+
+	npc_press_touch = -1
+	npc_press_target = {}
+	npc_press_elapsed = 0.0
+
+	if merchant_interaction_popup != null:
+		merchant_interaction_popup.queue_free()
+		merchant_interaction_popup = null
+
+	# Release the zone-local Training Spark before its presentation root dies.
+	view_registry.unbind(
+		TRAINING_ENTITY_ID
+	)
+
+	if simulation.entity(
+		TRAINING_ENTITY_ID
+	) != null:
+		if not simulation.release_entity(
+			TRAINING_ENTITY_ID
+		):
+			push_error(
+				"Unable to release zone-local Training Spark"
+			)
+			return false
+
+	autonomous_entity_ids.erase(
+		TRAINING_ENTITY_ID
+	)
+	npc = null
+
+	var unique_entity_ids: Dictionary = {}
+
+	for entity_id_variant in (
+		halas_spawn_entity_ids.values()
+	):
+		var entity_id := str(
+			entity_id_variant
+		)
+
+		if not entity_id.is_empty():
+			unique_entity_ids[
+				entity_id
+			] = true
+
+	var entity_ids: Array[String] = []
+
+	for entity_id_variant in (
+		unique_entity_ids.keys()
+	):
+		entity_ids.append(
+			str(
+				entity_id_variant
+			)
+		)
+
+	entity_ids.sort()
+
+	for entity_id in entity_ids:
+		# Binding removal happens before domain release while both identities
+		# are still known to the unload coordinator.
+		view_registry.unbind(
+			entity_id
+		)
+
+		if simulation.entity(
+			entity_id
+		) == null:
+			continue
+
+		if not simulation.release_entity(
+			entity_id
+		):
+			push_error(
+				"Unable to release zone-owned runtime actor: %s"
+				% entity_id
+			)
+			return false
+
+	halas_spawn_entity_ids.clear()
+	halas_population = null
+
+	return true
+
+
+func _ensure_active_zone_fixture_entities() -> void:
+	if not bool(
+		zone.get(
+			"enable_training_npc",
+			false
+		)
+	):
+		return
+
+	if simulation.entity(
+		TRAINING_ENTITY_ID
+	) == null:
+		simulation.add_entity(
+			EntityFactory.create(
+				_training_entity_definition()
+			),
+			true,
+			false
+		)
+
+	if not autonomous_entity_ids.has(
+		TRAINING_ENTITY_ID
+	):
+		autonomous_entity_ids.append(
+			TRAINING_ENTITY_ID
+		)
+
+
+func _staged_content_service_for_zone(
+	target_definition: Dictionary
+) -> ContentService:
+	var target_key := str(
+		target_definition.get(
+			"key",
+			""
+		)
+	)
+
+	var definition_path := (
+		zone_definition_loader
+		.zone_definition_path(
+			target_key
+		)
+	)
+
+	if definition_path.is_empty():
+		push_error(
+			zone_definition_loader.last_error
+		)
+		return null
+
+	var paths := (
+		content_service
+		.configured_paths()
+	)
+
+	# These are the zone-owned document slots emitted by
+	# ZoneDefinitionLoader.runtime_content_paths().
+	for key in [
+		"zone",
+		"npcs",
+		"merchants",
+		"factions",
+		"peq_items",
+		"world_objects",
+		"transitions",
+	]:
+		paths.erase(
+			key
+		)
+
+	paths[
+		"zone"
+	] = definition_path
+
+	var runtime_paths := (
+		zone_definition_loader
+		.runtime_content_paths(
+			target_definition
+		)
+	)
+
+	for key_variant in runtime_paths:
+		paths[
+			str(
+				key_variant
+			)
+		] = runtime_paths[
+			key_variant
+		]
+
+	var staged := ContentService.new()
+	staged.configure(
+		paths
+	)
+
+	if not staged.load_all():
+		push_error(
+			"Unable to stage target-zone content: %s"
+			% staged.last_error
+		)
+		return null
+
+	return staged
+
+
+func _transition_placement(
+	request: ZoneTransitionRequest,
+	target_definition: Dictionary
+) -> Dictionary:
+	var payload := request.to_dict()
+	var position_variant: Variant = (
+		payload.get(
+			"target_position",
+			null
+		)
+	)
+
+	var heading_eq := float(
+		payload.get(
+			"target_heading_eq",
+			-1.0
+		)
+	)
+
+	# Heading application is intentionally not silently approximated. The first
+	# executable transition slice proves coordinate placement only.
+	if heading_eq >= 0.0:
+		return {
+			"ok": false,
+			"error":
+				"Executable target_heading_eq support is not wired yet",
+		}
+
+	if position_variant is Vector3:
+		return {
+			"ok": true,
+			"position":
+				position_variant,
+		}
+
+	if (
+		position_variant is Array
+		and (
+			position_variant
+			as Array
+		).size() >= 3
+	):
+		return {
+			"ok": true,
+			"position":
+				_array_to_vector3(
+					position_variant
+				),
+		}
+
+	if not request.target_entry_ref.is_empty():
+		return {
+			"ok": false,
+			"error":
+				"Entry-reference transition execution requires a resolved entry dataset",
+		}
+
+	# A valid request normally supplies coordinates or an entry reference.
+	# Retain the target spawn only as a defensive fixture fallback.
+	return {
+		"ok": true,
+		"position":
+			_array_to_vector3(
+				target_definition.get(
+					"player_spawn",
+					[
+						0.0,
+						0.0,
+						0.0,
+					]
+				)
+			),
+	}
+
+
+func _place_persistent_player_after_transition(
+	target_position: Vector3
+) -> bool:
+	var player_entity := simulation.entity(
+		PLAYER_ENTITY_ID
+	)
+
+	if (
+		player_entity == null
+		or player == null
+	):
+		push_error(
+			"Zone transition requires the persistent player actor and view"
+		)
+		return false
+
+	# Death/respawn belongs to the newly active zone's configured player spawn;
+	# the transition coordinate is only the immediate entry position.
+	player_entity.spawn_position = (
+		_array_to_vector3(
+			zone.get(
+				"player_spawn",
+				[
+					0.0,
+					0.0,
+					0.0,
+				]
+			)
+		)
+	)
+	player_entity.position = (
+		target_position
+	)
+	player_entity.clear_target()
+	player_entity.set_movement_state(
+		GameplayEntity.MOVEMENT_IDLE,
+		Vector3.ZERO
+	)
+
+	player.global_position = (
+		target_position
+	)
+	player.velocity = (
+		Vector3.ZERO
+	)
+	player.reset_physics_interpolation()
+
+	if camera_pivot != null:
+		camera_pivot.global_position = (
+			target_position
+		)
+
+	return true
+
+
+func execute_zone_transition(
+	request: ZoneTransitionRequest
+) -> bool:
+	if (
+		request == null
+		or not request.is_valid()
+	):
+		push_error(
+			"Rejected invalid zone transition request"
+		)
+		return false
+
+	if (
+		not request.source_zone_key.is_empty()
+		and request.source_zone_key
+		!= current_zone_key
+	):
+		push_error(
+			"Zone transition source mismatch: expected %s, got %s"
+			% [
+				current_zone_key,
+				request.source_zone_key,
+			]
+		)
+		return false
+
+	var target_definition := (
+		zone_definition_loader
+		.load_zone(
+			request.target_zone_key
+		)
+	)
+
+	if target_definition.is_empty():
+		push_error(
+			zone_definition_loader.last_error
+		)
+		return false
+
+	if str(
+		target_definition.get(
+			"key",
+			""
+		)
+	) != request.target_zone_key:
+		push_error(
+			"Loaded transition target does not match request target"
+		)
+		return false
+
+	var placement := (
+		_transition_placement(
+			request,
+			target_definition
+		)
+	)
+
+	if not bool(
+		placement.get(
+			"ok",
+			false
+		)
+	):
+		push_error(
+			str(
+				placement.get(
+					"error",
+					"Unable to resolve target placement"
+				)
+			)
+		)
+		return false
+
+	# Stage and validate all target content and world-space configuration before
+	# destroying the current active zone. A bad target therefore leaves Halas
+	# fully intact.
+	var staged_content := (
+		_staged_content_service_for_zone(
+			target_definition
+		)
+	)
+
+	if staged_content == null:
+		return false
+
+	var staged_zone := (
+		staged_content.zone_definition(
+			request.target_zone_key
+		)
+	)
+	var staged_world_space := (
+		ZoneWorldSpace.new(
+			staged_zone
+		)
+	)
+
+	if not staged_world_space.is_valid():
+		push_error(
+			staged_world_space.last_error
+		)
+		return false
+
+	_sync_domain_from_views()
+
+	if not _unload_active_zone():
+		return false
+
+	current_zone_key = (
+		request.target_zone_key
+	)
+	content_service = (
+		staged_content
+	)
+	zone = (
+		staged_zone
+	)
+	zone_world_space = (
+		staged_world_space
+	)
+
+	if not zone_host.prepare_definition(
+		zone,
+		false
+	):
+		push_error(
+			zone_host.last_error
+		)
+		return false
+
+	_resolve_zone_spawns()
+	_prepare_zone_presentation()
+	_build_world()
+	_build_zone_objects()
+
+	_ensure_active_zone_fixture_entities()
+	_build_npc()
+	_build_npc_population()
+
+	if not _place_persistent_player_after_transition(
+		placement.get(
+			"position",
+			Vector3.ZERO
+		) as Vector3
+	):
+		return false
+
+	_restore_default_player_target()
+
+	auto_attack_enabled = false
+	joystick_vector = Vector2.ZERO
+	jump_held = false
+	jump_pressed = false
+	autosave_elapsed = 0.0
+
+	status_text = (
+		"Entered %s."
+		% str(
+			zone.get(
+				"name",
+				current_zone_key
+			)
+		)
+	)
+
+	return true
+
+
+func _unload_active_zone() -> bool:
+	if zone_host == null:
+		return true
+
+	# Runtime state must be captured while the transient actors still exist.
+	# Patrol position, respawn state, spawn selection, and world-object state
+	# therefore survive presentation teardown.
+	if not zone_host.capture_active_zone():
+		push_error(
+			zone_host.last_error
+		)
+		return false
+
+	if not _release_active_zone_population():
+		return false
+
+	# Presentation lifetime belongs to the presentation layer. Domain/view
+	# bindings have already been released, so the complete zone scene can now
+	# disappear before ZoneHost clears the active runtime references.
+	if zone_presentation_host != null:
+		zone_presentation_host.clear_zone()
+
+	active_zone_presentation = null
+
+	if not zone_host.unload_active_zone(
+		false
+	):
+		push_error(
+			zone_host.last_error
+		)
+		return false
+
+	zone_runtime_state = null
+	zone_spawn_resolver = null
+	resolved_zone_spawns = {}
+
+	return true
+
 
 func _build_camera() -> void:
 	camera_pivot = Node3D.new()
@@ -1910,26 +3158,178 @@ func open_selected_merchant() -> void:
 		listings
 	)
 
-func _load_save() -> void:
-	var player_fixture := content_service.player_fixture_definition()
-	var result := persistence_service.load_simulation(zone, simulation, {
-		"player_entity_id": PLAYER_ENTITY_ID,
-		"legacy_npc_entity_id": TRAINING_ENTITY_ID,
-		"rng_seed": simulation_rng.initial_seed(),
-		"class_id": int(player_fixture.get("identity", {}).get("class_id", 1)),
-		"race_id": int(player_fixture.get("identity", {}).get("race_id", 2)),
-		"deity_id": int(player_fixture.get("identity", {}).get("deity_id", 396)),
-	})
-	if not bool(result.get("ok", true)):
-		status_text = "Save data was ignored: %s" % str(result.get("error", "invalid save"))
+func _legacy_save_context() -> Dictionary:
+	var player_fixture := (
+		content_service.player_fixture_definition()
+	)
+
+	return {
+		"player_entity_id":
+			PLAYER_ENTITY_ID,
+		"legacy_npc_entity_id":
+			TRAINING_ENTITY_ID,
+		"rng_seed":
+			simulation_rng.initial_seed(),
+		"class_id": int(
+			player_fixture.get(
+				"identity",
+				{}
+			).get(
+				"class_id",
+				1
+			)
+		),
+		"race_id": int(
+			player_fixture.get(
+				"identity",
+				{}
+			).get(
+				"race_id",
+				2
+			)
+		),
+		"deity_id": int(
+			player_fixture.get(
+				"identity",
+				{}
+			).get(
+				"deity_id",
+				396
+			)
+		),
+	}
+
+
+func _prepare_save_read() -> void:
+	pending_save_read = (
+		persistence_service.read_save(
+			zone,
+			_legacy_save_context()
+		)
+	)
+
+	if not bool(
+		pending_save_read.get(
+			"ok",
+			true
+		)
+	):
+		status_text = (
+			"Save data was ignored: %s"
+			% str(
+				pending_save_read.get(
+					"error",
+					"invalid save"
+				)
+			)
+		)
+		return
+
+	if not bool(
+		pending_save_read.get(
+			"loaded",
+			false
+		)
+	):
+		return
+
+	var store_result := (
+		persistence_service
+		.restore_zone_store_from_read(
+			pending_save_read,
+			zone_state_store
+		)
+	)
+
+	if not bool(
+		store_result.get(
+			"ok",
+			false
+		)
+	):
+		status_text = (
+			"Save data was ignored: %s"
+			% str(
+				store_result.get(
+					"error",
+					"invalid zone-state store"
+				)
+			)
+		)
+		pending_save_read = store_result
+		return
+
+	if zone_state_store.has_zone(
+		current_zone_key
+	):
+		if not zone_host.restore_active_from_store():
+			status_text = (
+				"Save data was ignored: %s"
+				% zone_host.last_error
+			)
+			pending_save_read = {
+				"ok": false,
+				"loaded": false,
+				"reason": "invalid",
+				"error": zone_host.last_error,
+			}
+		else:
+			zone_runtime_state = (
+				zone_host.active_runtime_state
+			)
+
+
+func _restore_simulation_save() -> void:
+	if pending_save_read.is_empty():
+		_restore_default_player_target()
+		return
+
+	if not bool(
+		pending_save_read.get(
+			"ok",
+			true
+		)
+	):
+		_restore_default_player_target()
+		return
+
+	var result := (
+		persistence_service
+		.restore_simulation_from_read(
+			pending_save_read,
+			simulation
+		)
+	)
+
+	if not bool(
+		result.get(
+			"ok",
+			true
+		)
+	):
+		status_text = (
+			"Save data was ignored: %s"
+			% str(
+				result.get(
+					"error",
+					"invalid save"
+				)
+			)
+		)
 
 	_restore_default_player_target()
+
 
 func _save_game() -> void:
 	if simulation == null or player == null:
 		return
 	_sync_domain_from_views()
-	var result := persistence_service.save_simulation(zone, simulation)
+	var result := persistence_service.save_simulation(
+		zone,
+		simulation,
+		zone_runtime_state,
+		zone_state_store
+	)
 	if not bool(result.get("ok", false)):
 		status_text = "Unable to save local progress."
 

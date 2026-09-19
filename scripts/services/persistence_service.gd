@@ -1,7 +1,7 @@
 class_name PersistenceService
 extends RefCounted
 
-const SAVE_SCHEMA_VERSION := 3
+const SAVE_SCHEMA_VERSION := 5
 const DEFAULT_SAVE_PATH := "user://offline_slice_save.json"
 const OFFLINE_ELAPSED_POLICY := "freeze"
 
@@ -21,17 +21,72 @@ func _init(
 
 func save_simulation(
 	zone_definition: Dictionary,
-	simulation: Simulation
+	simulation: Simulation,
+	zone_runtime_state: ZoneRuntimeState = null,
+	zone_state_store: ZoneStateStore = null
 ) -> Dictionary:
-	# Version 3 stores simulation-relative timer durations. Wall-clock passage
-	# is metadata only and does not implicitly advance gameplay while offline.
+	# Schema 5 stores all known zone runtime snapshots while zone_key remains
+	# the currently active zone. Wall-clock passage remains metadata only.
+	var zone_key := str(
+		zone_definition.get(
+			"key",
+			""
+		)
+	)
+
+	if zone_key.is_empty():
+		return {
+			"ok": false,
+			"error": "Cannot save without an active zone key",
+		}
+
+	var save_store: ZoneStateStore = (
+		zone_state_store
+	)
+
+	if save_store == null:
+		save_store = ZoneStateStore.new()
+
+	if zone_runtime_state != null:
+		if (
+			zone_runtime_state.zone_key
+			!= zone_key
+		):
+			return {
+				"ok": false,
+				"error": (
+					"Active ZoneRuntimeState key does not match save zone"
+				),
+			}
+
+		if not save_store.capture_zone(
+			zone_runtime_state
+		):
+			return {
+				"ok": false,
+				"error": save_store.last_error,
+			}
+	elif not save_store.has_zone(
+		zone_key
+	):
+		if not save_store.capture_zone(
+			ZoneRuntimeState.new(
+				zone_key
+			)
+		):
+			return {
+				"ok": false,
+				"error": save_store.last_error,
+			}
+
 	var envelope := {
 		"schema_version": SAVE_SCHEMA_VERSION,
-		"zone_key": str(
-			zone_definition.get("key", "")
-		),
+		"zone_key": zone_key,
 		"zone_legacy_id": str(
-			zone_definition.get("id", "")
+			zone_definition.get(
+				"id",
+				""
+			)
 		),
 		"player_spawn_revision": int(
 			zone_definition.get(
@@ -41,6 +96,7 @@ func save_simulation(
 		),
 		"saved_unix_ms": _real_world_unix_ms(),
 		"offline_elapsed_policy": OFFLINE_ELAPSED_POLICY,
+		"zone_states": save_store.snapshot(),
 		"simulation": simulation.snapshot(),
 	}
 
@@ -72,9 +128,8 @@ func save_simulation(
 	return {"ok": true}
 
 
-func load_simulation(
+func read_save(
 	zone_definition: Dictionary,
-	simulation: Simulation,
 	legacy_context: Dictionary = {}
 ) -> Dictionary:
 	if not FileAccess.file_exists(_save_path):
@@ -95,17 +150,32 @@ func load_simulation(
 			% _save_path
 		)
 
-	var text: String = file.get_as_text()
+	var text_value: String = file.get_as_text()
 	file.close()
 
 	var result := deserialize_envelope(
-		text,
-		str(zone_definition.get("key", "")),
-		str(zone_definition.get("id", "")),
+		text_value,
+		str(
+			zone_definition.get(
+				"key",
+				""
+			)
+		),
+		str(
+			zone_definition.get(
+				"id",
+				""
+			)
+		),
 		legacy_context
 	)
 
-	if not bool(result.get("ok", false)):
+	if not bool(
+		result.get(
+			"ok",
+			false
+		)
+	):
 		return _load_failure(
 			str(
 				result.get(
@@ -115,11 +185,26 @@ func load_simulation(
 			)
 		)
 
-	var envelope: Dictionary = result.get("state", {})
+	var envelope: Dictionary = (
+		result.get(
+			"state",
+			{}
+		)
+	)
 
 	if (
-		str(envelope.get("zone_key", ""))
-		!= str(zone_definition.get("key", ""))
+		str(
+			envelope.get(
+				"zone_key",
+				""
+			)
+		)
+		!= str(
+			zone_definition.get(
+				"key",
+				""
+			)
+		)
 	):
 		return {
 			"ok": true,
@@ -142,27 +227,293 @@ func load_simulation(
 		)
 	)
 
-	var offline_elapsed_seconds := _offline_elapsed_seconds(
-		envelope
+	last_error = ""
+
+	return {
+		"ok": true,
+		"loaded": true,
+		"migrated": bool(
+			result.get(
+				"migrated",
+				false
+			)
+		),
+		"restore_position": restore_position,
+		"offline_elapsed_policy":
+			OFFLINE_ELAPSED_POLICY,
+		"offline_elapsed_seconds":
+			_offline_elapsed_seconds(
+				envelope
+			),
+		"envelope":
+			envelope.duplicate(true),
+	}
+
+
+func restore_zone_store_from_read(
+	read_result: Dictionary,
+	zone_state_store: ZoneStateStore
+) -> Dictionary:
+	if not bool(
+		read_result.get(
+			"ok",
+			false
+		)
+	):
+		return read_result.duplicate(true)
+
+	if not bool(
+		read_result.get(
+			"loaded",
+			false
+		)
+	):
+		return {
+			"ok": true,
+			"loaded": false,
+			"restored": false,
+			"reason": str(
+				read_result.get(
+					"reason",
+					"missing"
+				)
+			),
+		}
+
+	if zone_state_store == null:
+		return _load_failure(
+			"ZoneStateStore is required to restore zone persistence"
+		)
+
+	var envelope_variant: Variant = (
+		read_result.get(
+			"envelope",
+			{}
+		)
 	)
 
-	# The explicit policy is freeze: elapsed real-world time is observable for
-	# diagnostics but is never fed into Simulation.advance().
-	simulation.restore_snapshot(
-		envelope.get("simulation", {}),
-		restore_position
+	if not envelope_variant is Dictionary:
+		return _load_failure(
+			"Prepared save has no envelope"
+		)
+
+	var envelope: Dictionary = (
+		envelope_variant as Dictionary
 	)
+	var zone_states_variant: Variant = (
+		envelope.get(
+			"zone_states",
+			{}
+		)
+	)
+
+	if not zone_states_variant is Dictionary:
+		return _load_failure(
+			"Save zone-state store payload is missing"
+		)
+
+	if not zone_state_store.restore(
+		zone_states_variant
+	):
+		return _load_failure(
+			"Unable to restore zone-state store: %s"
+			% zone_state_store.last_error
+		)
 
 	last_error = ""
 
 	return {
 		"ok": true,
 		"loaded": true,
-		"migrated": bool(result.get("migrated", false)),
-		"restore_position": restore_position,
-		"offline_elapsed_policy": OFFLINE_ELAPSED_POLICY,
-		"offline_elapsed_seconds": offline_elapsed_seconds,
+		"restored": true,
+		"zone_count":
+			zone_state_store.zone_keys().size(),
 	}
+
+
+func restore_zone_state_from_read(
+	read_result: Dictionary,
+	zone_runtime_state: ZoneRuntimeState
+) -> Dictionary:
+	if zone_runtime_state == null:
+		return _load_failure(
+			"Zone runtime state is required to restore a zone save"
+		)
+
+	var store := ZoneStateStore.new()
+	var store_result := (
+		restore_zone_store_from_read(
+			read_result,
+			store
+		)
+	)
+
+	if not bool(
+		store_result.get(
+			"ok",
+			false
+		)
+	):
+		return store_result
+
+	if not bool(
+		store_result.get(
+			"loaded",
+			false
+		)
+	):
+		return store_result
+
+	var envelope_variant: Variant = (
+		read_result.get(
+			"envelope",
+			{}
+		)
+	)
+
+	if not envelope_variant is Dictionary:
+		return _load_failure(
+			"Prepared save has no envelope"
+		)
+
+	var envelope: Dictionary = (
+		envelope_variant as Dictionary
+	)
+	var zone_key := str(
+		envelope.get(
+			"zone_key",
+			""
+		)
+	)
+
+	if not store.restore_zone(
+		zone_key,
+		zone_runtime_state
+	):
+		return _load_failure(
+			"Unable to restore active zone %s: %s"
+			% [
+				zone_key,
+				store.last_error,
+			]
+		)
+
+	last_error = ""
+
+	return {
+		"ok": true,
+		"loaded": true,
+		"restored": true,
+	}
+
+
+func restore_simulation_from_read(
+	read_result: Dictionary,
+	simulation: Simulation
+) -> Dictionary:
+	if not bool(
+		read_result.get(
+			"ok",
+			false
+		)
+	):
+		return read_result.duplicate(true)
+
+	if not bool(
+		read_result.get(
+			"loaded",
+			false
+		)
+	):
+		return read_result.duplicate(true)
+
+	var envelope_variant: Variant = (
+		read_result.get(
+			"envelope",
+			{}
+		)
+	)
+
+	if not envelope_variant is Dictionary:
+		return _load_failure(
+			"Prepared save has no envelope"
+		)
+
+	var envelope: Dictionary = (
+		envelope_variant as Dictionary
+	)
+
+	# Offline elapsed time is diagnostics only. The Phase 4 freeze policy
+	# never feeds wall-clock passage into Simulation.advance().
+	simulation.restore_snapshot(
+		envelope.get(
+			"simulation",
+			{}
+		),
+		bool(
+			read_result.get(
+				"restore_position",
+				true
+			)
+		)
+	)
+
+	last_error = ""
+
+	var restored := (
+		read_result.duplicate(true)
+	)
+	restored.erase(
+		"envelope"
+	)
+	return restored
+
+
+func load_simulation(
+	zone_definition: Dictionary,
+	simulation: Simulation,
+	legacy_context: Dictionary = {},
+	zone_runtime_state: ZoneRuntimeState = null
+) -> Dictionary:
+	var read_result := read_save(
+		zone_definition,
+		legacy_context
+	)
+
+	if (
+		zone_runtime_state != null
+		and bool(
+			read_result.get(
+				"ok",
+				false
+			)
+		)
+		and bool(
+			read_result.get(
+				"loaded",
+				false
+			)
+		)
+	):
+		var zone_result := (
+			restore_zone_state_from_read(
+				read_result,
+				zone_runtime_state
+			)
+		)
+
+		if not bool(
+			zone_result.get(
+				"ok",
+				false
+			)
+		):
+			return zone_result
+
+	return restore_simulation_from_read(
+		read_result,
+		simulation
+	)
 
 
 func serialize_envelope(envelope: Dictionary) -> String:
@@ -239,6 +590,12 @@ func deserialize_envelope(
 	elif version == 2:
 		envelope = _migrate_v2_save(parsed)
 		migrated = true
+	elif version == 3:
+		envelope = _migrate_v3_save(parsed)
+		migrated = true
+	elif version == 4:
+		envelope = _migrate_v4_save(parsed)
+		migrated = true
 	elif version == SAVE_SCHEMA_VERSION:
 		envelope = parsed.duplicate(true)
 	else:
@@ -291,6 +648,41 @@ func _validate_envelope(envelope: Dictionary) -> String:
 	if not envelope.get("simulation") is Dictionary:
 		return "Save simulation payload is missing"
 
+	var zone_states_variant: Variant = (
+		envelope.get(
+			"zone_states",
+			null
+		)
+	)
+
+	if not zone_states_variant is Dictionary:
+		return "Save zone-state store payload is missing"
+
+	var zone_store_probe := ZoneStateStore.new()
+
+	if not zone_store_probe.restore(
+		zone_states_variant
+	):
+		return (
+			"Save zone-state store is invalid: %s"
+			% zone_store_probe.last_error
+		)
+
+	var active_zone_key := str(
+		envelope.get(
+			"zone_key",
+			""
+		)
+	)
+
+	if not zone_store_probe.has_zone(
+		active_zone_key
+	):
+		return (
+			"Save zone-state store does not contain active zone %s"
+			% active_zone_key
+		)
+
 	if (
 		str(
 			envelope.get(
@@ -339,6 +731,115 @@ func _decode_exact_rng_fields(
 
 	simulation_payload["rng"] = rng_payload
 	envelope["simulation"] = simulation_payload
+
+
+func _empty_zone_state(
+	zone_key: String
+) -> Dictionary:
+	return ZoneRuntimeState.new(
+		zone_key
+	).snapshot()
+
+
+func _single_zone_store_snapshot(
+	zone_key: String,
+	zone_state: Dictionary
+) -> Dictionary:
+	var zones: Dictionary = {}
+
+	zones[
+		zone_key
+	] = zone_state.duplicate(true)
+
+	return {
+		"schema_version":
+			ZoneStateStore.SCHEMA_VERSION,
+		"zones":
+			zones,
+	}
+
+
+func _empty_zone_store(
+	zone_key: String
+) -> Dictionary:
+	return _single_zone_store_snapshot(
+		zone_key,
+		_empty_zone_state(
+			zone_key
+		)
+	)
+
+
+func _migrate_v4_save(
+	version_four: Dictionary
+) -> Dictionary:
+	var envelope := (
+		version_four.duplicate(true)
+	)
+	var zone_key := str(
+		envelope.get(
+			"zone_key",
+			""
+		)
+	)
+	var zone_state_variant: Variant = (
+		envelope.get(
+			"zone_state",
+			null
+		)
+	)
+
+	envelope[
+		"schema_version"
+	] = SAVE_SCHEMA_VERSION
+
+	if zone_state_variant is Dictionary:
+		envelope[
+			"zone_states"
+		] = _single_zone_store_snapshot(
+			zone_key,
+			zone_state_variant as Dictionary
+		)
+	else:
+		# Schema 4 required zone_state. Preserve invalidity rather than
+		# manufacturing state for a malformed schema-4 save.
+		envelope[
+			"zone_states"
+		] = {}
+
+	envelope.erase(
+		"zone_state"
+	)
+
+	return envelope
+
+
+func _migrate_v3_save(
+	version_three: Dictionary
+) -> Dictionary:
+	var envelope := (
+		version_three.duplicate(true)
+	)
+	var zone_key := str(
+		envelope.get(
+			"zone_key",
+			""
+		)
+	)
+
+	envelope[
+		"schema_version"
+	] = SAVE_SCHEMA_VERSION
+	envelope[
+		"zone_states"
+	] = _empty_zone_store(
+		zone_key
+	)
+	envelope.erase(
+		"zone_state"
+	)
+
+	return envelope
 
 
 func _migrate_v2_save(version_two: Dictionary) -> Dictionary:
@@ -394,6 +895,17 @@ func _migrate_v2_save(version_two: Dictionary) -> Dictionary:
 		simulation_payload["active_spell_casts"] = {}
 
 	envelope["simulation"] = simulation_payload
+	envelope["zone_states"] = _empty_zone_store(
+		str(
+			envelope.get(
+				"zone_key",
+				""
+			)
+		)
+	)
+	envelope.erase(
+		"zone_state"
+	)
 	return envelope
 
 
@@ -576,6 +1088,9 @@ func _migrate_legacy_save(
 		),
 		"saved_unix_ms": 0,
 		"offline_elapsed_policy": OFFLINE_ELAPSED_POLICY,
+		"zone_states": _empty_zone_store(
+			zone_key
+		),
 		"simulation": {
 			"clock_elapsed_seconds": 0.0,
 			"rng": {

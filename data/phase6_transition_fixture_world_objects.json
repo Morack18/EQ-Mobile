@@ -1,0 +1,10 @@
+{
+  "fixture": true,
+  "fixture_provenance": "EQ Mobile empty transition fixture",
+  "key": "eqm:world_objects:halas",
+  "objects": [],
+  "review_state": "architecture_only_no_reviewed_import",
+  "schema_id": "eqm.world_object_dataset",
+  "schema_version": 1,
+  "zone_ref": "eqm:zone:phase6_transition_fixture"
+}

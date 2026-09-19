@@ -786,6 +786,45 @@ func _test_removed_target_cleanup() -> void:
 		"Removed entity remained referenced as another actor's target."
 	)
 
+	_expect(
+		simulation.release_entity(
+			target.entity_id
+		),
+		"Removed transient entity could not be released from simulation."
+	)
+
+	_expect(
+		simulation.entity(
+			target.entity_id
+		) == null,
+		"Released transient entity remained registered in simulation."
+	)
+
+	_expect(
+		simulation.drain_events().is_empty(),
+		"Released transient entity left stale queued events."
+	)
+
+	var replacement := EntityFactory.create({
+		"entity_id":
+			target.entity_id,
+		"definition_id":
+			"fixture:actor:replacement",
+	})
+
+	simulation.add_entity(
+		replacement,
+		true,
+		false
+	)
+
+	_expect(
+		simulation.entity(
+			target.entity_id
+		) == replacement,
+		"Released transient entity ID could not be registered again."
+	)
+
 
 func _test_halas_bulk_definition_mapping() -> void:
 	var targets: Array = [

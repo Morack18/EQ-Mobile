@@ -50,13 +50,43 @@ static func position_within_precision(actual: Vector3, expected: Vector3, precis
 static func halas_lantern_prop_yaw(degrees_eq: float) -> float:
 	return deg_to_rad(-degrees_eq)
 
-static func heading_to_godot_yaw(heading_eq: float) -> float:
-	assert(heading_eq >= 0.0 and heading_eq <= EQ_HEADING_UNITS_PER_TURN, "EQ heading out of range")
-	return PI * 0.5 - (heading_eq / EQ_HEADING_UNITS_PER_TURN) * TAU
+static func heading_to_godot_yaw(
+	heading_eq: float,
+	units_per_turn: float = EQ_HEADING_UNITS_PER_TURN
+) -> float:
+	assert(
+		units_per_turn > 0.0,
+		"Heading units per turn must be positive"
+	)
+	assert(
+		heading_eq >= 0.0
+		and heading_eq <= units_per_turn,
+		"EQ heading out of range"
+	)
+	return (
+		PI * 0.5
+		- (heading_eq / units_per_turn)
+		* TAU
+	)
 
-static func heading_forward(heading_eq: float) -> Vector3:
-	var turn := (heading_eq / EQ_HEADING_UNITS_PER_TURN) * TAU
-	return Vector3(-cos(turn), 0.0, -sin(turn))
+static func heading_forward(
+	heading_eq: float,
+	units_per_turn: float = EQ_HEADING_UNITS_PER_TURN
+) -> Vector3:
+	assert(
+		units_per_turn > 0.0,
+		"Heading units per turn must be positive"
+	)
+	var turn := (
+		heading_eq
+		/ units_per_turn
+		* TAU
+	)
+	return Vector3(
+		-cos(turn),
+		0.0,
+		-sin(turn)
+	)
 
 static func visual_scale_for_height(measured_height: float, target_height: float) -> float:
 	assert(measured_height > 0.0 and target_height > 0.0, "Character heights must be positive")

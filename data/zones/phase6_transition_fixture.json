@@ -1,0 +1,121 @@
+{
+  "bounds": {
+    "half_extent": 820.0
+  },
+  "content_refs": {
+    "faction_catalog": "res://data/halas_factions_source.json",
+    "item_catalog": "res://data/halas_items_source.json",
+    "merchant_catalog": "res://data/halas_merchants_source.json",
+    "npc_population": "res://data/phase6_transition_fixture_npcs.json",
+    "transitions": "res://data/phase6_transition_fixture_transitions.json",
+    "world_objects": "res://data/phase6_transition_fixture_world_objects.json"
+  },
+  "display_name": "Halas",
+  "enable_training_npc": false,
+  "environment": {
+    "ambient_light_color": "c7ced3",
+    "ambient_light_energy": 0.8,
+    "background_color": "59636b",
+    "directional_light": {
+      "energy": 1.2,
+      "rotation_degrees": [
+        -52.0,
+        -28.0,
+        0.0
+      ]
+    },
+    "evidence": "project_fixture_transition_validation",
+    "water": {
+      "enabled": false,
+      "evidence": "project_fixture_no_authored_water",
+      "material_name_contains": [
+        "halaswater"
+      ],
+      "surface_fallbacks": [
+        {
+          "mesh_surface_count": 62,
+          "surface_height_indices": [
+            58
+          ],
+          "water_surface_indices": [
+            58,
+            61
+          ]
+        }
+      ]
+    }
+  },
+  "era_metadata": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "review_state": "current_unreviewed_peq"
+  },
+  "fixture": true,
+  "fixture_geometry_provenance": "Project-authored empty Node3D scene used only to satisfy the generic ZoneDefinition geometry contract; contains no imported EverQuest geometry.",
+  "fixture_provenance": "EQ Mobile test content; not authentic EverQuest zone data",
+  "fixture_purpose": "project-original zone transition lifecycle validation",
+  "geometry_scale": 10.0,
+  "geometry_scene": "res://scenes/fixtures/phase6_transition_fixture_geometry.tscn",
+  "id": "phase6_transition_fixture",
+  "key": "eqm:zone:phase6_transition_fixture",
+  "name": "Phase 6 Transition Fixture",
+  "npc_archetypes": {},
+  "npc_model_directory": "",
+  "npc_source": "res://data/phase6_transition_fixture_npcs.json",
+  "object_instances": "",
+  "object_model_directory": "",
+  "player_respawn_seconds": 2.5,
+  "player_spawn": [
+    12.0,
+    1.0,
+    -8.0
+  ],
+  "player_spawn_revision": 1,
+  "progression": {
+    "era_cap_basis": "original_classic_pre_kunark",
+    "formula_version": 1,
+    "max_level": 50
+  },
+  "safe_point": {
+    "evidence": "current_eq_mobile_runtime_spawn",
+    "heading_eq": 0.0,
+    "kind": "zone_safe_point",
+    "position": [
+      -13.0,
+      4.38,
+      -10.0
+    ]
+  },
+  "schema_id": "eqm.zone_definition",
+  "schema_version": 1,
+  "source_refs": {
+    "client_geometry": "client:zone_geometry:halas",
+    "peq_zone": {
+      "short_name": "phase6_transition_fixture",
+      "table_row_id": 160,
+      "version": 0,
+      "zone_id": 29
+    }
+  },
+  "spawns": [],
+  "world_space_contract": {
+    "lantern_prop_axis_map": [
+      -1,
+      2,
+      3
+    ],
+    "lantern_prop_heading": "degrees -> negative Godot yaw",
+    "lantern_prop_heading_degrees_sign": -1.0,
+    "lantern_prop_position": "[x,y,z] -> [-x,y,z]",
+    "server_axis_map": [
+      -2,
+      3,
+      1
+    ],
+    "server_heading": "0..512 -> Godot yaw pi/2 - heading*tau/512",
+    "server_heading_units_per_turn": 512.0,
+    "server_position": "[x,y,elevation] -> [-y,elevation,x]",
+    "unit": "one Godot world unit equals one native EQ world unit after geometry_scale"
+  },
+  "zone_state_schema_version": 1
+}

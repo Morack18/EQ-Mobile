@@ -14,6 +14,8 @@ const TARGET_TINT := Color(0.97, 0.32, 0.29, 1.0)
 const CHARACTER_MODEL_FACING_OFFSET := PI * 0.5
 
 var _content: Dictionary = {}
+var _resolved_spawns: Dictionary = {}
+var _zone_runtime_state: ZoneRuntimeState
 var _models_path := ""
 var _model_scenes: Dictionary[String, PackedScene] = {}
 var _actors: Array[NpcActor] = []
@@ -40,6 +42,8 @@ class NpcActor:
 	var pause_remaining := 0.0
 	var movement_velocity := Vector3.ZERO
 	var spawn2_id := 0
+	var spawn_key := ""
+	var grid_id := 0
 	var npc_type_id := 0
 	var display_name := ""
 	var level := 1
@@ -66,14 +70,35 @@ class NpcActor:
 	var nameplate: Label3D
 
 
-func configure(content: Dictionary, models_path: String) -> void:
+func configure(
+	content: Dictionary,
+	models_path: String,
+	resolved_spawns: Dictionary,
+	zone_runtime_state: ZoneRuntimeState
+) -> void:
 	_content = content.duplicate(true)
+	_resolved_spawns = resolved_spawns.duplicate(true)
+	_zone_runtime_state = zone_runtime_state
 	_models_path = models_path
 
 
 func _ready() -> void:
-	assert(not _content.is_empty(), "Halas NPC content is required")
-	assert(not _models_path.is_empty(), "Halas NPC model directory is required")
+	assert(
+		not _content.is_empty(),
+		"Halas NPC content is required"
+	)
+	assert(
+		not _resolved_spawns.is_empty(),
+		"Resolved zone spawn definitions are required"
+	)
+	assert(
+		_zone_runtime_state != null,
+		"ZoneRuntimeState is required by the population compatibility bridge"
+	)
+	assert(
+		not _models_path.is_empty(),
+		"Halas NPC model directory is required"
+	)
 	_build_population(_content)
 	_validate_static_facing()
 
@@ -124,24 +149,119 @@ func _physics_process(_delta: float) -> void:
 	_validate_terrain_placement()
 
 func _build_population(content: Dictionary) -> void:
-	var npc_types: Dictionary = {}
-	var spawn_groups: Dictionary = {}
-	for npc_type in content.get("npc_types", []):
-		npc_types[str(npc_type.get("key", "peq:npc:%d" % int(npc_type.id)))] = npc_type
-	for group_id in content.get("spawn_groups", {}):
-		var group: Dictionary = content.spawn_groups[group_id]
-		spawn_groups[str(group.get("key", "peq:spawn_group:%s" % group_id))] = group
-	for spawn in content.get("spawns", []):
-		var spawn_group_ref := str(spawn.get("spawn_group_ref", "peq:spawn_group:%d" % int(spawn.get("spawn_group_id", 0))))
-		var spawn_group: Dictionary = spawn_groups.get(spawn_group_ref, {})
-		if spawn_group.is_empty():
-			push_error("Spawn %s has no resolved SpawnGroup %s" % [str(spawn.get("key", spawn.get("spawn2_id", "?"))), spawn_group_ref])
-			continue
-		var selection_spawn: Dictionary = spawn.duplicate()
-		selection_spawn["candidates"] = spawn_group.get("candidates", [])
-		var npc_type: Dictionary = _choose_npc_type(selection_spawn, npc_types)
-		if npc_type.is_empty():
-			continue
+	var spawns_variant: Variant = content.get(
+		"spawns",
+		[]
+	)
+
+	assert(
+		spawns_variant is Array,
+		"NPC content requires a spawn array"
+	)
+
+	for source_spawn_variant in (
+		spawns_variant as Array
+	):
+		assert(
+			source_spawn_variant is Dictionary,
+			"NPC spawn must be a dictionary"
+		)
+
+		var source_spawn: Dictionary = (
+			source_spawn_variant as Dictionary
+		)
+		var spawn2_id := int(
+			source_spawn.get(
+				"spawn2_id",
+				0
+			)
+		)
+
+		assert(
+			spawn2_id > 0,
+			"Presentation spawn requires spawn2 identity"
+		)
+
+		var spawn_key := str(
+			source_spawn.get(
+				"key",
+				ZoneSpawnResolver.spawn_key_for_id(
+					spawn2_id
+				)
+			)
+		)
+		var resolved_variant: Variant = (
+			_resolved_spawns.get(
+				spawn_key,
+				null
+			)
+		)
+
+		assert(
+			resolved_variant is Dictionary,
+			"Presentation spawn has no generic resolved definition: %s"
+			% spawn_key
+		)
+
+		var spawn: Dictionary = (
+			resolved_variant as Dictionary
+		)
+
+		assert(
+			int(
+				spawn.get(
+					"spawn2_id",
+					0
+				)
+			) == spawn2_id,
+			"Resolved SpawnPoint identity mismatch: %s"
+			% spawn_key
+		)
+
+		var npc_variant: Variant = (
+			spawn.get(
+				"npc_definition",
+				null
+			)
+		)
+
+		assert(
+			npc_variant is Dictionary,
+			"Resolved SpawnPoint has no NPC definition: %s"
+			% spawn_key
+		)
+
+		var npc_type: Dictionary = (
+			npc_variant as Dictionary
+		)
+		var selected_definition_ref := str(
+			spawn.get(
+				"selected_definition_ref",
+				""
+			)
+		)
+		var npc_definition_ref := str(
+			npc_type.get(
+				"key",
+				ZoneSpawnResolver.npc_key_for_id(
+					int(
+						npc_type.get(
+							"id",
+							0
+						)
+					)
+				)
+			)
+		)
+
+		assert(
+			not selected_definition_ref.is_empty()
+			and selected_definition_ref
+			== npc_definition_ref,
+			"Resolved SpawnPoint definition mismatch: %s"
+			% spawn_key
+		)
+
 		var model_name := _model_for(npc_type)
 		if model_name.is_empty():
 			continue
@@ -171,6 +291,7 @@ func _build_population(content: Dictionary) -> void:
 		actor.animator = animator
 		actor.model_name = model_name
 		actor.spawn2_id = int(spawn.spawn2_id)
+		actor.spawn_key = spawn_key
 		actor.npc_type_id = int(npc_type.id)
 		actor.display_name = str(npc_type.name).replace("_", " ")
 		actor.level = int(npc_type.get("level", 1))
@@ -200,12 +321,49 @@ func _build_population(content: Dictionary) -> void:
 		actor.spawn_heading_eq = float(spawn.heading_eq)
 		actor.visual_ground_y = visual.position.y
 		_set_animation(actor, "idle")
-		var grid_id := str(int(spawn.get("grid_id", 0)))
-		for point in content.get("grids", {}).get(grid_id, []):
-			actor.patrol.append(point)
-			_source_positions.append(point.position_eq)
-			_patrol_source_positions.append(point.position_eq)
-			actor.patrol_targets.append(eq_to_world(point.position_eq))
+		var spawn_runtime := _spawn_runtime(
+			spawn_key
+		)
+		actor.grid_id = int(
+			spawn_runtime.get(
+				"grid_id",
+				spawn.get(
+					"grid_id",
+					0
+				)
+			)
+		)
+
+		var grid_key := str(
+			actor.grid_id
+		)
+
+		for point in content.get(
+			"grids",
+			{}
+		).get(
+			grid_key,
+			[]
+		):
+			actor.patrol.append(
+				point
+			)
+			_source_positions.append(
+				point.position_eq
+			)
+			_patrol_source_positions.append(
+				point.position_eq
+			)
+			actor.patrol_targets.append(
+				eq_to_world(
+					point.position_eq
+				)
+			)
+
+		_restore_or_seed_actor_runtime(
+			actor
+		)
+
 		_actors.append(actor)
 		_actors_by_spawn2[actor.spawn2_id] = actor
 
@@ -348,25 +506,6 @@ func _add_target_pick_area(actor_node: Node3D, target_height: float, spawn2_id: 
 	actor_node.add_child(area)
 
 
-func _choose_npc_type(spawn: Dictionary, npc_types: Dictionary) -> Dictionary:
-	var candidates: Array = spawn.get("candidates", [])
-	if candidates.is_empty():
-		return {}
-	# This roster choice is intentionally deterministic content selection, not a
-	# simulation random roll. Runtime stochastic systems use SimulationRng.
-	var total_weight := 0
-	for candidate in candidates:
-		total_weight += int(candidate.chance)
-	if total_weight <= 0:
-		return {}
-	var roll := int(spawn.spawn2_id) % total_weight
-	for candidate in candidates:
-		roll -= int(candidate.chance)
-		if roll < 0:
-			return npc_types.get(str(candidate.get("npc_ref", "peq:npc:%d" % int(candidate.npc_type_id))), {})
-	return npc_types.get(str(candidates[0].get("npc_ref", "peq:npc:%d" % int(candidates[0].npc_type_id))), {})
-
-
 func _model_for(npc_type: Dictionary) -> String:
 	var race := int(npc_type.race)
 	var gender := int(npc_type.gender)
@@ -480,6 +619,196 @@ func _set_animation(actor: NpcActor, clip: String) -> void:
 		actor.animator.play(clip)
 
 
+func _spawn_runtime(
+	spawn_key: String
+) -> Dictionary:
+	if (
+		_zone_runtime_state == null
+		or spawn_key.is_empty()
+	):
+		return {}
+
+	var state := (
+		_zone_runtime_state.spawn_state(
+			spawn_key
+		)
+	)
+
+	var runtime_variant: Variant = (
+		state.get(
+			"runtime",
+			{}
+		)
+	)
+
+	if not runtime_variant is Dictionary:
+		return {}
+
+	return (
+		(
+			runtime_variant
+			as Dictionary
+		).duplicate(true)
+	)
+
+
+func _normalized_patrol_index(
+	actor: NpcActor,
+	index: int
+) -> int:
+	if actor.patrol.is_empty():
+		return 0
+
+	var size := actor.patrol.size()
+	return (
+		(index % size + size)
+		% size
+	)
+
+
+func _runtime_position(
+	value: Variant
+) -> Variant:
+	if not value is Array:
+		return null
+
+	var components: Array = value
+
+	if components.size() != 3:
+		return null
+
+	return Vector3(
+		float(
+			components[0]
+		),
+		float(
+			components[1]
+		),
+		float(
+			components[2]
+		)
+	)
+
+
+func _restore_or_seed_actor_runtime(
+	actor: NpcActor
+) -> void:
+	var runtime := _spawn_runtime(
+		actor.spawn_key
+	)
+
+	actor.grid_id = int(
+		runtime.get(
+			"grid_id",
+			actor.grid_id
+		)
+	)
+	actor.patrol_index = (
+		_normalized_patrol_index(
+			actor,
+			int(
+				runtime.get(
+					"patrol_index",
+					0
+				)
+			)
+		)
+	)
+	actor.pause_remaining = maxf(
+		0.0,
+		float(
+			runtime.get(
+				"pause_remaining",
+				0.0
+			)
+		)
+	)
+
+	var position_variant: Variant = (
+		_runtime_position(
+			runtime.get(
+				"position",
+				null
+			)
+		)
+	)
+
+	if position_variant is Vector3:
+		actor.node.position = (
+			position_variant as Vector3
+		)
+
+	if runtime.has(
+		"heading_radians"
+	):
+		actor.node.rotation.y = float(
+			runtime[
+				"heading_radians"
+			]
+		)
+
+	_write_actor_runtime(
+		actor,
+		actor.patrol_index,
+		actor.pause_remaining
+	)
+
+
+func _write_actor_runtime(
+	actor: NpcActor,
+	patrol_index: int,
+	pause_remaining: float
+) -> void:
+	# The live zone always supplies ZoneRuntimeState. Keeping the actor fields
+	# synchronized provides a temporary compatibility surface for isolated
+	# presentation tests while ZoneRuntimeState remains authoritative.
+	actor.patrol_index = (
+		_normalized_patrol_index(
+			actor,
+			patrol_index
+		)
+	)
+	actor.pause_remaining = maxf(
+		0.0,
+		pause_remaining
+	)
+
+	if (
+		_zone_runtime_state == null
+		or actor.spawn_key.is_empty()
+	):
+		return
+
+	var runtime := _spawn_runtime(
+		actor.spawn_key
+	)
+
+	runtime[
+		"grid_id"
+	] = actor.grid_id
+	runtime[
+		"patrol_index"
+	] = actor.patrol_index
+	runtime[
+		"pause_remaining"
+	] = actor.pause_remaining
+	runtime[
+		"position"
+	] = [
+		actor.node.position.x,
+		actor.node.position.y,
+		actor.node.position.z,
+	]
+	runtime[
+		"heading_radians"
+	] = actor.node.rotation.y
+
+	_zone_runtime_state.set_spawn_runtime(
+		actor.spawn_key,
+		runtime
+	)
+
+
 func _update_patrol(
 	actor: NpcActor,
 	delta: float
@@ -493,13 +822,44 @@ func _update_patrol(
 		)
 		return
 
-	if actor.pause_remaining > 0.0:
-		actor.pause_remaining = maxf(
+	var runtime := _spawn_runtime(
+		actor.spawn_key
+	)
+
+	var patrol_index := (
+		_normalized_patrol_index(
+			actor,
+			int(
+				runtime.get(
+					"patrol_index",
+					actor.patrol_index
+				)
+			)
+		)
+	)
+
+	var pause_remaining := maxf(
+		0.0,
+		float(
+			runtime.get(
+				"pause_remaining",
+				actor.pause_remaining
+			)
+		)
+	)
+
+	if pause_remaining > 0.0:
+		pause_remaining = maxf(
 			0.0,
-			actor.pause_remaining - delta
+			pause_remaining - delta
 		)
 		actor.visual.position.y = (
 			actor.visual_ground_y
+		)
+		_write_actor_runtime(
+			actor,
+			patrol_index,
+			pause_remaining
 		)
 		_set_animation(
 			actor,
@@ -508,10 +868,10 @@ func _update_patrol(
 		return
 
 	var point: Dictionary = actor.patrol[
-		actor.patrol_index
+		patrol_index
 	]
 	var target := actor.patrol_targets[
-		actor.patrol_index
+		patrol_index
 	]
 	var offset := (
 		target
@@ -536,18 +896,24 @@ func _update_patrol(
 				)
 			)
 
-		actor.pause_remaining = float(
+		pause_remaining = float(
 			point.get(
 				"pause_seconds",
 				0
 			)
 		)
-		actor.patrol_index = (
-			(actor.patrol_index + 1)
+		patrol_index = (
+			(patrol_index + 1)
 			% actor.patrol.size()
 		)
 		actor.visual.position.y = (
 			actor.visual_ground_y
+		)
+
+		_write_actor_runtime(
+			actor,
+			patrol_index,
+			pause_remaining
 		)
 		_set_animation(
 			actor,
@@ -572,7 +938,10 @@ func _update_patrol(
 	if delta > 0.0:
 		actor.movement_velocity = (
 			direction
-			* (travel_distance / delta)
+			* (
+				travel_distance
+				/ delta
+			)
 		)
 
 	actor.node.look_at(
@@ -583,10 +952,17 @@ func _update_patrol(
 	actor.visual.position.y = (
 		actor.visual_ground_y
 	)
+
+	_write_actor_runtime(
+		actor,
+		patrol_index,
+		0.0
+	)
 	_set_animation(
 		actor,
 		"walk"
 	)
+
 
 func _validate_static_facing() -> void:
 	var static_count := 0
@@ -612,9 +988,22 @@ func _validate_terrain_placement() -> void:
 	var space_state := get_world_3d().direct_space_state
 	_print_transform_audit(space_state)
 	for actor in _actors:
-		actor.node.global_position = _snap_to_agreeing_terrain(space_state, actor.node.global_position)
+		actor.node.global_position = _snap_to_agreeing_terrain(
+			space_state,
+			actor.node.global_position
+		)
+
 		for index in actor.patrol_targets.size():
-			actor.patrol_targets[index] = _snap_to_agreeing_terrain(space_state, actor.patrol_targets[index])
+			actor.patrol_targets[index] = _snap_to_agreeing_terrain(
+				space_state,
+				actor.patrol_targets[index]
+			)
+
+		_write_actor_runtime(
+			actor,
+			actor.patrol_index,
+			actor.pause_remaining
+		)
 	print(
 		"Halas NPC placement validation: %d terrain-aligned, %d source-elevation retained."
 		% [_terrain_snapped_count, _terrain_unmatched_count]

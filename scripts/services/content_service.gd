@@ -18,6 +18,12 @@ func configure(paths: Dictionary) -> void:
 	last_error = ""
 
 
+func configured_paths() -> Dictionary:
+	return _paths.duplicate(
+		true
+	)
+
+
 func load_all() -> bool:
 	for key in _paths:
 		var path := str(_paths[key])
@@ -60,6 +66,22 @@ func npc_dataset() -> Dictionary:
 	var dataset: Dictionary = _documents.get("npcs", {})
 	assert(not dataset.is_empty(), "NPC content has not been loaded")
 	return dataset.duplicate(true)
+
+
+func world_object_dataset() -> Dictionary:
+	var document: Dictionary = _documents.get(
+		"world_objects",
+		{}
+	)
+	return document.duplicate(true)
+
+
+func transition_dataset() -> Dictionary:
+	var document: Dictionary = _documents.get(
+		"transitions",
+		{}
+	)
+	return document.duplicate(true)
 
 
 func item_definitions() -> Dictionary:

@@ -1,0 +1,66 @@
+{
+  "dataset_id": "eqm:dataset:halas-npcs",
+  "fixture": true,
+  "fixture_provenance": "EQ Mobile empty transition fixture; no imported NPC definitions",
+  "grids": {},
+  "meta": {
+    "design_target": "classic_p1999",
+    "era_profile": "original_classic_pre_kunark",
+    "evidence": [
+      {
+        "claim": "PEQ spawn/group/NPC relationships",
+        "label": "confirmed_source_behavior"
+      }
+    ],
+    "filters": {
+      "content_flags": "excluded",
+      "expansion_id": 0,
+      "zone_short_name": "phase6_transition_fixture",
+      "zone_version": 0
+    },
+    "generator": {
+      "tool": "tools/apply_halas_npc_overlay.py"
+    },
+    "overlay": {
+      "dataset_id": "eqm:overlay:halas-npcs-p1999-v1",
+      "review_state": "pending_reviewed_corrections",
+      "schema_version": 1,
+      "sha256": "e5ef0fa4e2a6487e1834f050296cb0b7dd63000e151169c2beb51c58d396b967"
+    },
+    "review_state": "current_unreviewed_peq",
+    "sources": [
+      {
+        "artifact": "peq-1789171214.zip",
+        "member": "peq-dump/create_tables_content.sql",
+        "namespace": "peq",
+        "sha256": "96a13e1e601f782a2997c8ae8342bcd849631614203de3fd823dc40d4850cd4d",
+        "tables": [
+          "zone",
+          "spawn2",
+          "spawnentry",
+          "npc_types",
+          "grid_entries"
+        ]
+      }
+    ]
+  },
+  "npc_types": [],
+  "schema_id": "eqm.halas.npcs.derived",
+  "schema_version": 1,
+  "source": {
+    "archive": "peq-1789171214.zip",
+    "expansion_id": 0,
+    "p1999_overlay": "data/halas_npcs_overlay.json",
+    "p1999_overlay_applied": true,
+    "p1999_overlay_revision": 1,
+    "raw_source": "data/halas_npcs_source.json",
+    "schema": "ProjectEQ content SQL with P1999 overlay",
+    "spawn_filter": "zone version 0; expansion range includes classic; no content flags or disabled-content flags",
+    "target_era": "classic_p1999",
+    "zone": "phase6_transition_fixture",
+    "zone_id": 29,
+    "zone_table_id": 160
+  },
+  "spawn_groups": {},
+  "spawns": []
+}

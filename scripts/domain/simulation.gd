@@ -673,33 +673,145 @@ func advance(delta_seconds: float) -> void:
 	_expire_timed_effects()
 
 
-func remove_entity(entity_id: String) -> bool:
+func remove_entity(
+	entity_id: String
+) -> bool:
 	if is_paused():
 		return false
 
-	var current := entity(entity_id)
+	return _remove_entity_internal(
+		entity_id,
+		true
+	)
 
-	if current == null or not current.remove():
+
+func release_entity(
+	entity_id: String,
+	emit_despawn_event: bool = false
+) -> bool:
+	var current := entity(
+		entity_id
+	)
+
+	if current == null:
 		return false
 
-	_clear_target_references_to(entity_id)
+	if (
+		current.lifecycle
+		!= GameplayEntity.Lifecycle.REMOVED
+	):
+		if not _remove_entity_internal(
+			entity_id,
+			emit_despawn_event
+		):
+			return false
+
+	_purge_queued_events_for_entity(
+		entity_id
+	)
+
+	entities.erase(
+		entity_id
+	)
+
+	# Death reward dedupe is keyed by runtime entity ID + life number.
+	# A reconstructed transient actor starts a fresh lifetime and must not
+	# inherit dedupe records from a prior zone residency.
+	var death_key_prefix := (
+		"%s:"
+		% entity_id
+	)
+
+	for death_key_variant in (
+		_rewarded_deaths.keys()
+	):
+		if str(
+			death_key_variant
+		).begins_with(
+			death_key_prefix
+		):
+			_rewarded_deaths.erase(
+				death_key_variant
+			)
+
+	return true
+
+
+func _purge_queued_events_for_entity(
+	entity_id: String
+) -> void:
+	var retained_events: Array = []
+
+	for event_variant in _event_queue:
+		if not event_variant is GameplayEvent:
+			retained_events.append(
+				event_variant
+			)
+			continue
+
+		var event: GameplayEvent = (
+			event_variant
+		)
+
+		if (
+			event.source_entity_id
+			== entity_id
+			or event.target_entity_id
+			== entity_id
+		):
+			continue
+
+		retained_events.append(
+			event
+		)
+
+	_event_queue = retained_events
+
+
+func _remove_entity_internal(
+	entity_id: String,
+	emit_despawn_event: bool
+) -> bool:
+	var current := entity(
+		entity_id
+	)
+
+	if (
+		current == null
+		or not current.remove()
+	):
+		return false
+
+	_clear_target_references_to(
+		entity_id
+	)
 
 	# Generic gameplay timers use category|owner|timer.
 	# Removing an entity clears every timer owned by its runtime entity ID.
-	timers.cancel_owner(entity_id)
+	timers.cancel_owner(
+		entity_id
+	)
 
-	_active_spell_casts.erase(entity_id)
+	_active_spell_casts.erase(
+		entity_id
+	)
 
 	for record_key in _timed_effects.keys():
-		var record_variant: Variant = _timed_effects[
-			record_key
-		]
+		var record_variant: Variant = (
+			_timed_effects[
+				record_key
+			]
+		)
 
 		if not record_variant is Dictionary:
-			_timed_effects.erase(record_key)
+			_timed_effects.erase(
+				record_key
+			)
 			continue
 
-		var record: Dictionary = record_variant
+		var record: Dictionary = (
+			record_variant
+		)
 
 		if (
 			str(
@@ -710,16 +822,22 @@ func remove_entity(entity_id: String) -> bool:
 			)
 			== entity_id
 		):
-			_timed_effects.erase(record_key)
+			_timed_effects.erase(
+				record_key
+			)
 
-	_emit(
-		GameplayEvent.Type.DESPAWN,
-		current.entity_id,
-		"",
-		{"reason": "removed"}
-	)
+	if emit_despawn_event:
+		_emit(
+			GameplayEvent.Type.DESPAWN,
+			current.entity_id,
+			"",
+			{
+				"reason": "removed",
+			}
+		)
 
 	return true
+
 
 
 func _clear_target_references_to(target_id: String) -> void:
