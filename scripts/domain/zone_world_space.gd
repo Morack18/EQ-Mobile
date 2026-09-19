@@ -144,12 +144,21 @@ func server_position(
 func server_heading_yaw(
     heading_eq: float
 ) -> float:
+    return EqWorldSpace.horizontal_direction_to_yaw(
+        server_heading_direction(
+            heading_eq
+        )
+    )
+
+
+func server_heading_direction(
+    heading_eq: float
+) -> Vector3:
     assert(
         is_valid(),
         last_error
     )
-
-    return EqWorldSpace.heading_to_godot_yaw(
+    var source_direction := EqWorldSpace.server_heading_source_vector(
         heading_eq,
         float(
             contract.get(
@@ -158,6 +167,16 @@ func server_heading_yaw(
             )
         )
     )
+    var mapped := server_position([
+        source_direction.x,
+        source_direction.y,
+        source_direction.z,
+    ])
+    assert(
+        absf(mapped.y) <= 0.000001,
+        "Server heading axis map must preserve a horizontal world direction"
+    )
+    return mapped.normalized()
 
 
 func object_position(
@@ -199,6 +218,107 @@ func object_heading_yaw(
                 "lantern_prop_heading_degrees_sign",
                 -1.0
             )
+        )
+    )
+
+
+func object_rotation_basis(
+    source_degrees: Array
+) -> Basis:
+    assert(
+        is_valid(),
+        last_error
+    )
+    assert(
+        has_object_transform(),
+        "Zone has no static-object coordinate transform"
+    )
+    assert(
+        source_degrees.size() == 3,
+        "Object rotation requires [RotX, RotY, RotZ]"
+    )
+
+    # Lantern writes object rotations as RotX, RotY, RotZ and applies them
+    # through Matrix4x4.CreateFromYawPitchRoll(
+    #     yaw=RotY,
+    #     pitch=RotX,
+    #     roll=RotZ
+    # ).
+    #
+    # Godot uses the same positive right-handed rotation sense around these
+    # local axes. Composition is Y * X * Z.
+    var source_basis := (
+        Basis(
+            Vector3.UP,
+            deg_to_rad(
+                float(
+                    source_degrees[1]
+                )
+            )
+        )
+        * Basis(
+            Vector3.RIGHT,
+            deg_to_rad(
+                float(
+                    source_degrees[0]
+                )
+            )
+        )
+        * Basis(
+            Vector3.BACK,
+            deg_to_rad(
+                float(
+                    source_degrees[2]
+                )
+            )
+        )
+    )
+
+    var coordinate_basis := (
+        _axis_map_basis(
+            _axis_map(
+                "lantern_prop_axis_map"
+            )
+        )
+    )
+
+    # Change the complete rotation from Lantern placement coordinates into
+    # this zone's Godot coordinate frame. This remains valid for a reflected
+    # frame such as Halas' X mirror.
+    return (
+        coordinate_basis
+        * source_basis
+        * coordinate_basis.inverse()
+    )
+
+
+func _axis_map_basis(
+    axis_map: Array
+) -> Basis:
+    return Basis(
+        EqWorldSpace.map_position(
+            [
+                1.0,
+                0.0,
+                0.0,
+            ],
+            axis_map
+        ),
+        EqWorldSpace.map_position(
+            [
+                0.0,
+                1.0,
+                0.0,
+            ],
+            axis_map
+        ),
+        EqWorldSpace.map_position(
+            [
+                0.0,
+                0.0,
+                1.0,
+            ],
+            axis_map
         )
     )
 

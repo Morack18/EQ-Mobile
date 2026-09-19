@@ -25,7 +25,7 @@ Halas uses two declared input conventions; they must not be conflated.
 | PEQ/EQEmu server `[x, y, elevation]` | `[-y, elevation, x]` | spawns, patrols, server-position audits |
 | Lantern prop `[x, y, z]` | `[-x, y, z]` | object placements |
 | EQ heading `0..512` | `π/2 - heading × τ/512` | static spawn/patrol facing |
-| Lantern prop heading degrees | negated Godot yaw | object placements |
+| Lantern prop `[RotX, RotY, RotZ]` | complete yaw/pitch/roll basis transformed through the zone object-axis map | object placements |
 
 The server transform was chosen by the collision audit against authored Halas
 terrain; it is not a universal assumption. The prop transform is separately

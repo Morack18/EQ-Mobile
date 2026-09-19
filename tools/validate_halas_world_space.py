@@ -14,7 +14,8 @@ expected = {
     "server_heading_units_per_turn": 512.0,
     "lantern_prop_position": "[x,y,z] -> [-x,y,z]",
     "lantern_prop_axis_map": [-1, 2, 3],
-    "lantern_prop_heading": "degrees -> negative Godot yaw",
+    "lantern_prop_heading": "RotY degrees -> negative Godot yaw",
+    "lantern_prop_rotation": "[RotX,RotY,RotZ] -> axis-map-conjugated Lantern yaw/pitch/roll",
     "lantern_prop_heading_degrees_sign": -1.0,
 }
 assert zone.get("world_space_contract") == expected, "Halas world-space contract differs from the documented calibration"

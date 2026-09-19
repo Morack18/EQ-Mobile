@@ -24,8 +24,9 @@ intended zone-to-character ratio without modifying the extracted source file.
 `object_instances.txt` manifest. It contains 445 instance records for 91
 unique static-prop models. Only those referenced GLBs are copied to
 `assets/imported/halas/objects/`; the placement loader reads each record's
-source position, heading, and scale, then mirrors the X position and heading
-to match the Halas GLB transform.
+source position, complete `RotX`/`RotY`/`RotZ` orientation, and scale. The
+complete orientation is transformed through Halas' X-mirrored object
+coordinate frame rather than reducing source placement to yaw alone.
 
 This covers Lantern's world-object data, not NPC spawns. The supplied EQEmu
 checkout contains server code but no populated content database from which

@@ -50,26 +50,7 @@ static func position_within_precision(actual: Vector3, expected: Vector3, precis
 static func halas_lantern_prop_yaw(degrees_eq: float) -> float:
 	return deg_to_rad(-degrees_eq)
 
-static func heading_to_godot_yaw(
-	heading_eq: float,
-	units_per_turn: float = EQ_HEADING_UNITS_PER_TURN
-) -> float:
-	assert(
-		units_per_turn > 0.0,
-		"Heading units per turn must be positive"
-	)
-	assert(
-		heading_eq >= 0.0
-		and heading_eq <= units_per_turn,
-		"EQ heading out of range"
-	)
-	return (
-		PI * 0.5
-		- (heading_eq / units_per_turn)
-		* TAU
-	)
-
-static func heading_forward(
+static func server_heading_source_vector(
 	heading_eq: float,
 	units_per_turn: float = EQ_HEADING_UNITS_PER_TURN
 ) -> Vector3:
@@ -77,16 +58,23 @@ static func heading_forward(
 		units_per_turn > 0.0,
 		"Heading units per turn must be positive"
 	)
-	var turn := (
-		heading_eq
-		/ units_per_turn
-		* TAU
-	)
+	assert(heading_eq >= 0.0, "Server heading must be nonnegative")
+	var turn := fposmod(heading_eq, units_per_turn) / units_per_turn * TAU
 	return Vector3(
-		-cos(turn),
-		0.0,
-		-sin(turn)
+		sin(turn),
+		cos(turn),
+		0.0
 	)
+
+
+static func horizontal_direction_to_yaw(direction: Vector3) -> float:
+	var horizontal := Vector3(direction.x, 0.0, direction.z)
+	assert(
+		horizontal.length_squared() > 0.000001,
+		"Heading direction must have a horizontal component"
+	)
+	horizontal = horizontal.normalized()
+	return atan2(-horizontal.x, -horizontal.z)
 
 static func visual_scale_for_height(measured_height: float, target_height: float) -> float:
 	assert(measured_height > 0.0 and target_height > 0.0, "Character heights must be positive")
@@ -96,7 +84,5 @@ static func run_contract_tests() -> void:
 	assert(position_within_precision(halas_server_position([0.0, 0.0, 0.0]), Vector3.ZERO))
 	assert(position_within_precision(halas_server_position([10.0, 20.0, 30.0]), Vector3(-20.0, 30.0, 10.0)))
 	assert(position_within_precision(map_position([10.0, 20.0, 30.0], [-1, 2, 3]), Vector3(-10.0, 20.0, 30.0)))
-	assert(is_equal_approx(heading_to_godot_yaw(0.0), PI * 0.5))
-	assert(is_equal_approx(heading_to_godot_yaw(256.0), -PI * 0.5))
-	assert(heading_forward(0.0).is_equal_approx(Vector3(-1.0, 0.0, 0.0)))
-	assert(heading_forward(128.0).is_equal_approx(Vector3(0.0, 0.0, -1.0)))
+	assert(server_heading_source_vector(0.0).is_equal_approx(Vector3(0.0, 1.0, 0.0)))
+	assert(server_heading_source_vector(128.0).is_equal_approx(Vector3(1.0, 0.0, 0.0)))

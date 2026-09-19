@@ -410,26 +410,82 @@ func _test_zone_world_space_contract() -> void:
         "Zone object heading mapping changed."
     )
 
-    _expect(
-        is_equal_approx(
-            mapper.server_heading_yaw(
-                128.0
-            ),
-            0.0
-        ),
-        "Zone server heading mapping changed."
+    var yaw_only_basis := (
+        mapper.object_rotation_basis([
+            0.0,
+            90.0,
+            0.0,
+        ])
+    )
+
+    var legacy_yaw_basis := Basis(
+        Vector3.UP,
+        mapper.object_heading_yaw(
+            90.0
+        )
     )
 
     _expect(
-        is_equal_approx(
-            EqWorldSpace.heading_to_godot_yaw(
-                256.0,
-                1024.0
-            ),
-            0.0
+        yaw_only_basis.x.is_equal_approx(
+            legacy_yaw_basis.x
+        )
+        and yaw_only_basis.y.is_equal_approx(
+            legacy_yaw_basis.y
+        )
+        and yaw_only_basis.z.is_equal_approx(
+            legacy_yaw_basis.z
         ),
-        "Generic heading conversion does not honor units-per-turn."
+        "Full object rotation changed the validated yaw-only mapping."
     )
+
+    var rolled_object_basis := (
+        mapper.object_rotation_basis([
+            0.0,
+            90.0,
+            30.0,
+        ])
+    )
+
+    _expect(
+        rolled_object_basis.x.is_equal_approx(
+            Vector3(
+                0.0,
+                -0.5,
+                0.8660254
+            )
+        )
+        and rolled_object_basis.y.is_equal_approx(
+            Vector3(
+                0.0,
+                0.8660254,
+                0.5
+            )
+        )
+        and rolled_object_basis.z.is_equal_approx(
+            Vector3(
+                -1.0,
+                0.0,
+                0.0
+            )
+        ),
+        "Full object rotation lost Lantern RotZ roll under the Halas X mirror."
+    )
+
+    var expected_halas_directions := {
+        0.0: Vector3(-1.0, 0.0, 0.0),
+        128.0: Vector3(0.0, 0.0, 1.0),
+        256.0: Vector3(1.0, 0.0, 0.0),
+        384.0: Vector3(0.0, 0.0, -1.0),
+    }
+    for heading_variant in expected_halas_directions:
+        var heading := float(heading_variant)
+        _expect(
+            mapper.server_heading_direction(heading).is_equal_approx(
+                expected_halas_directions[heading_variant] as Vector3
+            ),
+            "Halas server heading %.0f did not map its source direction through the axis contract."
+            % heading
+        )
 
     # JSON numeric arrays are Variants. Mesh surface matching must normalize
     # configured values rather than depending on Variant numeric membership.
@@ -515,6 +571,16 @@ func _test_generic_populated_zone_presentation() -> void:
     if not mapper.is_valid():
         return
 
+    _expect(
+        mapper.server_heading_direction(0.0).is_equal_approx(
+            Vector3(0.0, 0.0, -1.0)
+        )
+        and mapper.server_heading_direction(256.0).is_equal_approx(
+            Vector3(1.0, 0.0, 0.0)
+        ),
+        "Synthetic non-Halas heading directions do not honor its axis map and 1024-unit turn."
+    )
+
     var dataset := {
         "npc_types": [
             {
@@ -563,11 +629,24 @@ func _test_generic_populated_zone_presentation() -> void:
                     6.0,
                 ],
                 "heading_eq": 256.0,
-                "grid_id": 0,
+                "grid_id": 7003,
                 "respawn_seconds": 30.0,
             },
         ],
-        "grids": {},
+        "grids": {
+            "7003": [
+                {
+                    "number": 1,
+                    "position_eq": [
+                        8.0,
+                        9.0,
+                        10.0,
+                    ],
+                    "heading_eq": -1.0,
+                    "pause_seconds": 0,
+                },
+            ],
+        },
     }
 
     var runtime_state := (
@@ -673,10 +752,90 @@ func _test_generic_populated_zone_presentation() -> void:
             _expect(
                 is_equal_approx(
                     actor_node.rotation.y,
-                    0.0
+                    -PI * 0.5
                 ),
-                "Generic NPC presentation ignored the probe zone's heading units."
+                "Generic NPC presentation did not map its 1024-unit source heading."
             )
+
+            _expect(
+                (actor_node.transform.basis * Vector3.FORWARD).is_equal_approx(
+                    Vector3(1.0, 0.0, 0.0)
+                ),
+                "Generic NPC canonical actor facing does not match the mapped source direction."
+            )
+
+        var actor := population._actors[0]
+        _expect(
+            actor.patrol_targets.size() == 1
+            and actor.patrol_targets[0].is_equal_approx(
+                Vector3(
+                    8.0,
+                    10.0,
+                    -9.0
+                )
+            ),
+            "Generic NPC patrol destination was not preserved through the active ZoneWorldSpace."
+        )
+
+        # Travel facing is derived from actual horizontal motion, independently
+        # of source waypoint heading and all visual/model corrections.
+        actor.node.position = Vector3(7.0, 6.0, -9.0)
+        runtime_state.set_spawn_runtime(actor.spawn_key, {
+            "grid_id": 7003,
+            "patrol_index": 0,
+            "pause_remaining": 0.0,
+        })
+        population._update_patrol(actor, 0.1)
+        _expect(
+            (actor.node.transform.basis * Vector3.FORWARD).is_equal_approx(
+                Vector3(1.0, 0.0, 0.0)
+            ),
+            "Moving NPC actor does not face its horizontal travel direction."
+        )
+
+        actor.node.position = actor.patrol_targets[0]
+        actor.patrol[0]["heading_eq"] = 0.0
+        actor.patrol[0]["pause_seconds"] = 5.0
+        population._update_patrol(actor, 0.0)
+        _expect(
+            (actor.node.transform.basis * Vector3.FORWARD).is_equal_approx(
+                Vector3(0.0, 0.0, -1.0)
+            ),
+            "Paused NPC waypoint did not apply its authored canonical facing."
+        )
+
+        actor.node.position = actor.patrol_targets[0]
+        actor.node.rotation.y = mapper.server_heading_yaw(0.0)
+        actor.patrol[0]["heading_eq"] = 256.0
+        actor.patrol[0]["pause_seconds"] = 0.0
+        runtime_state.set_spawn_runtime(actor.spawn_key, {
+            "grid_id": 7003,
+            "patrol_index": 0,
+            "pause_remaining": 0.0,
+        })
+        population._update_patrol(actor, 0.0)
+        _expect(
+            (actor.node.transform.basis * Vector3.FORWARD).is_equal_approx(
+                Vector3(0.0, 0.0, -1.0)
+            ),
+            "Zero-pause NPC waypoint forced its transient authored heading."
+        )
+
+        actor.node.position = actor.patrol_targets[0]
+        actor.patrol[0]["heading_eq"] = -1.0
+        actor.patrol[0]["pause_seconds"] = 5.0
+        runtime_state.set_spawn_runtime(actor.spawn_key, {
+            "grid_id": 7003,
+            "patrol_index": 0,
+            "pause_remaining": 0.0,
+        })
+        population._update_patrol(actor, 0.0)
+        _expect(
+            (actor.node.transform.basis * Vector3.FORWARD).is_equal_approx(
+                Vector3(0.0, 0.0, -1.0)
+            ),
+            "Negative NPC waypoint heading forced an arrival facing."
+        )
 
         _expect(
             str(
@@ -726,6 +885,61 @@ func _test_generic_populated_zone_presentation() -> void:
         )
 
     population.free()
+
+    # A mid-movement runtime position is instance state, not a replacement for
+    # canonical Spawn2/grid definitions. Population construction must restore
+    # that exact state without altering its Y value.
+    runtime_state.set_spawn_runtime(
+        "peq:spawn:7001",
+        {
+            "grid_id": 7003,
+            "patrol_index": 0,
+            "pause_remaining": 0.0,
+            "position": [
+                14.0,
+                15.0,
+                16.0,
+            ],
+            "heading_radians": -PI * 0.5,
+            "heading_space": "canonical_world",
+        }
+    )
+    var restored_population := ZoneNpcPopulation.new()
+    restored_population.configure(
+        dataset,
+        "",
+        resolved,
+        runtime_state,
+        mapper,
+        {
+            "missing_model_policy": "placeholder",
+            "default_height": 2.0,
+        }
+    )
+    restored_population._build_population(dataset)
+    _expect(
+        restored_population._actors.size() == 1
+        and restored_population._actors[0].node.position.is_equal_approx(
+            Vector3(14.0, 15.0, 16.0)
+        ),
+        "Generic NPC runtime restore changed the saved actor elevation."
+    )
+    _expect(
+        restored_population._actors.size() == 1
+        and restored_population._actors[0].patrol_targets.size() == 1
+        and restored_population._actors[0].patrol_targets[0].is_equal_approx(
+            Vector3(8.0, 10.0, -9.0)
+        ),
+        "Generic NPC runtime restore rewrote the canonical patrol destination."
+    )
+    _expect(
+        restored_population._actors.size() == 1
+        and (restored_population._actors[0].node.transform.basis * Vector3.FORWARD).is_equal_approx(
+            Vector3(1.0, 0.0, 0.0)
+        ),
+        "Persisted canonical NPC heading was changed by presentation correction."
+    )
+    restored_population.free()
 
 
 func _test_zone_spawn_resolver() -> void:
@@ -1049,6 +1263,22 @@ func _test_zone_spawn_resolver() -> void:
             "EqWorldSpace.halas_server_position"
         ),
         "Zone NPC presentation bypasses the active ZoneWorldSpace contract."
+    )
+
+    _expect(
+        population_source.contains(
+            "func _record_terrain_diagnostic("
+        )
+        and not population_source.contains(
+            "func _snap_to_agreeing_terrain("
+        )
+        and not population_source.contains(
+            "actor.node.global_position ="
+        )
+        and not population_source.contains(
+            "actor.patrol_targets[index] ="
+        ),
+        "Generic terrain diagnostics can still mutate canonical NPC source coordinates."
     )
 
     _expect(

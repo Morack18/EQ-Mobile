@@ -22,7 +22,7 @@ var _source_positions: Array = []
 var _spawn_source_positions: Array = []
 var _patrol_source_positions: Array = []
 var _terrain_validated := false
-var _terrain_snapped_count := 0
+var _terrain_aligned_count := 0
 var _terrain_unmatched_count := 0
 var _runtime_paused := false
 
@@ -32,7 +32,6 @@ class NpcActor:
 	var visual: Node3D
 	var animator: AnimationPlayer
 	var model_name := ""
-	var heading_yaw_offset := 0.0
 	var spawn_heading_eq := 0.0
 	var visual_ground_y := 0.0
 	var patrol: Array = []
@@ -328,14 +327,7 @@ func _build_population(content: Dictionary) -> void:
 		_spawn_source_positions.append(
 			spawn.position_eq
 		)
-		actor_node.rotation.y = (
-			_static_heading_to_yaw(
-				float(
-					spawn.heading_eq
-				),
-				heading_yaw_offset
-			)
-		)
+		actor_node.rotation.y = _server_heading_to_yaw(float(spawn.heading_eq))
 		add_child(actor_node)
 
 		var target_height := (
@@ -361,11 +353,7 @@ func _build_population(content: Dictionary) -> void:
 				).instantiate()
 				as Node3D
 			)
-			visual.rotation.y = (
-				deg_to_rad(
-					_visual_facing_offset_degrees()
-				)
-			)
+		visual.rotation.y = deg_to_rad(_visual_facing_offset_degrees()) + heading_yaw_offset
 
 		visual.name = "Model"
 		actor_node.add_child(
@@ -412,9 +400,6 @@ func _build_population(content: Dictionary) -> void:
 		actor.visual = visual
 		actor.animator = animator
 		actor.model_name = model_name
-		actor.heading_yaw_offset = (
-			heading_yaw_offset
-		)
 		actor.spawn2_id = int(spawn.spawn2_id)
 		actor.spawn_key = spawn_key
 		actor.npc_type_id = int(npc_type.id)
@@ -1115,9 +1100,7 @@ func _restore_or_seed_actor_runtime(
 			position_variant as Vector3
 		)
 
-	if runtime.has(
-		"heading_radians"
-	):
+	if runtime.get("heading_space", "") == "canonical_world" and runtime.has("heading_radians"):
 		actor.node.rotation.y = float(
 			runtime[
 				"heading_radians"
@@ -1179,6 +1162,9 @@ func _write_actor_runtime(
 	runtime[
 		"heading_radians"
 	] = actor.node.rotation.y
+	runtime[
+		"heading_space"
+	] = "canonical_world"
 
 	_zone_runtime_state.set_spawn_runtime(
 		actor.spawn_key,
@@ -1261,24 +1247,14 @@ func _update_patrol(
 	if distance <= 0.12:
 		actor.node.position = target
 
-		if float(
-			point.heading_eq
-		) >= 0.0:
-			actor.node.rotation.y = (
-				_static_heading_to_yaw(
-					float(
-						point.heading_eq
-					),
-					actor.heading_yaw_offset
-				)
-			)
-
 		pause_remaining = float(
 			point.get(
 				"pause_seconds",
 				0
 			)
 		)
+		if pause_remaining > 0.0 and float(point.heading_eq) >= 0.0:
+			actor.node.rotation.y = _server_heading_to_yaw(float(point.heading_eq))
 		patrol_index = (
 			(patrol_index + 1)
 			% actor.patrol.size()
@@ -1321,11 +1297,7 @@ func _update_patrol(
 			)
 		)
 
-	actor.node.look_at(
-		actor.node.global_position
-		+ direction,
-		Vector3.UP
-	)
+	actor.node.rotation.y = EqWorldSpace.horizontal_direction_to_yaw(direction)
 	actor.visual.position.y = (
 		actor.visual_ground_y
 	)
@@ -1351,16 +1323,22 @@ func _validate_static_facing() -> void:
 		):
 			continue
 		static_count += 1
-		var expected := _static_heading_expected_forward(
-			actor.spawn_heading_eq,
-			actor.heading_yaw_offset
-		)
+		var expected := _zone_world_space.server_heading_direction(actor.spawn_heading_eq)
 		var actual := actor.visual.global_transform.basis * Vector3.RIGHT
 		actual.y = 0.0
 		actual = actual.normalized()
 		var alignment := actual.dot(expected)
 		lowest_alignment = minf(lowest_alignment, alignment)
-		assert(alignment > 0.9999, "Static NPC heading mismatch: %s" % actor.node.name)
+		assert(
+			alignment > 0.9999,
+			"Static NPC heading mismatch: %s expected=%s actor=%s actual=%s"
+			% [
+				actor.node.name,
+				expected,
+				actor.node.global_transform.basis * Vector3.FORWARD,
+				actual,
+			]
+		)
 	print(
 		"%s static facing audit: %d source-headed NPCs, worst alignment %.6f."
 		% [
@@ -1375,27 +1353,23 @@ func _validate_terrain_placement() -> void:
 	var space_state := get_world_3d().direct_space_state
 	_print_transform_audit(space_state)
 	for actor in _actors:
-		actor.node.global_position = _snap_to_agreeing_terrain(
+		# Spawn and patrol coordinates are canonical mapped source data. Terrain
+		# observations are useful for auditing transforms, but path grounding is a
+		# future movement/presentation concern and must never rewrite those values.
+		_record_terrain_diagnostic(
 			space_state,
 			actor.node.global_position
 		)
-
-		for index in actor.patrol_targets.size():
-			actor.patrol_targets[index] = _snap_to_agreeing_terrain(
+		for target in actor.patrol_targets:
+			_record_terrain_diagnostic(
 				space_state,
-				actor.patrol_targets[index]
+				target
 			)
-
-		_write_actor_runtime(
-			actor,
-			actor.patrol_index,
-			actor.pause_remaining
-		)
 	print(
-		"%s NPC placement validation: %d terrain-aligned, %d source-elevation retained."
+		"%s NPC terrain diagnostic: %d terrain-aligned, %d source-elevation retained."
 		% [
 			_audit_label(),
-			_terrain_snapped_count,
+			_terrain_aligned_count,
 			_terrain_unmatched_count,
 		]
 	)
@@ -1521,7 +1495,7 @@ func _terrain_agrees(space_state: PhysicsDirectSpaceState3D, source: Vector3) ->
 	return not hit.is_empty() and absf(((hit.position as Vector3).y) - source.y) <= _terrain_snap_tolerance()
 
 
-func _snap_to_agreeing_terrain(space_state: PhysicsDirectSpaceState3D, source: Vector3) -> Vector3:
+func _record_terrain_diagnostic(space_state: PhysicsDirectSpaceState3D, source: Vector3) -> void:
 	var query := PhysicsRayQueryParameters3D.create(
 		source + Vector3.UP * _terrain_cast_height(),
 		source - Vector3.UP * _terrain_cast_height()
@@ -1530,13 +1504,12 @@ func _snap_to_agreeing_terrain(space_state: PhysicsDirectSpaceState3D, source: V
 	var hit := space_state.intersect_ray(query)
 	if hit.is_empty():
 		_terrain_unmatched_count += 1
-		return source
+		return
 	var terrain_y := (hit.position as Vector3).y
 	if absf(terrain_y - source.y) > _terrain_snap_tolerance():
 		_terrain_unmatched_count += 1
-		return source
-	_terrain_snapped_count += 1
-	return Vector3(source.x, terrain_y, source.z)
+		return
+	_terrain_aligned_count += 1
 
 
 func _server_position(
@@ -1553,45 +1526,7 @@ func _server_position(
 	)
 
 
-func _static_heading_to_yaw(
-	heading_eq: float,
-	heading_yaw_offset: float
-) -> float:
+func _server_heading_to_yaw(heading_eq: float) -> float:
 	if heading_eq < 0.0:
 		return 0.0
-
-	return (
-		_zone_world_space.server_heading_yaw(
-			heading_eq
-		)
-		+ heading_yaw_offset
-	)
-
-
-func _static_heading_expected_forward(
-	heading_eq: float,
-	heading_yaw_offset: float
-) -> Vector3:
-	var units_per_turn := float(
-		_zone_world_space.contract.get(
-			"server_heading_units_per_turn",
-			EqWorldSpace.EQ_HEADING_UNITS_PER_TURN
-		)
-	)
-
-	var forward := (
-		EqWorldSpace.heading_forward(
-			heading_eq,
-			units_per_turn
-		)
-	)
-
-	if not is_zero_approx(
-		heading_yaw_offset
-	):
-		forward = forward.rotated(
-			Vector3.UP,
-			heading_yaw_offset
-		)
-
-	return forward.normalized()
+	return _zone_world_space.server_heading_yaw(heading_eq)

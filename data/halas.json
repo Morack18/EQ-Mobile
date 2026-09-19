@@ -35,7 +35,8 @@
       2,
       3
     ],
-    "lantern_prop_heading": "degrees -> negative Godot yaw",
+    "lantern_prop_heading": "RotY degrees -> negative Godot yaw",
+    "lantern_prop_rotation": "[RotX,RotY,RotZ] -> axis-map-conjugated Lantern yaw/pitch/roll",
     "server_heading_units_per_turn": 512.0,
     "lantern_prop_heading_degrees_sign": -1.0
   },
@@ -50,7 +51,7 @@
     "controller_kind": "halas_population_presentation",
     "fallback_display_name": "Halas NPC",
     "missing_model_policy": "skip",
-    "visual_facing_offset_degrees": 90.0,
+    "visual_facing_offset_degrees": -90.0,
     "patrol_walk_speed": 2.35,
     "terrain_snap_tolerance": 6.0,
     "terrain_cast_height": 12.0,
@@ -88,7 +89,8 @@
         "family": "hlm",
         "skin_count": 2,
         "head_count": 2,
-        "default_size": 7.0
+        "default_size": 7.0,
+        "heading_yaw_offset_degrees": 180.0
       },
       {
         "race_id": 2,
@@ -96,14 +98,16 @@
         "family": "baf",
         "skin_count": 4,
         "head_count": 4,
-        "default_size": 7.0
+        "default_size": 7.0,
+        "heading_yaw_offset_degrees": 180.0
       },
       {
         "race_id": 2,
         "family": "bam",
         "skin_count": 4,
         "head_count": 4,
-        "default_size": 7.0
+        "default_size": 7.0,
+        "heading_yaw_offset_degrees": 180.0
       },
       {
         "race_id": 1,
@@ -111,21 +115,24 @@
         "family": "huf",
         "skin_count": 5,
         "head_count": 4,
-        "default_size": 6.0
+        "default_size": 6.0,
+        "heading_yaw_offset_degrees": 180.0
       },
       {
         "race_id": 1,
         "family": "hum",
         "skin_count": 5,
         "head_count": 4,
-        "default_size": 6.0
+        "default_size": 6.0,
+        "heading_yaw_offset_degrees": 180.0
       },
       {
         "race_id": 42,
         "family": "wol",
         "skin_count": 4,
         "head_count": 2,
-        "default_size": 4.0
+        "default_size": 4.0,
+        "heading_yaw_offset_degrees": 180.0
       },
       {
         "race_id": 73,

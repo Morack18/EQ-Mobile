@@ -1533,27 +1533,23 @@ func _build_zone_objects() -> void:
 			continue
 		var placement := Node3D.new()
 		placement.name = "%s_%d" % [model_name, line_number]
-		placement.position = (
+		placement.transform = Transform3D(
+			zone_world_space.object_rotation_basis([
+				float(values[4]),
+				float(values[5]),
+				float(values[6]),
+			]),
 			zone_world_space.object_position([
-				float(
-					values[1]
-				),
-				float(
-					values[2]
-				),
-				float(
-					values[3]
-				),
+				float(values[1]),
+				float(values[2]),
+				float(values[3]),
 			])
 		)
-		placement.rotation.y = (
-			zone_world_space.object_heading_yaw(
-				float(
-					values[5]
-				)
-			)
+		placement.scale = Vector3(
+			float(values[7]),
+			float(values[8]),
+			float(values[9])
 		)
-		placement.scale = Vector3(float(values[7]), float(values[8]), float(values[9]))
 		var object := scene.instantiate() as Node3D
 		object.name = "Visual"
 		placement.add_child(object)

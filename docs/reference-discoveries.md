@@ -6,6 +6,30 @@ copy of reference implementation code.
 
 ## Movement and size — EQEmu
 
+- `zone/spawn2.cpp:Spawn2::Process` passes authored Spawn2 XYZ directly into
+  NPC creation; `zone/waypoints.cpp:AssignWaypoints` preserves waypoint XYZ;
+  and `zone/mob_ai.cpp:NPC::AI_DoMovement` uses horizontal waypoint arrival
+  while retaining the full authored destination for movement. The reviewed
+  `MobMovementManager::UpdatePathGround` behavior is movement-layer route
+  adjustment, not a rewrite of canonical Spawn2/grid data. EQ Mobile therefore
+  maps source spawn and patrol coordinates through the active `ZoneWorldSpace`
+  exactly, keeps terrain checks diagnostic-only, and reserves any future
+  path/grounding adaptation for the movement/presentation layer. This applies
+  to every zone; Halas Spawn2 10047's water launch is a regression example,
+  not a special-case branch.
+
+- `common/misc_functions.cpp:FixHeading` and
+  `zone/position.cpp:CalculateHeadingAngleBetweenPositions` establish a
+  512-unit source turn with heading 0 along positive source Y and quarter-turns
+  toward positive source X, negative source Y, and negative source X.
+  `ZoneWorldSpace` converts that source vector `[sin(theta), cos(theta), 0]`
+  through each zone's declared server-axis map before deriving canonical actor
+  facing. Units-per-turn remains zone-configurable. Model root/family offsets
+  are local visual metadata only, while saved actor headings remain canonical
+  world headings. `zone/mob_ai.cpp:AI_DoMovement` source review further
+  supports travel-facing during movement and authored waypoint facing only for
+  nonnegative headings at positive-duration pauses.
+
 - `resources/EQEmu-master/zone/client.cpp` constructs a standard client with
   run speed `0.7`.
 - `resources/EQEmu-master/zone/mob.cpp` resolves that value as
@@ -93,14 +117,11 @@ copy of reference implementation code.
   capsule uses that radius with a 7-unit HLM standing span, so the physical
   player is no longer a tiny body beneath a correctly scaled character model.
 - `resources/eqoxide-main/crates/eqoxide-renderer/src/camera.rs:entity_model_matrix_heading`
-  establishes that exported glTF character models face local `+X`; EQ headings
-  are `0=north`, counter-clockwise. `resources/eqoxide-main/src/movement.rs`
-  gives the matching motion basis: `forward = (-sin(heading), cos(heading))`.
-  EQ Mobile keeps Godot `Node3D` local `-Z` as the movement-facing axis (so
-  `look_at()` is authoritative), rotates each character visual `+90°` around
-  Y beneath that node, and converts a static EQ heading to Godot yaw as
-  `π/2 - heading * TAU/512`. This aligns player motion, NPC patrol motion, and
-  source spawn/waypoint headings without baking a correction into the models.
+  establishes that exported glTF character models need a local visual-facing
+  calibration. EQ Mobile keeps Godot `Node3D` local `-Z` as the actor's
+  canonical movement-facing axis and applies imported-model corrections below
+  that actor node. This preserves the zone-mapped source heading independently
+  of asset-root orientation.
 - `resources/eqoxide-main/crates/eqoxide-nav/src/collision.rs:Collision::build`
   flattens **both** zone terrain and every transformed placed-object mesh into
   one triangle-query world. `resources/OpenEQ-master/Engine/EngineCore.cs`
@@ -118,6 +139,25 @@ copy of reference implementation code.
   the standard conversion. `HalasNpcPopulation` performs a startup audit over
   every non-patrolling actor, asserting that its source spawn heading and
   rendered model-facing direction align; patrol stops use the same conversion.
+
+## Static object rotation — LanternExtractor / OpenEQ
+
+- `LanternExtractor-main.zip:LanternExtractor-main/LanternExtractor/EQ/Wld/Fragments/ObjectInstance.cs`
+  parses WLD object-instance rotation into a complete internal rotation vector.
+- `ObjectInstanceWriter.cs` exports that vector as manifest `RotX`, `RotY`,
+  and `RotZ`, mapping internal `Rotation.x`, `Rotation.z`, and `Rotation.y`
+  respectively.
+- `GltfWriter.cs:CreateTransformMatrixForObjectInstance` supplies internal
+  `Rotation.z`, `Rotation.x`, and `Rotation.y` to
+  `CreateFromYawPitchRoll`, so manifest `RotY` is yaw and manifest `RotZ`
+  is real roll. It cannot safely be discarded merely because most placements
+  are upright.
+- `resources/OpenEQ-master/converter/wld.py:frag_objloc` independently retains
+  all three WLD rotation components in its placeable representation.
+- EQ Mobile reconstructs the complete Lantern placement rotation and maps it
+  between coordinate frames with `M * R * M^-1`. Halas' object coordinate
+  transform mirrors X, so this generalizes the previously validated negated
+  yaw while retaining source-authored roll.
 
 ## Recording rule
 

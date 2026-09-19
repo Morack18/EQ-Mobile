@@ -32,8 +32,10 @@ the full reference archive.
    rescale the supplied source GLB.
 3. Copy Lantern's object-placement manifest to `data/<zone>_objects.csv` and
    only the GLBs it references to `assets/imported/<zone>/objects/`.
-4. Establish and document a prop transform separately from NPCs. Halas props
-   use an X mirror, whereas Halas server NPC data uses a different conversion.
+4. Establish and document a prop transform separately from NPCs. Preserve all
+   three Lantern placement rotation fields; do not reduce placements to yaw
+   simply because most rows are upright. Halas props use an X mirror, whereas
+   Halas server NPC data uses a different conversion.
 5. Build temporary triangle collision from the imported zone mesh before
    validating placements. Replace it with mobile-friendly collision/navmesh
    once the zone is accepted.
