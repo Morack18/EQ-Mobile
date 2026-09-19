@@ -1,21 +1,19 @@
-class_name HalasNpcPopulation
+class_name ZoneNpcPopulation
 extends Node3D
 
-## Visual classic-era Halas population. Gameplay/source content is injected by
-## ContentService; this presentation adapter never opens gameplay JSON itself.
-## EQ server coordinates are [x, y, elevation]. Terrain calibration against
-## every static Halas source spawn gives (-y, elevation, x).
+## Zone-owned NPC presentation. Gameplay/source content is injected through
+## ContentService and resolved SpawnPoints; this class never opens gameplay
+## JSON itself. Source coordinates and appearance quirks come from ZoneDefinition
+## data rather than from a hardcoded first-zone transform.
 
-const WALK_SPEED := 2.35
-const TERRAIN_SNAP_TOLERANCE := 6.0
-const TERRAIN_CAST_HEIGHT := 12.0
 const TARGET_PICK_COLLISION_LAYER := EqWorldSpace.COLLISION_LAYER_TARGET_PICK
 const TARGET_TINT := Color(0.97, 0.32, 0.29, 1.0)
-const CHARACTER_MODEL_FACING_OFFSET := PI * 0.5
 
 var _content: Dictionary = {}
 var _resolved_spawns: Dictionary = {}
 var _zone_runtime_state: ZoneRuntimeState
+var _zone_world_space: ZoneWorldSpace
+var _presentation_profile: Dictionary = {}
 var _models_path := ""
 var _model_scenes: Dictionary[String, PackedScene] = {}
 var _actors: Array[NpcActor] = []
@@ -34,6 +32,7 @@ class NpcActor:
 	var visual: Node3D
 	var animator: AnimationPlayer
 	var model_name := ""
+	var heading_yaw_offset := 0.0
 	var spawn_heading_eq := 0.0
 	var visual_ground_y := 0.0
 	var patrol: Array = []
@@ -74,18 +73,24 @@ func configure(
 	content: Dictionary,
 	models_path: String,
 	resolved_spawns: Dictionary,
-	zone_runtime_state: ZoneRuntimeState
+	zone_runtime_state: ZoneRuntimeState,
+	zone_world_space: ZoneWorldSpace,
+	presentation_profile: Dictionary = {}
 ) -> void:
 	_content = content.duplicate(true)
 	_resolved_spawns = resolved_spawns.duplicate(true)
 	_zone_runtime_state = zone_runtime_state
+	_zone_world_space = zone_world_space
+	_presentation_profile = (
+		presentation_profile.duplicate(true)
+	)
 	_models_path = models_path
 
 
 func _ready() -> void:
 	assert(
 		not _content.is_empty(),
-		"Halas NPC content is required"
+		"Zone NPC content is required"
 	)
 	assert(
 		not _resolved_spawns.is_empty(),
@@ -96,8 +101,15 @@ func _ready() -> void:
 		"ZoneRuntimeState is required by the population compatibility bridge"
 	)
 	assert(
-		not _models_path.is_empty(),
-		"Halas NPC model directory is required"
+		_zone_world_space != null
+		and _zone_world_space.is_valid(),
+		"Valid ZoneWorldSpace is required by zone NPC presentation"
+	)
+	assert(
+		not _models_path.is_empty()
+		or _missing_model_policy()
+		== "placeholder",
+		"Zone NPC model directory is required unless placeholder presentation is enabled"
 	)
 	_build_population(_content)
 	_validate_static_facing()
@@ -146,6 +158,13 @@ func _physics_process(_delta: float) -> void:
 		return
 
 	_terrain_validated = true
+
+	if (
+		_terrain_snap_tolerance() <= 0.0
+		or _terrain_cast_height() <= 0.0
+	):
+		return
+
 	_validate_terrain_placement()
 
 func _build_population(content: Dictionary) -> void:
@@ -262,27 +281,130 @@ func _build_population(content: Dictionary) -> void:
 			% spawn_key
 		)
 
-		var model_name := _model_for(npc_type)
-		if model_name.is_empty():
+		var model_descriptor := (
+			_model_descriptor(
+				npc_type
+			)
+		)
+		var model_name := str(
+			model_descriptor.get(
+				"model_name",
+				""
+			)
+		)
+
+		if (
+			model_name.is_empty()
+			and _missing_model_policy()
+			== "skip"
+		):
 			continue
+
+		var heading_yaw_offset := deg_to_rad(
+			float(
+				model_descriptor.get(
+					"heading_yaw_offset_degrees",
+					0.0
+				)
+			)
+		)
+
 		var actor_node := Node3D.new()
-		actor_node.name = "%s_%d" % [str(npc_type.name), int(spawn.spawn2_id)]
-		actor_node.position = eq_to_world(spawn.position_eq)
-		_source_positions.append(spawn.position_eq)
-		_spawn_source_positions.append(spawn.position_eq)
-		actor_node.rotation.y = static_heading_to_yaw(float(spawn.heading_eq), model_name)
+		actor_node.name = (
+			"%s_%d"
+			% [
+				str(npc_type.name),
+				int(spawn.spawn2_id),
+			]
+		)
+		actor_node.position = (
+			_server_position(
+				spawn.position_eq
+			)
+		)
+		_source_positions.append(
+			spawn.position_eq
+		)
+		_spawn_source_positions.append(
+			spawn.position_eq
+		)
+		actor_node.rotation.y = (
+			_static_heading_to_yaw(
+				float(
+					spawn.heading_eq
+				),
+				heading_yaw_offset
+			)
+		)
 		add_child(actor_node)
-		var visual := _load_model(model_name).instantiate() as Node3D
+
+		var target_height := (
+			_npc_target_height(
+				npc_type,
+				model_descriptor
+			)
+		)
+
+		var visual: Node3D
+		var animator: AnimationPlayer
+
+		if model_name.is_empty():
+			visual = (
+				_placeholder_visual(
+					target_height
+				)
+			)
+		else:
+			visual = (
+				_load_model(
+					model_name
+				).instantiate()
+				as Node3D
+			)
+			visual.rotation.y = (
+				deg_to_rad(
+					_visual_facing_offset_degrees()
+				)
+			)
+
 		visual.name = "Model"
-		visual.rotation.y = CHARACTER_MODEL_FACING_OFFSET
-		actor_node.add_child(visual)
-		var animator := _animation_player_below(visual)
-		if animator != null and animator.has_animation("idle"):
-			animator.play("idle")
-			animator.advance(0.0)
-		var target_height := _npc_target_height(npc_type)
-		_normalize_model_to_height(visual, target_height)
-		var nameplate := _add_nameplate(actor_node, str(npc_type.name), target_height)
+		actor_node.add_child(
+			visual
+		)
+
+		# Model bounds use global transforms, so the visual must belong to the
+		# active scene tree before height normalization inspects child meshes.
+		if not model_name.is_empty():
+			_normalize_model_to_height(
+				visual,
+				target_height
+			)
+			animator = (
+				_animation_player_below(
+					visual
+				)
+			)
+
+		if (
+			animator != null
+			and animator.has_animation(
+				"idle"
+			)
+		):
+			animator.play(
+				"idle"
+			)
+			animator.advance(
+				0.0
+			)
+
+		var nameplate := (
+			_add_nameplate(
+				actor_node,
+				str(npc_type.name),
+				target_height
+			)
+		)
 		_add_target_pick_area(actor_node, target_height, int(spawn.spawn2_id))
 
 		var actor := NpcActor.new()
@@ -290,6 +412,9 @@ func _build_population(content: Dictionary) -> void:
 		actor.visual = visual
 		actor.animator = animator
 		actor.model_name = model_name
+		actor.heading_yaw_offset = (
+			heading_yaw_offset
+		)
 		actor.spawn2_id = int(spawn.spawn2_id)
 		actor.spawn_key = spawn_key
 		actor.npc_type_id = int(npc_type.id)
@@ -355,7 +480,7 @@ func _build_population(content: Dictionary) -> void:
 				point.position_eq
 			)
 			actor.patrol_targets.append(
-				eq_to_world(
+				_server_position(
 					point.position_eq
 				)
 			)
@@ -424,9 +549,9 @@ func nearest_target(origin: Vector3, view_forward: Vector3, max_distance: float 
 
 
 func target_for_pick_area(area: Area3D) -> Dictionary:
-	if area == null or not area.has_meta("halas_spawn2_id"):
+	if area == null or not area.has_meta("zone_spawn2_id"):
 		return {}
-	var spawn2_id := int(area.get_meta("halas_spawn2_id"))
+	var spawn2_id := int(area.get_meta("zone_spawn2_id"))
 	for actor in _actors:
 		if actor.spawn2_id == spawn2_id:
 			return _target_dictionary(actor)
@@ -495,7 +620,7 @@ func _add_target_pick_area(actor_node: Node3D, target_height: float, spawn2_id: 
 	area.collision_layer = TARGET_PICK_COLLISION_LAYER
 	area.collision_mask = 0
 	area.input_ray_pickable = true
-	area.set_meta("halas_spawn2_id", spawn2_id)
+	area.set_meta("zone_spawn2_id", spawn2_id)
 	var shape := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = clampf(target_height * 0.18, 0.45, 1.5)
@@ -506,49 +631,301 @@ func _add_target_pick_area(actor_node: Node3D, target_height: float, spawn2_id: 
 	actor_node.add_child(area)
 
 
-func _model_for(npc_type: Dictionary) -> String:
-	var race := int(npc_type.race)
-	var gender := int(npc_type.gender)
-	var texture := int(npc_type.get("texture", 0))
-	var face := maxi(0, int(npc_type.get("face", 0)))
-	if race == 90:
-		return _appearance_model("hlf" if gender == 1 else "hlm", texture, face, 1 if gender == 1 else 2, 1 if gender == 1 else 2)
-	if race == 2:
-		return _appearance_model("baf" if gender == 1 else "bam", texture, face, 4, 4)
-	if race == 1:
-		return _appearance_model("huf" if gender == 1 else "hum", texture, face, 5, 4)
-	if race == 42:
-		return _appearance_model("wol", texture, face, 4, 2)
-	if race == 73:
-		return "hferry"
-	return ""
+func _audit_label() -> String:
+	return str(
+		_presentation_profile.get(
+			"audit_label",
+			"Zone"
+		)
+	)
 
 
-func _appearance_model(family: String, texture: int, face: int, skin_count: int, head_count: int) -> String:
-	var skin := clampi(texture, 0, skin_count - 1)
-	var head := clampi(face, 0, head_count - 1)
-	return "%s_s%d_h%d" % [family, skin, head]
+func _missing_model_policy() -> String:
+	return str(
+		_presentation_profile.get(
+			"missing_model_policy",
+			"placeholder"
+		)
+	)
 
 
-func _npc_target_height(npc_type: Dictionary) -> float:
-	var source_size := float(npc_type.get("size", 0.0))
-	var default_size := _race_gender_default_size(int(npc_type.race), int(npc_type.gender))
-	return source_size if source_size > 0.0 else default_size
+func _visual_facing_offset_degrees() -> float:
+	return float(
+		_presentation_profile.get(
+			"visual_facing_offset_degrees",
+			0.0
+		)
+	)
 
 
-func _race_gender_default_size(race: int, _gender: int) -> float:
-	match race:
-		1:
-			return 6.0
-		2:
-			return 7.0
-		42:
-			return 4.0
-		73:
-			return 6.0
-		90:
-			return 7.0
-	return 6.0
+func _patrol_walk_speed() -> float:
+	return maxf(
+		0.0,
+		float(
+			_presentation_profile.get(
+				"patrol_walk_speed",
+				0.0
+			)
+		)
+	)
+
+
+func _terrain_snap_tolerance() -> float:
+	return maxf(
+		0.0,
+		float(
+			_presentation_profile.get(
+				"terrain_snap_tolerance",
+				0.0
+			)
+		)
+	)
+
+
+func _terrain_cast_height() -> float:
+	return maxf(
+		0.0,
+		float(
+			_presentation_profile.get(
+				"terrain_cast_height",
+				0.0
+			)
+		)
+	)
+
+
+func _model_descriptor(
+	npc_type: Dictionary
+) -> Dictionary:
+	var explicit_model := str(
+		npc_type.get(
+			"model_name",
+			""
+		)
+	)
+
+	if not explicit_model.is_empty():
+		return {
+			"model_name":
+				explicit_model,
+			"default_size":
+				float(
+					_presentation_profile.get(
+						"default_height",
+						1.0
+					)
+				),
+			"heading_yaw_offset_degrees":
+				0.0,
+		}
+
+	var rules_variant: Variant = (
+		_presentation_profile.get(
+			"model_rules",
+			[]
+		)
+	)
+
+	if not rules_variant is Array:
+		return {}
+
+	var race_id := int(
+		npc_type.get(
+			"race",
+			0
+		)
+	)
+	var gender_id := int(
+		npc_type.get(
+			"gender",
+			0
+		)
+	)
+	var texture := int(
+		npc_type.get(
+			"texture",
+			0
+		)
+	)
+	var face := maxi(
+		0,
+		int(
+			npc_type.get(
+				"face",
+				0
+			)
+		)
+	)
+
+	for rule_variant in (
+		rules_variant as Array
+	):
+		if not rule_variant is Dictionary:
+			continue
+
+		var rule: Dictionary = (
+			rule_variant
+		)
+
+		if int(
+			rule.get(
+				"race_id",
+				-1
+			)
+		) != race_id:
+			continue
+
+		if (
+			rule.has(
+				"gender_id"
+			)
+			and int(
+				rule.get(
+					"gender_id",
+					-1
+				)
+			) != gender_id
+		):
+			continue
+
+		var descriptor := (
+			rule.duplicate(true)
+		)
+
+		var model_name := str(
+			rule.get(
+				"model_name",
+				""
+			)
+		)
+
+		if model_name.is_empty():
+			var family := str(
+				rule.get(
+					"family",
+					""
+				)
+			)
+
+			if family.is_empty():
+				return {}
+
+			model_name = (
+				_appearance_model(
+					family,
+					texture,
+					face,
+					maxi(
+						1,
+						int(
+							rule.get(
+								"skin_count",
+								1
+							)
+						)
+					),
+					maxi(
+						1,
+						int(
+							rule.get(
+								"head_count",
+								1
+							)
+						)
+					)
+				)
+			)
+
+		descriptor[
+			"model_name"
+		] = model_name
+
+		return descriptor
+
+	return {}
+
+
+func _appearance_model(
+	family: String,
+	texture: int,
+	face: int,
+	skin_count: int,
+	head_count: int
+) -> String:
+	var skin := clampi(
+		texture,
+		0,
+		skin_count - 1
+	)
+	var head := clampi(
+		face,
+		0,
+		head_count - 1
+	)
+
+	return "%s_s%d_h%d" % [
+		family,
+		skin,
+		head,
+	]
+
+
+func _npc_target_height(
+	npc_type: Dictionary,
+	model_descriptor: Dictionary
+) -> float:
+	var source_size := float(
+		npc_type.get(
+			"size",
+			0.0
+		)
+	)
+
+	if source_size > 0.0:
+		return source_size
+
+	return maxf(
+		0.01,
+		float(
+			model_descriptor.get(
+				"default_size",
+				_presentation_profile.get(
+					"default_height",
+					1.0
+				)
+			)
+		)
+	)
+
+
+func _placeholder_visual(
+	target_height: float
+) -> Node3D:
+	var root := Node3D.new()
+	var body := MeshInstance3D.new()
+	var capsule := CapsuleMesh.new()
+
+	capsule.radius = maxf(
+		0.2,
+		target_height * 0.18
+	)
+	capsule.height = maxf(
+		target_height,
+		capsule.radius * 2.0
+	)
+
+	body.name = "Placeholder"
+	body.mesh = capsule
+	body.position.y = (
+		capsule.height
+		* 0.5
+	)
+
+	root.add_child(
+		body
+	)
+
+	return root
 
 
 func _load_model(model_name: String) -> PackedScene:
@@ -556,7 +933,7 @@ func _load_model(model_name: String) -> PackedScene:
 		return _model_scenes[model_name]
 	var path := "%s/%s.glb" % [_models_path, model_name]
 	var scene := load(path) as PackedScene
-	assert(scene != null, "Missing imported Halas character model: %s" % path)
+	assert(scene != null, "Missing imported zone character model: %s" % path)
 	_model_scenes[model_name] = scene
 	return scene
 
@@ -888,11 +1265,11 @@ func _update_patrol(
 			point.heading_eq
 		) >= 0.0:
 			actor.node.rotation.y = (
-				static_heading_to_yaw(
+				_static_heading_to_yaw(
 					float(
 						point.heading_eq
 					),
-					actor.model_name
+					actor.heading_yaw_offset
 				)
 			)
 
@@ -927,7 +1304,7 @@ func _update_patrol(
 	)
 	var travel_distance := minf(
 		distance,
-		WALK_SPEED * delta
+		_patrol_walk_speed() * delta
 	)
 
 	actor.node.position += (
@@ -968,10 +1345,16 @@ func _validate_static_facing() -> void:
 	var static_count := 0
 	var lowest_alignment := 1.0
 	for actor in _actors:
-		if not actor.patrol.is_empty():
+		if (
+			not actor.patrol.is_empty()
+			or actor.model_name.is_empty()
+		):
 			continue
 		static_count += 1
-		var expected := static_heading_expected_forward(actor.spawn_heading_eq, actor.model_name)
+		var expected := _static_heading_expected_forward(
+			actor.spawn_heading_eq,
+			actor.heading_yaw_offset
+		)
 		var actual := actor.visual.global_transform.basis * Vector3.RIGHT
 		actual.y = 0.0
 		actual = actual.normalized()
@@ -979,8 +1362,12 @@ func _validate_static_facing() -> void:
 		lowest_alignment = minf(lowest_alignment, alignment)
 		assert(alignment > 0.9999, "Static NPC heading mismatch: %s" % actor.node.name)
 	print(
-		"Halas static facing audit: %d source-headed NPCs, worst alignment %.6f."
-		% [static_count, lowest_alignment]
+		"%s static facing audit: %d source-headed NPCs, worst alignment %.6f."
+		% [
+			_audit_label(),
+			static_count,
+			lowest_alignment,
+		]
 	)
 
 
@@ -1005,25 +1392,85 @@ func _validate_terrain_placement() -> void:
 			actor.pause_remaining
 		)
 	print(
-		"Halas NPC placement validation: %d terrain-aligned, %d source-elevation retained."
-		% [_terrain_snapped_count, _terrain_unmatched_count]
+		"%s NPC placement validation: %d terrain-aligned, %d source-elevation retained."
+		% [
+			_audit_label(),
+			_terrain_snapped_count,
+			_terrain_unmatched_count,
+		]
 	)
 
 
-func _print_transform_audit(space_state: PhysicsDirectSpaceState3D) -> void:
-	var candidates := {
-		"-x,z,y": func(p: Array) -> Vector3: return Vector3(-float(p[0]), float(p[2]), float(p[1])),
-		"x,z,-y": func(p: Array) -> Vector3: return Vector3(float(p[0]), float(p[2]), -float(p[1])),
-		"-y,z,x": func(p: Array) -> Vector3: return Vector3(-float(p[1]), float(p[2]), float(p[0])),
-		"y,z,-x": func(p: Array) -> Vector3: return Vector3(float(p[1]), float(p[2]), -float(p[0])),
-	}
+func _print_transform_audit(
+	space_state: PhysicsDirectSpaceState3D
+) -> void:
+	var candidates_variant: Variant = (
+		_presentation_profile.get(
+			"coordinate_audit_axis_maps",
+			[]
+		)
+	)
+
+	if (
+		not candidates_variant is Array
+		or (
+			candidates_variant as Array
+		).is_empty()
+	):
+		return
+
 	var results: Array[String] = []
-	for label in candidates:
-		var transform: Callable = candidates[label]
-		var spawn_aligned := _count_terrain_matches(space_state, transform, _spawn_source_positions)
-		var patrol_aligned := _count_terrain_matches(space_state, transform, _patrol_source_positions)
+
+	for candidate_variant in (
+		candidates_variant as Array
+	):
+		if not candidate_variant is Dictionary:
+			continue
+
+		var candidate: Dictionary = (
+			candidate_variant
+		)
+		var label := str(
+			candidate.get(
+				"label",
+				"map"
+			)
+		)
+		var axis_map_variant: Variant = (
+			candidate.get(
+				"axis_map",
+				[]
+			)
+		)
+
+		if not axis_map_variant is Array:
+			continue
+
+		var axis_map: Array = (
+			axis_map_variant as Array
+		)
+
+		if axis_map.size() != 3:
+			continue
+
+		var spawn_aligned := (
+			_count_terrain_matches(
+				space_state,
+				axis_map,
+				_spawn_source_positions
+			)
+		)
+		var patrol_aligned := (
+			_count_terrain_matches(
+				space_state,
+				axis_map,
+				_patrol_source_positions
+			)
+		)
+
 		results.append(
-			"%s=spawns %d/%d, paths %d/%d" % [
+			"%s=spawns %d/%d, paths %d/%d"
+			% [
 				label,
 				spawn_aligned,
 				_spawn_source_positions.size(),
@@ -1031,31 +1478,53 @@ func _print_transform_audit(space_state: PhysicsDirectSpaceState3D) -> void:
 				_patrol_source_positions.size(),
 			]
 		)
-	print("Halas coordinate audit: " + ", ".join(results))
+
+	if not results.is_empty():
+		print(
+			"%s coordinate audit: %s"
+			% [
+				_audit_label(),
+				", ".join(
+					results
+				),
+			]
+		)
 
 
-func _count_terrain_matches(space_state: PhysicsDirectSpaceState3D, transform: Callable, points: Array) -> int:
+func _count_terrain_matches(
+	space_state: PhysicsDirectSpaceState3D,
+	axis_map: Array,
+	points: Array
+) -> int:
 	var aligned := 0
+
 	for source_position in points:
-		if _terrain_agrees(space_state, transform.call(source_position)):
+		if _terrain_agrees(
+			space_state,
+			EqWorldSpace.map_position(
+				source_position,
+				axis_map
+			)
+		):
 			aligned += 1
+
 	return aligned
 
 
 func _terrain_agrees(space_state: PhysicsDirectSpaceState3D, source: Vector3) -> bool:
 	var query := PhysicsRayQueryParameters3D.create(
-		source + Vector3.UP * TERRAIN_CAST_HEIGHT,
-		source - Vector3.UP * TERRAIN_CAST_HEIGHT
+		source + Vector3.UP * _terrain_cast_height(),
+		source - Vector3.UP * _terrain_cast_height()
 	)
 	query.collision_mask = EqWorldSpace.COLLISION_LAYER_TERRAIN
 	var hit := space_state.intersect_ray(query)
-	return not hit.is_empty() and absf(((hit.position as Vector3).y) - source.y) <= TERRAIN_SNAP_TOLERANCE
+	return not hit.is_empty() and absf(((hit.position as Vector3).y) - source.y) <= _terrain_snap_tolerance()
 
 
 func _snap_to_agreeing_terrain(space_state: PhysicsDirectSpaceState3D, source: Vector3) -> Vector3:
 	var query := PhysicsRayQueryParameters3D.create(
-		source + Vector3.UP * TERRAIN_CAST_HEIGHT,
-		source - Vector3.UP * TERRAIN_CAST_HEIGHT
+		source + Vector3.UP * _terrain_cast_height(),
+		source - Vector3.UP * _terrain_cast_height()
 	)
 	query.collision_mask = EqWorldSpace.COLLISION_LAYER_TERRAIN
 	var hit := space_state.intersect_ray(query)
@@ -1063,28 +1532,66 @@ func _snap_to_agreeing_terrain(space_state: PhysicsDirectSpaceState3D, source: V
 		_terrain_unmatched_count += 1
 		return source
 	var terrain_y := (hit.position as Vector3).y
-	if absf(terrain_y - source.y) > TERRAIN_SNAP_TOLERANCE:
+	if absf(terrain_y - source.y) > _terrain_snap_tolerance():
 		_terrain_unmatched_count += 1
 		return source
 	_terrain_snapped_count += 1
 	return Vector3(source.x, terrain_y, source.z)
 
 
-static func eq_to_world(position_eq: Array) -> Vector3:
-	return EqWorldSpace.halas_server_position(position_eq)
+func _server_position(
+	position_eq: Array
+) -> Vector3:
+	assert(
+		_zone_world_space != null
+		and _zone_world_space.is_valid(),
+		"ZoneWorldSpace is required for NPC source coordinates"
+	)
+
+	return _zone_world_space.server_position(
+		position_eq
+	)
 
 
-static func static_heading_to_yaw(heading_eq: float, model_name: String) -> float:
+func _static_heading_to_yaw(
+	heading_eq: float,
+	heading_yaw_offset: float
+) -> float:
 	if heading_eq < 0.0:
 		return 0.0
-	var yaw := EqWorldSpace.heading_to_godot_yaw(heading_eq)
-	if model_name.begins_with("hlf_"):
-		yaw += PI
-	return yaw
+
+	return (
+		_zone_world_space.server_heading_yaw(
+			heading_eq
+		)
+		+ heading_yaw_offset
+	)
 
 
-static func static_heading_expected_forward(heading_eq: float, model_name: String) -> Vector3:
-	var forward := EqWorldSpace.heading_forward(heading_eq)
-	if model_name.begins_with("hlf_"):
-		forward = -forward
-	return forward
+func _static_heading_expected_forward(
+	heading_eq: float,
+	heading_yaw_offset: float
+) -> Vector3:
+	var units_per_turn := float(
+		_zone_world_space.contract.get(
+			"server_heading_units_per_turn",
+			EqWorldSpace.EQ_HEADING_UNITS_PER_TURN
+		)
+	)
+
+	var forward := (
+		EqWorldSpace.heading_forward(
+			heading_eq,
+			units_per_turn
+		)
+	)
+
+	if not is_zero_approx(
+		heading_yaw_offset
+	):
+		forward = forward.rotated(
+			Vector3.UP,
+			heading_yaw_offset
+		)
+
+	return forward.normalized()

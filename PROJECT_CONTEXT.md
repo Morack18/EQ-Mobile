@@ -1,6 +1,6 @@
 # EQ Mobile — Project Context
 
-Last updated: 2026-09-16
+Last updated: 2026-09-19
 
 ## Product intent
 
@@ -67,6 +67,13 @@ Runtime systems must consume those neutral contracts rather than SQL layouts.
   `data/halas_npcs_source.json`; its empty, versioned P1999 correction overlay
   is applied deterministically and awaits reviewed corrections before the roster
   can be treated as exact.
+- Generic zone runtime: `ZoneDefinition`, `ZoneWorldSpace`, `ZoneHost`,
+  `ZonePresentationHost`, `ZoneRuntimeState`, and the generic NPC
+  presentation/runtime bridge no longer require Halas-specific composition.
+  The Phase 6 content-empty transition fixture and project-authored populated
+  non-Halas probe validate optional zone content, alternate coordinate
+  contracts, model-free placeholder NPC presentation, and per-zone runtime
+  identity/state without claiming additional EverQuest content.
 - Reusable import knowledge: `docs/zone-import-playbook.md` is the required
   source of truth for future zone imports. It records the validation-first
   geometry, coordinate, animation, and appearance pipeline learned from Halas.

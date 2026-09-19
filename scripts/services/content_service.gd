@@ -64,7 +64,6 @@ func player_class_catalog() -> Dictionary:
 
 func npc_dataset() -> Dictionary:
 	var dataset: Dictionary = _documents.get("npcs", {})
-	assert(not dataset.is_empty(), "NPC content has not been loaded")
 	return dataset.duplicate(true)
 
 
@@ -131,6 +130,8 @@ func _read_json(path: String) -> Variant:
 func _build_item_catalog() -> bool:
 	_item_definitions.clear()
 	for document_key in ["items", "peq_items"]:
+		if not _documents.has(document_key):
+			continue
 		var document: Dictionary = _documents.get(document_key, {})
 		var items = document.get("items")
 		if not items is Dictionary:
@@ -147,6 +148,13 @@ func _build_item_catalog() -> bool:
 
 
 func _build_merchant_catalog() -> bool:
+	if not _documents.has("merchants"):
+		_merchant_catalog = {
+			"by_id": {},
+			"by_key": {},
+		}
+		return true
+
 	var document: Dictionary = _documents.get("merchants", {})
 	var merchants = document.get("merchants")
 	if not merchants is Dictionary:
@@ -170,6 +178,15 @@ func _build_merchant_catalog() -> bool:
 
 
 func _build_faction_catalog() -> bool:
+	if not _documents.has("factions"):
+		_faction_catalog = {
+			"factions": {},
+			"npc_faction_bundles": {},
+			"factions_by_key": {},
+			"npc_faction_bundles_by_key": {},
+		}
+		return true
+
 	var document: Dictionary = _documents.get("factions", {})
 	var factions = document.get("factions")
 	var bundles = document.get("npc_faction_bundles")

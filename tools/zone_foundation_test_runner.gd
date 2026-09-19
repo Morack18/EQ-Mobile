@@ -6,8 +6,10 @@ var _failures: Array[String] = []
 func _init() -> void:
     _test_zone_catalog_and_definition()
     _test_definition_is_not_halas_locked()
+    _test_optional_zone_content_contract()
     _test_main_startup_uses_zone_catalog()
     _test_zone_world_space_contract()
+    _test_generic_populated_zone_presentation()
     _test_zone_spawn_resolver()
     _test_spawn_point_state_round_trip()
     _test_world_object_state_round_trip()
@@ -189,6 +191,98 @@ func _test_definition_is_not_halas_locked() -> void:
             "eqm:zone:foundation_probe"
         ).is_empty(),
         "Generic ZoneDefinition validation contains a Halas-specific requirement."
+    )
+
+
+func _test_optional_zone_content_contract() -> void:
+    var loader := ZoneDefinitionLoader.new()
+
+    _expect(
+        loader.load_catalog(),
+        "Zone catalog did not load for optional-content test."
+    )
+
+    var fixture := loader.load_zone(
+        "eqm:zone:phase6_transition_fixture"
+    )
+
+    _expect(
+        not fixture.is_empty(),
+        "Optional-content fixture did not load: %s"
+        % loader.last_error
+    )
+
+    if fixture.is_empty():
+        return
+
+    var paths := loader.runtime_content_paths(
+        fixture
+    )
+
+    _expect(
+        paths.is_empty(),
+        "Content-empty zone inherited runtime content paths."
+    )
+
+    _expect(
+        loader.validate_definition(
+            fixture,
+            "eqm:zone:phase6_transition_fixture"
+        ).is_empty(),
+        "Content-empty zone definition was rejected."
+    )
+
+    var mapper := ZoneWorldSpace.new(
+        fixture
+    )
+
+    _expect(
+        mapper.is_valid(),
+        "Content-empty zone world-space contract was rejected: %s"
+        % mapper.last_error
+    )
+
+    _expect(
+        not mapper.has_object_transform(),
+        "Zone with no static props still requires an object transform."
+    )
+
+    var service := ContentService.new()
+
+    service.configure({
+        "items":
+            "res://data/items.json",
+        "player_classes":
+            "res://data/player_classes.json",
+        "player_fixture":
+            "res://data/player_fixture.json",
+    })
+
+    _expect(
+        service.load_all(),
+        "ContentService rejected absent optional zone catalogs: %s"
+        % service.last_error
+    )
+
+    _expect(
+        service.npc_dataset().is_empty(),
+        "Absent NPC population did not resolve to an empty dataset."
+    )
+
+    _expect(
+        service.merchant_listings(
+            "",
+            0
+        ).is_empty(),
+        "Absent merchant catalog did not resolve to an empty catalog."
+    )
+
+    _expect(
+        service.faction_catalog().get(
+            "factions_by_key",
+            {}
+        ).is_empty(),
+        "Absent faction catalog did not resolve to an empty catalog."
     )
 
 
@@ -390,6 +484,248 @@ func _test_zone_world_space_contract() -> void:
             "main.gd still owns a Halas-specific world rule: %s"
             % forbidden
         )
+
+
+func _test_generic_populated_zone_presentation() -> void:
+    var zone_key := (
+        "eqm:zone:population_probe"
+    )
+
+    var mapper := ZoneWorldSpace.new({
+        "key": zone_key,
+        "object_instances": "",
+        "object_model_directory": "",
+        "world_space_contract": {
+            "server_axis_map": [
+                1,
+                3,
+                -2,
+            ],
+            "server_heading_units_per_turn":
+                1024.0,
+        },
+    })
+
+    _expect(
+        mapper.is_valid(),
+        "Synthetic non-Halas ZoneWorldSpace was rejected: %s"
+        % mapper.last_error
+    )
+
+    if not mapper.is_valid():
+        return
+
+    var dataset := {
+        "npc_types": [
+            {
+                "id": 7002,
+                "key": "peq:npc:7002",
+                "name": "Foundation_Probe",
+                "level": 1,
+                "race": 999,
+                "race_ref": "fixture:race:999",
+                "gender": 0,
+                "class": 1,
+                "class_ref": "fixture:class:1",
+                "texture": 0,
+                "face": 0,
+                "size": 2.0,
+                "hp": 1,
+                "mana": 0,
+                "merchant_id": 0,
+                "npc_faction_id": 0,
+                "loottable_id": 0,
+            },
+        ],
+        "spawn_groups": {
+            "7000": {
+                "id": 7000,
+                "key": "peq:spawn_group:7000",
+                "candidates": [
+                    {
+                        "chance": 100,
+                        "npc_type_id": 7002,
+                        "npc_ref": "peq:npc:7002",
+                    },
+                ],
+            },
+        },
+        "spawns": [
+            {
+                "spawn2_id": 7001,
+                "key": "peq:spawn:7001",
+                "spawn_group_id": 7000,
+                "spawn_group_ref":
+                    "peq:spawn_group:7000",
+                "position_eq": [
+                    4.0,
+                    5.0,
+                    6.0,
+                ],
+                "heading_eq": 256.0,
+                "grid_id": 0,
+                "respawn_seconds": 30.0,
+            },
+        ],
+        "grids": {},
+    }
+
+    var runtime_state := (
+        ZoneRuntimeState.new(
+            zone_key
+        )
+    )
+
+    var resolver := (
+        ZoneSpawnResolver.new(
+            zone_key
+        )
+    )
+
+    var resolved := (
+        resolver.resolve_into_state(
+            dataset,
+            runtime_state
+        )
+    )
+
+    _expect(
+        resolver.last_error.is_empty()
+        and resolved.size() == 1,
+        "Synthetic populated zone did not resolve its SpawnPoint: %s"
+        % resolver.last_error
+    )
+
+    if (
+        not resolver.last_error.is_empty()
+        or resolved.size() != 1
+    ):
+        return
+
+    var population := (
+        ZoneNpcPopulation.new()
+    )
+
+    population.configure(
+        dataset,
+        "",
+        resolved,
+        runtime_state,
+        mapper,
+        {
+            "audit_label":
+                "Foundation Probe",
+            "missing_model_policy":
+                "placeholder",
+            "default_height":
+                2.0,
+        }
+    )
+
+    # This runner executes from SceneTree._init(), where add_child() does not
+    # guarantee that Node._ready() has completed before the next assertion.
+    # Exercise the already-configured population builder synchronously so this
+    # remains a deterministic unit probe rather than a frame-timing test.
+    population._build_population(
+        dataset
+    )
+
+    var targets: Array[Dictionary] = (
+        population.actor_targets()
+    )
+
+    _expect(
+        targets.size() == 1,
+        "Synthetic populated zone did not build one presentation actor."
+    )
+
+    if targets.size() == 1:
+        var target: Dictionary = (
+            targets[0]
+        )
+        var node_variant: Variant = (
+            target.get(
+                "node"
+            )
+        )
+
+        _expect(
+            node_variant is Node3D,
+            "Synthetic populated zone actor has no Node3D view."
+        )
+
+        if node_variant is Node3D:
+            var actor_node := (
+                node_variant as Node3D
+            )
+
+            _expect(
+                actor_node.position.is_equal_approx(
+                    Vector3(
+                        4.0,
+                        6.0,
+                        -5.0
+                    )
+                ),
+                "Generic NPC presentation ignored the probe zone's server axis map."
+            )
+
+            _expect(
+                is_equal_approx(
+                    actor_node.rotation.y,
+                    0.0
+                ),
+                "Generic NPC presentation ignored the probe zone's heading units."
+            )
+
+        _expect(
+            str(
+                target.get(
+                    "model_name",
+                    "not-empty"
+                )
+            ).is_empty(),
+            "Model-free populated zone did not use placeholder presentation."
+        )
+
+        var definitions := (
+            ZoneEntityAdapter
+            .neutral_definitions_from_targets(
+                targets,
+                {
+                    "zone_key":
+                        zone_key,
+                }
+            )
+        )
+
+        _expect(
+            definitions.size() == 1
+            and str(
+                definitions[0].get(
+                    "entity_id",
+                    ""
+                )
+            )
+            == (
+                "%s:spawn:7001"
+                % zone_key
+            ),
+            "Generic runtime NPC identity is not scoped to the active zone."
+        )
+
+        _expect(
+            definitions.size() == 1
+            and str(
+                definitions[0].get(
+                    "definition_id",
+                    ""
+                )
+            ) == "peq:npc:7002",
+            "Generic presentation adapter lost NPC definition identity."
+        )
+
+    population.free()
 
 
 func _test_zone_spawn_resolver() -> void:
@@ -678,13 +1014,13 @@ func _test_zone_spawn_resolver() -> void:
     )
 
     var population_file := FileAccess.open(
-        "res://scripts/halas_npc_population.gd",
+        "res://scripts/presentation/zone_npc_population.gd",
         FileAccess.READ
     )
 
     _expect(
         population_file != null,
-        "Unable to inspect Halas population compatibility presentation."
+        "Unable to inspect generic zone NPC presentation."
     )
 
     if population_file == null:
@@ -702,21 +1038,31 @@ func _test_zone_spawn_resolver() -> void:
         and population_source.contains(
             "\"npc_definition\""
         ),
-        "Halas presentation does not consume generic resolved spawn definitions."
+        "Zone NPC presentation does not consume generic resolved spawn definitions."
+    )
+
+    _expect(
+        population_source.contains(
+            "_zone_world_space.server_position("
+        )
+        and not population_source.contains(
+            "EqWorldSpace.halas_server_position"
+        ),
+        "Zone NPC presentation bypasses the active ZoneWorldSpace contract."
     )
 
     _expect(
         not population_source.contains(
             "func _choose_npc_type("
         ),
-        "Halas presentation still owns SpawnGroup candidate selection."
+        "Zone NPC presentation still owns SpawnGroup candidate selection."
     )
 
     _expect(
         not population_source.contains(
             "spawn2_id) % total_weight"
         ),
-        "Halas presentation still contains legacy weighted selection logic."
+        "Zone NPC presentation still contains legacy weighted selection logic."
     )
 
     _expect(
@@ -729,7 +1075,29 @@ func _test_zone_spawn_resolver() -> void:
         and population_source.contains(
             "\"heading_radians\""
         ),
-        "Halas patrol compatibility controller is not bridged through ZoneRuntimeState."
+        "Zone NPC patrol compatibility controller is not bridged through ZoneRuntimeState."
+    )
+
+    _expect(
+        main_source.contains(
+            "ZoneNpcPopulation.new()"
+        )
+        and main_source.contains(
+            "ZoneEntityAdapter"
+        )
+        and not main_source.contains(
+            "HalasNpcPopulation"
+        )
+        and not main_source.contains(
+            "HalasEntityAdapter"
+        )
+        and not main_source.contains(
+            "halas_population"
+        )
+        and not main_source.contains(
+            "halas_spawn_entity_ids"
+        ),
+        "main.gd still depends on the Halas-specific NPC presentation path."
     )
 
 
@@ -1711,13 +2079,10 @@ func _test_zone_transition_contract() -> void:
                 ""
             )
         ).is_empty()
-        and not loader.runtime_content_paths(
+        and loader.runtime_content_paths(
             fixture
-        ).get(
-            "npcs",
-            ""
         ).is_empty(),
-        "Phase 6 transition fixture is not a clean data-only zone."
+        "Phase 6 transition fixture is not a clean content-empty zone."
     )
 
 

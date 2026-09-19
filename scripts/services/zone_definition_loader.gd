@@ -462,15 +462,61 @@ func validate_definition(
             "Zone server_axis_map must be a signed permutation of 1, 2, 3"
         )
 
-    if not _valid_axis_map(
+    var server_heading_units := float(
         world_contract.get(
-            "lantern_prop_axis_map",
-            []
+            "server_heading_units_per_turn",
+            0.0
         )
+    )
+
+    if server_heading_units <= 0.0:
+        return (
+            "Zone server_heading_units_per_turn must be positive"
+        )
+
+    var object_instances := str(
+        definition.get(
+            "object_instances",
+            ""
+        )
+    )
+    var object_model_directory := str(
+        definition.get(
+            "object_model_directory",
+            ""
+        )
+    )
+
+    if (
+        object_instances.is_empty()
+        != object_model_directory.is_empty()
     ):
         return (
-            "Zone lantern_prop_axis_map must be a signed permutation of 1, 2, 3"
+            "Zone static-object placement and model directory must be declared together"
         )
+
+    if not object_instances.is_empty():
+        if not _valid_axis_map(
+            world_contract.get(
+                "lantern_prop_axis_map",
+                []
+            )
+        ):
+            return (
+                "Zone lantern_prop_axis_map must be a signed permutation of 1, 2, 3"
+            )
+
+        if is_zero_approx(
+            float(
+                world_contract.get(
+                    "lantern_prop_heading_degrees_sign",
+                    0.0
+                )
+            )
+        ):
+            return (
+                "Zone lantern_prop_heading_degrees_sign must be non-zero"
+            )
 
     var bounds_variant: Variant = definition.get(
         "bounds",
@@ -528,24 +574,6 @@ func validate_definition(
         return (
             "Zone definition content_refs are missing"
         )
-
-    var refs: Dictionary = refs_variant
-
-    for required_ref in [
-        "npc_population",
-        "world_objects",
-        "transitions",
-    ]:
-        if str(
-            refs.get(
-                required_ref,
-                ""
-            )
-        ).is_empty():
-            return (
-                "Zone content ref is missing: %s"
-                % required_ref
-            )
 
     if not definition.get(
         "environment",

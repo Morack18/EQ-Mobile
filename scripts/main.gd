@@ -71,10 +71,10 @@ var hud: Control
 var ui_layer: CanvasLayer
 var merchant_panel: MerchantBrowsePanel
 var merchant_interaction_popup: MerchantInteractionPopup
-var halas_population: HalasNpcPopulation
-var halas_spawn_entity_ids: Dictionary = {}
+var zone_npc_population: ZoneNpcPopulation
+var zone_spawn_entity_ids: Dictionary = {}
 
-var selected_halas_target: Dictionary = {}
+var selected_zone_target: Dictionary = {}
 var selected_entity_id := ""
 var npc_press_touch := -1
 var npc_press_position := Vector2.ZERO
@@ -417,7 +417,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_set_jump_held(event.pressed and not event.echo)
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
-		_target_nearest_halas_npc()
+		_target_nearest_zone_npc()
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_M:
 		open_selected_merchant()
@@ -427,8 +427,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		hud.handle_touch(event.index, event.position, event.pressed)
 		if event.pressed:
-			var touch_target := _target_halas_npc_at_screen(event.position)
-			var touch_actor := _halas_entity_for_target(
+			var touch_target := _target_zone_npc_at_screen(event.position)
+			var touch_actor := _zone_entity_for_target(
 				touch_target
 			)
 			if (
@@ -593,17 +593,17 @@ func _sync_domain_from_views() -> void:
 			training_entity
 		)
 
-	if halas_population == null:
+	if zone_npc_population == null:
 		return
 
 	for spawn2_variant in (
-		halas_spawn_entity_ids
+		zone_spawn_entity_ids
 	):
 		var spawn2_id := int(
 			spawn2_variant
 		)
 		var entity_id := str(
-			halas_spawn_entity_ids[
+			zone_spawn_entity_ids[
 				spawn2_variant
 			]
 		)
@@ -617,7 +617,7 @@ func _sync_domain_from_views() -> void:
 		):
 			continue
 
-		# Halas patrol remains a presentation
+		# Zone NPC patrol remains a presentation
 		# compatibility path. Mirror its pose
 		# into the generic actor contract.
 		view_registry.sync_to_domain(
@@ -625,7 +625,7 @@ func _sync_domain_from_views() -> void:
 		)
 
 		var velocity := (
-			halas_population
+			zone_npc_population
 			.movement_velocity_for_spawn(
 				spawn2_id
 			)
@@ -1779,6 +1779,57 @@ func _build_npc() -> void:
 	view_registry.apply_from_domain(entity)
 
 
+func _npc_presentation_profile() -> Dictionary:
+	var profile_variant: Variant = (
+		zone.get(
+			"npc_presentation",
+			{}
+		)
+	)
+
+	if not profile_variant is Dictionary:
+		return {}
+
+	return (
+		(
+			profile_variant as Dictionary
+		).duplicate(true)
+	)
+
+
+func _npc_presentation_context() -> Dictionary:
+	var context := (
+		_npc_presentation_profile()
+	)
+
+	context[
+		"zone_key"
+	] = current_zone_key
+
+	if str(
+		context.get(
+			"runtime_id_namespace",
+			""
+		)
+	).is_empty():
+		context[
+			"runtime_id_namespace"
+		] = current_zone_key
+
+	return context
+
+
+func _zone_runtime_entity_id(
+	spawn2_id: int
+) -> String:
+	return (
+		ZoneEntityAdapter.runtime_entity_id(
+			spawn2_id,
+			_npc_presentation_context()
+		)
+	)
+
+
 func _build_npc_population() -> void:
 	var models_path := str(
 		zone.get(
@@ -1790,10 +1841,7 @@ func _build_npc_population() -> void:
 		content_service.npc_dataset()
 	)
 
-	if (
-		npc_content.is_empty()
-		or models_path.is_empty()
-	):
+	if npc_content.is_empty():
 		return
 
 	assert(
@@ -1801,48 +1849,51 @@ func _build_npc_population() -> void:
 		"Active-zone presentation is required before NPC population"
 	)
 
-	halas_population = (
-		HalasNpcPopulation.new()
+	zone_npc_population = (
+		ZoneNpcPopulation.new()
 	)
-	halas_population.name = (
-		"ClassicHalasPopulation"
+	zone_npc_population.name = (
+		"ZoneNpcPopulation"
 	)
-	halas_population.configure(
+	zone_npc_population.configure(
 		npc_content,
 		models_path,
 		resolved_zone_spawns,
-		zone_runtime_state
+		zone_runtime_state,
+		zone_world_space,
+		_npc_presentation_profile()
 	)
 	active_zone_presentation.add_child(
-		halas_population
+		zone_npc_population
 	)
 
-	_register_halas_domain_actors()
+	_register_zone_domain_actors()
 
 
-func _register_halas_domain_actors() -> void:
+func _register_zone_domain_actors() -> void:
 	assert(
-		halas_population != null,
-		"Halas population must exist "
+		zone_npc_population != null,
+		"Zone NPC population must exist "
 		+ "before actor registration"
 	)
 
-	halas_spawn_entity_ids.clear()
+	zone_spawn_entity_ids.clear()
 
 	var targets: Array[Dictionary] = (
-		halas_population.actor_targets()
+		zone_npc_population.actor_targets()
 	)
 	var definitions: Array[Dictionary] = (
-		HalasEntityAdapter
+		ZoneEntityAdapter
 		.neutral_definitions_from_targets(
-			targets
+			targets,
+			_npc_presentation_context()
 		)
 	)
 
 	assert(
 		definitions.size()
 		== targets.size(),
-		"Halas actor definition count "
+		"Zone actor definition count "
 		+ "must match presentation roster"
 	)
 
@@ -1864,7 +1915,7 @@ func _register_halas_domain_actors() -> void:
 
 		assert(
 			spawn2_id > 0,
-			"Halas runtime actor "
+			"Zone runtime actor "
 			+ "requires a spawn2 ID"
 		)
 
@@ -1955,14 +2006,14 @@ func _register_halas_domain_actors() -> void:
 
 		assert(
 			not entity_id.is_empty(),
-			"Halas runtime actor "
+			"Zone runtime actor "
 			+ "requires an entity ID"
 		)
 		assert(
 			simulation.entity(
 				entity_id
 			) == null,
-			"Duplicate Halas runtime "
+			"Duplicate zone runtime "
 			+ "actor: %s"
 			% entity_id
 		)
@@ -1987,7 +2038,7 @@ func _register_halas_domain_actors() -> void:
 
 		assert(
 			node_variant is Node3D,
-			"Halas runtime actor "
+			"Zone runtime actor "
 			+ "requires a view node"
 		)
 
@@ -2034,7 +2085,7 @@ func _register_halas_domain_actors() -> void:
 			% spawn_key
 		)
 
-		halas_spawn_entity_ids[
+		zone_spawn_entity_ids[
 			spawn2_id
 		] = entity_id
 
@@ -2044,7 +2095,7 @@ func _release_active_zone_population() -> bool:
 
 	# Clear interaction state while presentation objects are still valid.
 	# This also restores the persistent player's default target.
-	_clear_halas_selection()
+	_clear_zone_selection()
 
 	npc_press_touch = -1
 	npc_press_target = {}
@@ -2078,7 +2129,7 @@ func _release_active_zone_population() -> bool:
 	var unique_entity_ids: Dictionary = {}
 
 	for entity_id_variant in (
-		halas_spawn_entity_ids.values()
+		zone_spawn_entity_ids.values()
 	):
 		var entity_id := str(
 			entity_id_variant
@@ -2123,8 +2174,8 @@ func _release_active_zone_population() -> bool:
 			)
 			return false
 
-	halas_spawn_entity_ids.clear()
-	halas_population = null
+	zone_spawn_entity_ids.clear()
+	zone_npc_population = null
 
 	return true
 
@@ -2439,7 +2490,7 @@ func execute_zone_transition(
 		return false
 
 	# Stage and validate all target content and world-space configuration before
-	# destroying the current active zone. A bad target therefore leaves Halas
+	# destroying the current active zone. A bad target therefore leaves the current zone
 	# fully intact.
 	var staged_content := (
 		_staged_content_service_for_zone(
@@ -2600,8 +2651,8 @@ func _build_hud() -> void:
 func _set_runtime_paused(
 	paused: bool
 ) -> void:
-	if halas_population != null:
-		halas_population.set_runtime_paused(
+	if zone_npc_population != null:
+		zone_npc_population.set_runtime_paused(
 			paused
 		)
 
@@ -2660,20 +2711,20 @@ func _target_status_line() -> String:
 	]
 
 
-func _target_nearest_halas_npc() -> void:
-	if halas_population == null:
+func _target_nearest_zone_npc() -> void:
+	if zone_npc_population == null:
 		return
 	var forward := -camera_pivot.global_transform.basis.z
-	var target := halas_population.nearest_target(player.global_position, forward)
+	var target := zone_npc_population.nearest_target(player.global_position, forward)
 	if target.is_empty():
-		_clear_halas_selection()
-		status_text = "No Halas NPC is in target range."
+		_clear_zone_selection()
+		status_text = "No zone NPC is in target range."
 		return
-	_select_halas_target(target)
+	_select_zone_target(target)
 
 
-func _target_halas_npc_at_screen(screen_position: Vector2) -> Dictionary:
-	if halas_population == null or camera == null:
+func _target_zone_npc_at_screen(screen_position: Vector2) -> Dictionary:
+	if zone_npc_population == null or camera == null:
 		return {}
 	var origin := camera.project_ray_origin(screen_position)
 	var direction := camera.project_ray_normal(screen_position)
@@ -2690,18 +2741,18 @@ func _target_halas_npc_at_screen(screen_position: Vector2) -> Dictionary:
 	var collider: Variant = hit.get("collider")
 	if not collider is Area3D:
 		return {}
-	var target := halas_population.target_for_pick_area(collider)
+	var target := zone_npc_population.target_for_pick_area(collider)
 	if target.is_empty():
 		return {}
-	_select_halas_target(target)
+	_select_zone_target(target)
 	return target
 
 
-func _select_halas_target(
+func _select_zone_target(
 	target: Dictionary
 ) -> void:
 	var entity_id := (
-		HalasEntityAdapter.runtime_entity_id(
+		_zone_runtime_entity_id(
 			int(
 				target.get(
 					"spawn2_id",
@@ -2716,15 +2767,15 @@ func _select_halas_target(
 
 	if entity == null:
 		push_error(
-			"Halas presentation target "
+			"Zone presentation target "
 			+ "has no registered domain "
 			+ "actor: "
 			+ entity_id
 		)
-		_clear_halas_selection()
+		_clear_zone_selection()
 		return
 
-	selected_halas_target = target
+	selected_zone_target = target
 	selected_entity_id = entity_id
 
 	view_registry.sync_to_domain(
@@ -2740,10 +2791,10 @@ func _select_halas_target(
 			+ "target: "
 			+ entity_id
 		)
-		_clear_halas_selection()
+		_clear_zone_selection()
 		return
 
-	halas_population.set_selected_spawn(
+	zone_npc_population.set_selected_spawn(
 		int(
 			target.get(
 				"spawn2_id",
@@ -2757,14 +2808,14 @@ func _select_halas_target(
 		)
 	)
 
-func _clear_halas_selection() -> void:
-	selected_halas_target = {}
+func _clear_zone_selection() -> void:
+	selected_zone_target = {}
 	selected_entity_id = ""
 
 	_restore_default_player_target()
 
-	if halas_population != null:
-		halas_population.set_selected_spawn(
+	if zone_npc_population != null:
+		zone_npc_population.set_selected_spawn(
 			-1
 		)
 
@@ -2787,7 +2838,7 @@ func _cancel_npc_long_press(touch_index: int) -> void:
 	npc_press_elapsed = 0.0
 
 
-func _halas_entity_for_target(
+func _zone_entity_for_target(
 	target: Dictionary
 ) -> GameplayEntity:
 	if (
@@ -2807,13 +2858,13 @@ func _halas_entity_for_target(
 		return null
 
 	return simulation.entity(
-		HalasEntityAdapter.runtime_entity_id(
+		_zone_runtime_entity_id(
 			spawn2_id
 		)
 	)
 
 
-func _selected_halas_entity() -> GameplayEntity:
+func _selected_zone_entity() -> GameplayEntity:
 	if (
 		simulation == null
 		or selected_entity_id.is_empty()
@@ -2865,7 +2916,7 @@ func _actor_has_merchant_catalog(
 func _open_merchant_interaction(
 	target: Dictionary
 ) -> void:
-	var actor := _halas_entity_for_target(
+	var actor := _zone_entity_for_target(
 		target
 	)
 
@@ -2920,7 +2971,7 @@ func _open_merchant_interaction(
 func _selected_npc_interaction_summary(
 	target: Dictionary
 ) -> String:
-	var actor := _halas_entity_for_target(
+	var actor := _zone_entity_for_target(
 		target
 	)
 
@@ -3068,7 +3119,7 @@ func _merchant_preview_for_actor(
 	]
 
 func _selected_merchant_is_browseable() -> bool:
-	var actor := _selected_halas_entity()
+	var actor := _selected_zone_entity()
 
 	if not _actor_has_merchant_catalog(
 		actor
@@ -3095,7 +3146,7 @@ func open_selected_merchant() -> void:
 	):
 		return
 
-	var actor := _selected_halas_entity()
+	var actor := _selected_zone_entity()
 
 	if not _actor_has_merchant_catalog(
 		actor

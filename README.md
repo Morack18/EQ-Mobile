@@ -24,6 +24,12 @@ player to the configured safe spawn with full health. The fixture also awards
 explicit tuned XP, displaying cumulative progress and applying the configured
 classic-era level cap; it does not assign XP to imported Halas NPCs.
 
+The runtime zone foundation is not Halas-specific: zone definitions own their
+world-space contracts and optional content references, empty optional content
+is valid, and populated zones use a generic NPC presentation/runtime bridge.
+Halas remains the current playable imported zone and supplies its own
+presentation profile for its source-model quirks.
+
 See [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for source-resource boundaries,
 architecture, and the next milestones.
 
@@ -48,6 +54,8 @@ godot --headless --path . --script res://tools/time_rng_test_runner.gd
 godot --headless --path . --script res://tools/save_migration_test_runner.gd
 godot --headless --path . --script res://tools/actor_model_test_runner.gd
 godot --headless --path . --script res://tools/zone_foundation_test_runner.gd
+godot --headless --path . --script res://tools/zone_transition_smoke_runner.gd
+python3 tools/zone_pipeline.py validate --config data/zones/halas.pipeline.json
 python3 tools/validate_halas_zone_data.py
 python3 tools/validate_halas_spawn_coordinates.py
 python3 tools/validate_halas_asset_scale.py

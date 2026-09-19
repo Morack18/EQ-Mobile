@@ -43,6 +43,97 @@
   "object_model_directory": "res://assets/imported/halas/objects",
   "npc_source": "res://data/halas_npcs.json",
   "npc_model_directory": "res://assets/imported/halas/characters",
+  "npc_presentation": {
+    "audit_label": "Halas",
+    "runtime_id_namespace": "halas",
+    "source_kind": "peq_halas_npc",
+    "controller_kind": "halas_population_presentation",
+    "fallback_display_name": "Halas NPC",
+    "missing_model_policy": "skip",
+    "visual_facing_offset_degrees": 90.0,
+    "patrol_walk_speed": 2.35,
+    "terrain_snap_tolerance": 6.0,
+    "terrain_cast_height": 12.0,
+    "default_height": 6.0,
+    "coordinate_audit_axis_maps": [
+      {
+        "label": "-x,z,y",
+        "axis_map": [-1, 3, 2]
+      },
+      {
+        "label": "x,z,-y",
+        "axis_map": [1, 3, -2]
+      },
+      {
+        "label": "-y,z,x",
+        "axis_map": [-2, 3, 1]
+      },
+      {
+        "label": "y,z,-x",
+        "axis_map": [2, 3, -1]
+      }
+    ],
+    "model_rules": [
+      {
+        "race_id": 90,
+        "gender_id": 1,
+        "family": "hlf",
+        "skin_count": 1,
+        "head_count": 1,
+        "default_size": 7.0,
+        "heading_yaw_offset_degrees": 180.0
+      },
+      {
+        "race_id": 90,
+        "family": "hlm",
+        "skin_count": 2,
+        "head_count": 2,
+        "default_size": 7.0
+      },
+      {
+        "race_id": 2,
+        "gender_id": 1,
+        "family": "baf",
+        "skin_count": 4,
+        "head_count": 4,
+        "default_size": 7.0
+      },
+      {
+        "race_id": 2,
+        "family": "bam",
+        "skin_count": 4,
+        "head_count": 4,
+        "default_size": 7.0
+      },
+      {
+        "race_id": 1,
+        "gender_id": 1,
+        "family": "huf",
+        "skin_count": 5,
+        "head_count": 4,
+        "default_size": 6.0
+      },
+      {
+        "race_id": 1,
+        "family": "hum",
+        "skin_count": 5,
+        "head_count": 4,
+        "default_size": 6.0
+      },
+      {
+        "race_id": 42,
+        "family": "wol",
+        "skin_count": 4,
+        "head_count": 2,
+        "default_size": 4.0
+      },
+      {
+        "race_id": 73,
+        "model_name": "hferry",
+        "default_size": 6.0
+      }
+    ]
+  },
   "enable_training_npc": true,
   "player_respawn_seconds": 2.5,
   "progression": {

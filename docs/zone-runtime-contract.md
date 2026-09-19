@@ -27,6 +27,36 @@ A `ZoneDefinition` is immutable content. It owns:
 A spawned NPC remains a transient `GameplayEntity`. Its definition identity
 does not replace the stable spawn-point identity.
 
+## Optional zone content
+
+A valid zone does not have to contain every kind of classic-game content.
+
+`geometry_scene`, the stable zone identity, and the server-coordinate
+world-space contract remain foundational. Optional content can be absent:
+
+- `content_refs` may be empty;
+- NPC population may be absent;
+- world objects may be absent;
+- transitions may be absent;
+- static props may be absent;
+- imported NPC character models may be absent.
+
+`ContentService` resolves omitted optional zone datasets to neutral empty state
+rather than requiring Halas-shaped data.
+
+Static-object paths are paired: `object_instances` and
+`object_model_directory` are either both present or both absent. Prop
+axis/heading conversion is required only when static props exist.
+
+Server-coordinate conversion is always required for a loaded zone.
+`ZoneWorldSpace` therefore requires the server axis map and positive server
+heading units independently of whether the zone contains props.
+
+A populated zone may omit `npc_model_directory` when its NPC presentation
+policy uses project-owned placeholders. Halas retains its explicit
+source-model/skip presentation policy as zone data; that policy is not a
+global runtime assumption.
+
 ## Spawn ownership
 
 The neutral model follows the source distinction visible in EQEmu:
@@ -102,21 +132,44 @@ The structural split is informed by:
 EQ Mobile reimplements these concepts as offline Godot-native data/state. It
 does not port EQEmu server/database infrastructure.
 
+ProjectEQ SQL-dump mechanics and classic/content-flag availability filtering
+live in the neutral `tools/peq_sql.py` module. Generic import tooling such as
+`tools/zone_pipeline.py` and `tools/import_phase2_identity.py` must consume
+that neutral boundary rather than importing helpers from a Halas-specific
+importer. Halas-specific importers may still compose those shared helpers with
+Halas-specific source/output policy.
+
 ## Foundation gate
 
 Adding zone #2 must not require another `Main` implementation.
 
-The remaining Phase 6 work is therefore to:
+The Phase 6 foundation now proves that:
 
-1. route startup content through `ZoneDefinitionLoader`;
-2. make world geometry, props, environment and coordinate transforms consume
-   ZoneDefinition data rather than Halas constants;
-3. replace the Halas-only population/adapter boundary with a generic
-   zone-spawn presentation/runtime bridge;
-4. persist `ZoneRuntimeState` per zone;
-5. support unload/reload through one runtime zone host;
-6. extend the existing zone pipeline validator to enforce these contracts;
-7. import/review doors and zone transitions separately from the architecture.
+1. startup content is selected through `ZoneDefinitionLoader`;
+2. geometry, optional props, environment, and coordinate transforms consume
+   `ZoneDefinition` data rather than Halas constants;
+3. NPC composition uses the generic `ZoneNpcPopulation` and
+   `ZoneEntityAdapter` presentation/runtime bridge;
+4. NPC source coordinates pass through the active `ZoneWorldSpace`;
+5. zones with no NPCs, world objects, transitions, or static props are valid;
+6. populated zones can use placeholder NPC presentation without importing
+   Halas character models;
+7. `ZoneRuntimeState` is isolated and persisted per zone;
+8. `ZoneHost` and `ZonePresentationHost` support unload/reload through one
+   active-zone lifecycle;
+9. the generic zone pipeline supports zones with no static props and applies
+   classic/content-flag filtering to imported spawn candidates;
+10. Halas -> project fixture -> Halas reconstructs transient actors while
+    preserving persistent player and per-zone runtime state.
+
+The project-authored non-Halas population probe additionally uses a different
+server axis map, 1024 heading units per turn, no character-model directory,
+placeholder presentation, and a zone-scoped runtime actor identity. This is an
+architecture fixture only; it is not claimed EverQuest content.
+
+Authentic doors, zone-line content, additional classic-zone datasets, and
+reviewed source-specific presentation rules remain later content work rather
+than prerequisites for the generic foundation.
 ## Spawn selection authority
 
 `ZoneSpawnResolver` is the generic definition-resolution boundary. During the
@@ -138,11 +191,16 @@ build a view for it, but may not reroll or replace that selection.
 the current grid identity, patrol waypoint index, waypoint pause remaining,
 world-space position, and world-space heading.
 
-During the Halas migration, `HalasNpcPopulation` remains the compatibility
-movement controller and visual presentation. It must read the canonical patrol
-values from `ZoneRuntimeState` before movement and write the resulting pose and
-patrol state back afterward. Its local actor patrol fields are compatibility
-mirrors only and are not the persistence authority.
+`ZoneNpcPopulation` is the generic movement controller and visual presentation
+bridge. It reads canonical patrol values from `ZoneRuntimeState` before
+movement and writes the resulting pose and patrol state back afterward. Its
+local actor patrol fields are presentation/runtime mirrors only and are not
+the persistence authority.
+
+Zone-specific appearance behavior belongs in the zone's `npc_presentation`
+profile. Halas model-family rules, source-model fallback policy, visual-facing
+offsets, terrain calibration, and coordinate-audit candidates are therefore
+Halas data rather than generic population code.
 
 Authored grid waypoints remain content definition data. Runtime location,
 waypoint progress, and pause progress are mutable zone state and must survive
@@ -195,11 +253,14 @@ snapshot already held by the state store. Unloading captures the active runtime
 before clearing active-zone references. Reloading therefore reconstructs
 runtime state independently of presentation nodes.
 
-During the migration, `main.gd` keeps compatibility aliases for the host-owned
-runtime/store/resolver and still constructs geometry, world objects, Halas NPC
-presentation, player nodes, and UI. Those presentation responsibilities move
-behind the zone boundary in later slices; they are deliberately not part of
-this first lifecycle extraction.
+`main.gd` remains the composition/orchestration root between the host-owned
+runtime/store/resolver and presentation systems. It constructs active-zone
+geometry, world objects, generic NPC presentation, persistent player nodes,
+and UI, but it no longer selects an NPC population implementation from the
+zone name.
+
+Those presentation responsibilities remain outside `ZoneHost`; the host stays
+presentation-agnostic and owns only active-zone domain/runtime lifecycle.
 ## Active-zone presentation lifetime
 
 `ZonePresentationHost` owns one `ActiveZonePresentation` root for the prepared active zone.
@@ -252,9 +313,12 @@ domain actors and view bindings are released before the zone presentation is
 detached.
 ## Executable zone transition staging
 
-The first executable zone-transition slice uses a project-original geometry-empty
-fixture zone, `eqm:zone:phase6_transition_fixture`. It is explicitly test
-content and is not presented as authentic EverQuest geography or behavior.
+The first executable zone-transition slice uses a project-original
+geometry-empty and content-empty fixture zone,
+`eqm:zone:phase6_transition_fixture`. It is explicitly test content and is not
+presented as authentic EverQuest geography or behavior. Its `content_refs`
+object is intentionally empty so transition testing also proves that optional
+zone content is not a hidden Halas requirement.
 
 A coordinate-based `ZoneTransitionRequest` is executed in this order:
 

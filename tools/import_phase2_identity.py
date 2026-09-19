@@ -17,7 +17,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from import_peq_halas import as_int, rows_for_table, table_columns
+from peq_sql import as_int, rows_for_table, table_columns
 
 ROOT = Path(__file__).resolve().parents[1]
 SQL_MEMBER = "peq-dump/create_tables_content.sql"

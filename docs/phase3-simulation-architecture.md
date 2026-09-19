@@ -36,15 +36,36 @@ This pause-on-close behavior is recorded as `DEV-010` in `docs/deviation-registr
 
 `SimulationRng` is the single simulation RNG abstraction. Its seed and generator state are serializable. Tests provide fixed seeds. The same initial state, elapsed-time advances, commands, and seed therefore reproduce the same stochastic damage sequence.
 
-The persistence boundary encodes the RNG's 64-bit seed and generator state as decimal strings inside schema-version-2 JSON and decodes them back to integers before restoring the simulation. This preserves exact deterministic continuation across actual save-file I/O while remaining able to read existing schema-version-2 envelopes whose RNG fields are numeric.
+Phase 3 introduced persistence of the RNG's 64-bit seed and generator state as
+decimal strings in the save envelope, decoding them back to integers before
+restoring the simulation. Later save-schema revisions retain that exact
+deterministic representation while adding zone-state data. Existing supported
+older envelopes remain migration inputs rather than a second RNG format.
 
 The existing Halas spawn-roster selection based on `spawn2_id % total_weight` remains explicitly deterministic content selection; it is not a simulation random roll.
 
 ## Content and provenance
 
-`ContentService` is the gameplay JSON repository boundary. Zone, item, class/ability, faction, merchant, and NPC datasets are loaded once and exposed by stable keys/references. `HalasNpcPopulation` receives already-loaded NPC content and remains a presentation adapter.
+`ContentService` is the gameplay JSON repository boundary. Zone, item,
+class/ability, faction, merchant, and NPC datasets are exposed through stable
+keys/references. Zone-owned optional datasets resolve to neutral empty state
+when a valid zone omits them; global required content keeps its explicit
+requirements.
 
-Imported Halas source HP, AC, damage, delay, loot, faction, and merchant fields remain provenance metadata. `HalasEntityAdapter` creates imported runtime entities with combat disabled by default. The Phase 3 foundation test uses an explicit project-owned safe test override only to prove that an imported NPC can traverse the same generic combat/lifecycle pipeline; it never promotes unreviewed PEQ values to authoritative gameplay data.
+Active zone NPC composition uses the presentation-layer
+`ZoneNpcPopulation`/`ZoneEntityAdapter` bridge. The population consumes
+already-resolved SpawnPoint/NPC definitions and the active `ZoneWorldSpace`;
+it does not choose SpawnGroup candidates. Zone-specific appearance quirks
+remain presentation data rather than domain rules.
+
+Imported Halas source HP, AC, damage, delay, loot, faction, and merchant fields
+remain provenance metadata. The generic adapter creates imported runtime
+entities with combat disabled by default. Halas-specific source/provenance
+helpers may remain in tests and import tooling, but the active runtime
+composition path does not depend on a Halas adapter. The Phase 3 foundation
+test uses an explicit project-owned safe test override only to prove that an
+imported NPC can traverse the same generic combat/lifecycle pipeline; it never
+promotes unreviewed PEQ values to authoritative gameplay data.
 
 The foundation gate resolves its imported NPC through the actual typed relationship chain:
 
@@ -54,7 +75,13 @@ The test deliberately selects a spawn-referenced NPC for which source HP, damage
 
 ## Persistence
 
-`PersistenceService` is the only owner of the production `user://offline_slice_save.json` path. Save schema version 2 stores a simulation snapshot instead of reconstructing authoritative gameplay fields in `main.gd`. It centralizes JSON validation, invalid/corrupt handling, zone checks, migration from the former flat save structure, and deterministic RNG persistence.
+`PersistenceService` is the only owner of the production
+`user://offline_slice_save.json` path. Phase 3 introduced schema version 2 as
+a simulation snapshot instead of reconstructing authoritative gameplay fields
+in `main.gd`; subsequent phases extend that envelope through migration rather
+than restoring scattered save ownership. The current zone-runtime contract
+uses schema 5 for per-zone state while preserving the same service boundary,
+validation, migration, and deterministic RNG requirements.
 
 Phase 3 tests use separate Phase 3-only temporary `user://` paths. They exercise `save_simulation()` and `load_simulation()` rather than only serialization helpers and clean the temporary files before and after use.
 

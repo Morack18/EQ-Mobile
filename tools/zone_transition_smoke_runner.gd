@@ -53,7 +53,7 @@ func _run() -> void:
 
     var halas_ids_variant: Variant = (
         game.get(
-            "halas_spawn_entity_ids"
+            "zone_spawn_entity_ids"
         )
     )
     var halas_ids: Dictionary = (
@@ -167,7 +167,7 @@ func _run() -> void:
 
     _expect(
         game.get(
-            "halas_population"
+            "zone_npc_population"
         ) == null,
         "Halas NPC presentation survived fixture transition."
     )

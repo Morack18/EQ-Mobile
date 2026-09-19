@@ -19,7 +19,15 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from import_peq_halas import CLASSIC_EXPANSION, as_float, as_int, is_available_in_classic, rows_for_table
+from peq_sql import (
+    CLASSIC_EXPANSION,
+    as_float,
+    as_int,
+    is_available_in_classic,
+    rows_for_table,
+    spawnentry_available_in_classic,
+    table_columns,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,9 +72,24 @@ def load_config(value: str) -> tuple[Path, dict[str, Any]]:
     runtime = config.get("runtime")
     if not isinstance(runtime, dict):
         fail("config.runtime must be an object")
-    for key in ("zone_definition", "geometry", "placement_manifest", "prop_directory"):
+    for key in ("zone_definition", "geometry"):
         if not isinstance(runtime.get(key), str) or not runtime[key]:
             fail(f"config.runtime.{key} must be a non-empty project-relative path")
+
+    placement = runtime.get("placement_manifest", "")
+    props = runtime.get("prop_directory", "")
+
+    if placement is None:
+        placement = ""
+    if props is None:
+        props = ""
+
+    if not isinstance(placement, str) or not isinstance(props, str):
+        fail("config.runtime placement_manifest and prop_directory must be strings when supplied")
+
+    if bool(placement) != bool(props):
+        fail("config.runtime placement_manifest and prop_directory must be supplied together")
+
     return path, config
 
 
@@ -144,8 +167,6 @@ def placement_rows(path: Path) -> list[list[str]]:
                 rows.append(row)
     except FileNotFoundError:
         fail(f"missing placement manifest: {path.relative_to(ROOT)}")
-    if not rows:
-        fail("placement manifest has no object records")
     return rows
 
 
@@ -164,47 +185,155 @@ def validate(config_path: Path, config: dict[str, Any]) -> dict[str, Any]:
     runtime: dict[str, str] = config["runtime"]
     zone_path = project_path(runtime["zone_definition"], "runtime.zone_definition")
     geometry_path = project_path(runtime["geometry"], "runtime.geometry")
-    manifest_path = project_path(runtime["placement_manifest"], "runtime.placement_manifest")
-    props_path = project_path(runtime["prop_directory"], "runtime.prop_directory")
     zone = read_json(zone_path, "zone definition")
-    for path, label in ((geometry_path, "geometry"), (props_path, "prop directory")):
-        if not path.exists():
-            fail(f"missing {label}: {path.relative_to(ROOT)}")
+
+    if not geometry_path.exists():
+        fail(f"missing geometry: {geometry_path.relative_to(ROOT)}")
+
     if zone.get("geometry_scene") != "res://" + runtime["geometry"]:
         fail("zone definition geometry_scene does not match runtime.geometry")
-    if zone.get("object_instances") != "res://" + runtime["placement_manifest"]:
-        fail("zone definition object_instances does not match runtime.placement_manifest")
-    if zone.get("object_model_directory") != "res://" + runtime["prop_directory"]:
-        fail("zone definition object_model_directory does not match runtime.prop_directory")
+
     compensation = zone.get("geometry_scale")
     if not isinstance(compensation, (int, float)) or isinstance(compensation, bool):
         fail("zone definition geometry_scale must be numeric")
+
     root_scale = glb_root_scale(geometry_path)
-    if not math.isclose(root_scale * float(compensation), 1.0, abs_tol=0.000001):
-        fail(f"geometry root scale {root_scale:g} × compensation {compensation:g} does not equal 1")
-    rows = placement_rows(manifest_path)
-    models = sorted({row[0] for row in rows})
-    missing = [name for name in models if not (props_path / f"{name}.glb").is_file()]
-    if missing:
-        fail("placement models absent from runtime prop directory: " + ", ".join(missing))
+    if not math.isclose(
+        root_scale * float(compensation),
+        1.0,
+        abs_tol=0.000001,
+    ):
+        fail(
+            f"geometry root scale {root_scale:g} × compensation "
+            f"{compensation:g} does not equal 1"
+        )
+
+    placement_value = runtime.get("placement_manifest", "")
+    props_value = runtime.get("prop_directory", "")
+    has_static_props = bool(placement_value)
+
+    rows: list[list[str]] = []
+    models: list[str] = []
+    props_path: Path | None = None
+
+    if has_static_props:
+        manifest_path = project_path(
+            placement_value,
+            "runtime.placement_manifest",
+        )
+        props_path = project_path(
+            props_value,
+            "runtime.prop_directory",
+        )
+
+        if not props_path.exists():
+            fail(
+                f"missing prop directory: "
+                f"{props_path.relative_to(ROOT)}"
+            )
+
+        if zone.get("object_instances") != "res://" + placement_value:
+            fail(
+                "zone definition object_instances does not match "
+                "runtime.placement_manifest"
+            )
+
+        if zone.get("object_model_directory") != "res://" + props_value:
+            fail(
+                "zone definition object_model_directory does not match "
+                "runtime.prop_directory"
+            )
+
+        rows = placement_rows(manifest_path)
+        models = sorted({row[0] for row in rows})
+
+        missing = [
+            name
+            for name in models
+            if not (props_path / f"{name}.glb").is_file()
+        ]
+
+        if missing:
+            fail(
+                "placement models absent from runtime prop directory: "
+                + ", ".join(missing)
+            )
+    else:
+        if zone.get("object_instances", "") not in ("", None):
+            fail(
+                "zone definition declares object_instances but "
+                "pipeline has no static-prop configuration"
+            )
+        if zone.get("object_model_directory", "") not in ("", None):
+            fail(
+                "zone definition declares object_model_directory but "
+                "pipeline has no static-prop configuration"
+            )
+
     sources = config.get("sources", {})
     if sources:
         if not isinstance(sources, dict):
             fail("config.sources must be an object when supplied")
-        for runtime_key, source_key in (("geometry", "geometry"), ("placement_manifest", "placement_manifest")):
+
+        for runtime_key, source_key in (
+            ("geometry", "geometry"),
+            ("placement_manifest", "placement_manifest"),
+        ):
             source_value = sources.get(source_key)
+
             if source_value is None:
                 continue
-            source_path = project_path(source_value, f"sources.{source_key}")
-            runtime_path = project_path(runtime[runtime_key], f"runtime.{runtime_key}")
+
+            runtime_value = runtime.get(runtime_key, "")
+            if not runtime_value:
+                fail(
+                    f"sources.{source_key} is configured without "
+                    f"runtime.{runtime_key}"
+                )
+
+            source_path = project_path(
+                source_value,
+                f"sources.{source_key}",
+            )
+            runtime_path = project_path(
+                runtime_value,
+                f"runtime.{runtime_key}",
+            )
+
             if not source_path.is_file():
-                fail(f"missing source {source_key}: {source_path.relative_to(ROOT)}")
+                fail(
+                    f"missing source {source_key}: "
+                    f"{source_path.relative_to(ROOT)}"
+                )
+
             if source_path.read_bytes() != runtime_path.read_bytes():
                 fail(f"runtime {runtime_key} differs from configured source")
-    package_paths = [runtime["zone_definition"], runtime["placement_manifest"]]
-    for glb_path in [geometry_path] + [props_path / f"{model}.glb" for model in models]:
-        relative_glb = str(glb_path.relative_to(ROOT))
-        package_paths.extend([relative_glb + ".import", imported_scene_path(glb_path)])
+
+    package_paths = [runtime["zone_definition"]]
+
+    geometry_relative = str(geometry_path.relative_to(ROOT))
+    package_paths.extend(
+        [
+            geometry_relative + ".import",
+            imported_scene_path(geometry_path),
+        ]
+    )
+
+    if has_static_props:
+        package_paths.append(placement_value)
+
+        assert props_path is not None
+
+        for model in models:
+            glb_path = props_path / f"{model}.glb"
+            relative_glb = str(glb_path.relative_to(ROOT))
+            package_paths.extend(
+                [
+                    relative_glb + ".import",
+                    imported_scene_path(glb_path),
+                ]
+            )
+
     result = {
         "zone_id": config["zone_id"],
         "placements": len(rows),
@@ -213,7 +342,13 @@ def validate(config_path: Path, config: dict[str, Any]) -> dict[str, Any]:
         "geometry_scale": float(compensation),
         "package_paths": package_paths,
     }
-    print("PASS: %(zone_id)s — %(placements)d placements, %(models)d prop models, root scale %(root_scale)g × %(geometry_scale)g = 1." % result)
+
+    print(
+        "PASS: %(zone_id)s — %(placements)d placements, "
+        "%(models)d prop models, root scale %(root_scale)g × "
+        "%(geometry_scale)g = 1."
+        % result
+    )
     return result
 
 
@@ -229,49 +364,165 @@ def copy_asset_and_sidecars(source: Path, destination: Path, copied: set[Path]) 
 
 
 def stage_assets(config: dict[str, Any], overwrite: bool) -> None:
-    """Stage one extracted zone into its declared runtime paths.
-
-    The config's staging section names the three Lantern-export inputs. This
-    command never modifies resources/ and refuses to overwrite runtime outputs
-    unless explicitly asked.
-    """
+    """Stage one extracted zone into its declared runtime paths."""
     staging = config.get("staging")
     if not isinstance(staging, dict):
         fail("stage-assets requires a config.staging object")
-    for key in ("geometry_source", "placement_source", "prop_source_directory"):
-        if not isinstance(staging.get(key), str) or not staging[key]:
-            fail(f"config.staging.{key} must be a non-empty project-relative path")
+
+    geometry_source_value = staging.get("geometry_source")
+    if (
+        not isinstance(geometry_source_value, str)
+        or not geometry_source_value
+    ):
+        fail(
+            "config.staging.geometry_source must be a non-empty "
+            "project-relative path"
+        )
+
     runtime: dict[str, str] = config["runtime"]
-    geometry_source = project_path(staging["geometry_source"], "staging.geometry_source")
-    placement_source = project_path(staging["placement_source"], "staging.placement_source")
-    source_props = project_path(staging["prop_source_directory"], "staging.prop_source_directory")
-    geometry_destination = project_path(runtime["geometry"], "runtime.geometry")
-    manifest_destination = project_path(runtime["placement_manifest"], "runtime.placement_manifest")
-    destination_props = project_path(runtime["prop_directory"], "runtime.prop_directory")
-    for path, label in ((geometry_source, "geometry source"), (placement_source, "placement source"), (source_props, "prop source directory")):
-        if not path.exists():
-            fail(f"missing {label}: {path.relative_to(ROOT)}")
-    if not geometry_source.is_file() or geometry_source.suffix.lower() != ".glb":
+    geometry_source = project_path(
+        geometry_source_value,
+        "staging.geometry_source",
+    )
+    geometry_destination = project_path(
+        runtime["geometry"],
+        "runtime.geometry",
+    )
+
+    if (
+        not geometry_source.is_file()
+        or geometry_source.suffix.lower() != ".glb"
+    ):
         fail("staging.geometry_source must be a .glb file")
-    if not placement_source.is_file() or not source_props.is_dir():
-        fail("staging placement source must be a file and prop source must be a directory")
-    rows = placement_rows(placement_source)
-    model_names = sorted({row[0] for row in rows})
-    source_models = [source_props / f"{model}.glb" for model in model_names]
-    missing = [path.name for path in source_models if not path.is_file()]
-    if missing:
-        fail("placement models missing from source prop directory: " + ", ".join(missing))
-    outputs = [geometry_destination, manifest_destination] + [destination_props / path.name for path in source_models]
-    existing = [path for path in outputs if path.exists()]
+
+    placement_value = runtime.get("placement_manifest", "")
+    props_value = runtime.get("prop_directory", "")
+    has_static_props = bool(placement_value)
+
+    rows: list[list[str]] = []
+    source_models: list[Path] = []
+    manifest_destination: Path | None = None
+    destination_props: Path | None = None
+    placement_source: Path | None = None
+
+    if has_static_props:
+        placement_source_value = staging.get("placement_source")
+        source_props_value = staging.get("prop_source_directory")
+
+        if (
+            not isinstance(placement_source_value, str)
+            or not placement_source_value
+            or not isinstance(source_props_value, str)
+            or not source_props_value
+        ):
+            fail(
+                "static-prop staging requires placement_source and "
+                "prop_source_directory"
+            )
+
+        placement_source = project_path(
+            placement_source_value,
+            "staging.placement_source",
+        )
+        source_props = project_path(
+            source_props_value,
+            "staging.prop_source_directory",
+        )
+        manifest_destination = project_path(
+            placement_value,
+            "runtime.placement_manifest",
+        )
+        destination_props = project_path(
+            props_value,
+            "runtime.prop_directory",
+        )
+
+        if (
+            not placement_source.is_file()
+            or not source_props.is_dir()
+        ):
+            fail(
+                "staging placement source must be a file and "
+                "prop source must be a directory"
+            )
+
+        rows = placement_rows(placement_source)
+        model_names = sorted({row[0] for row in rows})
+        source_models = [
+            source_props / f"{model}.glb"
+            for model in model_names
+        ]
+
+        missing = [
+            path.name
+            for path in source_models
+            if not path.is_file()
+        ]
+
+        if missing:
+            fail(
+                "placement models missing from source prop directory: "
+                + ", ".join(missing)
+            )
+
+    outputs = [geometry_destination]
+
+    if has_static_props:
+        assert manifest_destination is not None
+        assert destination_props is not None
+        outputs.append(manifest_destination)
+        outputs.extend(
+            destination_props / path.name
+            for path in source_models
+        )
+
+    existing = [
+        path
+        for path in outputs
+        if path.exists()
+    ]
+
     if existing and not overwrite:
-        fail("refusing to overwrite runtime files; rerun with --overwrite: " + ", ".join(str(path.relative_to(ROOT)) for path in existing[:5]))
+        fail(
+            "refusing to overwrite runtime files; rerun with --overwrite: "
+            + ", ".join(
+                str(path.relative_to(ROOT))
+                for path in existing[:5]
+            )
+        )
+
     copied: set[Path] = set()
-    copy_asset_and_sidecars(geometry_source, geometry_destination, copied)
-    manifest_destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(placement_source, manifest_destination)
-    for source_model in source_models:
-        copy_asset_and_sidecars(source_model, destination_props / source_model.name, copied)
-    print(f"STAGED: {config['zone_id']} — geometry, {len(rows)} placements, {len(model_names)} prop GLBs, and {len(copied) - len(model_names) - 1} external GLB sidecars.")
+    copy_asset_and_sidecars(
+        geometry_source,
+        geometry_destination,
+        copied,
+    )
+
+    if has_static_props:
+        assert placement_source is not None
+        assert manifest_destination is not None
+        assert destination_props is not None
+
+        manifest_destination.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        shutil.copy2(
+            placement_source,
+            manifest_destination,
+        )
+
+        for source_model in source_models:
+            copy_asset_and_sidecars(
+                source_model,
+                destination_props / source_model.name,
+                copied,
+            )
+
+    print(
+        f"STAGED: {config['zone_id']} — geometry, "
+        f"{len(rows)} placements, {len(source_models)} prop GLBs."
+    )
 
 
 def import_npcs(config: dict[str, Any], archive_value: str, overwrite: bool) -> None:
@@ -311,12 +562,25 @@ def import_npcs(config: dict[str, Any], archive_value: str, overwrite: bool) -> 
     group_ids = {spawn["spawn_group_id"] for spawn in spawns}
     candidates: dict[int, list[dict[str, int]]] = {group: [] for group in group_ids}
     npc_ids: set[int] = set()
+    spawnentry_columns = table_columns(
+        archive,
+        "spawnentry",
+    )
     for row in rows_for_table(archive, "spawnentry"):
         group_id = as_int(row[0])
-        if group_id in candidates:
-            npc_id = as_int(row[1])
-            npc_ids.add(npc_id)
-            candidates[group_id].append({"npc_type_id": npc_id, "chance": as_int(row[2])})
+        if group_id not in candidates:
+            continue
+        if not spawnentry_available_in_classic(
+            row,
+            spawnentry_columns,
+        ):
+            continue
+        npc_id = as_int(row[1])
+        npc_ids.add(npc_id)
+        candidates[group_id].append({
+            "npc_type_id": npc_id,
+            "chance": as_int(row[2]),
+        })
     npc_types: dict[int, dict[str, Any]] = {}
     for row in rows_for_table(archive, "npc_types"):
         npc_id = as_int(row[0])

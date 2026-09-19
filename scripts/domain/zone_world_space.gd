@@ -4,6 +4,7 @@ extends RefCounted
 var definition: Dictionary = {}
 var contract: Dictionary = {}
 var last_error := ""
+var _object_transform_enabled := false
 
 
 func _init(
@@ -47,16 +48,6 @@ func configure(
             "Zone server axis map is invalid"
         )
 
-    if not _axis_map_is_valid(
-        contract.get(
-            "lantern_prop_axis_map",
-            []
-        )
-    ):
-        return _fail(
-            "Zone object axis map is invalid"
-        )
-
     var heading_units := float(
         contract.get(
             "server_heading_units_per_turn",
@@ -69,19 +60,55 @@ func configure(
             "Zone server heading units per turn must be positive"
         )
 
-    var prop_heading_sign := float(
-        contract.get(
-            "lantern_prop_heading_degrees_sign",
-            0.0
+    var object_instances := str(
+        definition.get(
+            "object_instances",
+            ""
+        )
+    )
+    var object_model_directory := str(
+        definition.get(
+            "object_model_directory",
+            ""
         )
     )
 
-    if is_zero_approx(
-        prop_heading_sign
+    if (
+        object_instances.is_empty()
+        != object_model_directory.is_empty()
     ):
         return _fail(
-            "Zone object heading sign must be non-zero"
+            "Zone static-object placement and model directory must be declared together"
         )
+
+    _object_transform_enabled = (
+        not object_instances.is_empty()
+    )
+
+    if _object_transform_enabled:
+        if not _axis_map_is_valid(
+            contract.get(
+                "lantern_prop_axis_map",
+                []
+            )
+        ):
+            return _fail(
+                "Zone object axis map is invalid"
+            )
+
+        var prop_heading_sign := float(
+            contract.get(
+                "lantern_prop_heading_degrees_sign",
+                0.0
+            )
+        )
+
+        if is_zero_approx(
+            prop_heading_sign
+        ):
+            return _fail(
+                "Zone object heading sign must be non-zero"
+            )
 
     last_error = ""
     return true
@@ -89,6 +116,13 @@ func configure(
 
 func is_valid() -> bool:
     return last_error.is_empty()
+
+
+func has_object_transform() -> bool:
+    return (
+        is_valid()
+        and _object_transform_enabled
+    )
 
 
 func server_position(
@@ -133,6 +167,10 @@ func object_position(
         is_valid(),
         last_error
     )
+    assert(
+        has_object_transform(),
+        "Zone has no static-object coordinate transform"
+    )
 
     return EqWorldSpace.map_position(
         source,
@@ -148,6 +186,10 @@ func object_heading_yaw(
     assert(
         is_valid(),
         last_error
+    )
+    assert(
+        has_object_transform(),
+        "Zone has no static-object coordinate transform"
     )
 
     return deg_to_rad(

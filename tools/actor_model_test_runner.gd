@@ -30,7 +30,7 @@ func _init() -> void:
 	_test_halas_attachment_mapping()
 	_test_resources_and_runtime_snapshot()
 	_test_heading_movement_target_and_lifecycle()
-	_test_runtime_pause_freezes_halas_bridge()
+	_test_runtime_pause_freezes_zone_population()
 	_test_effect_container_and_simulation_timer()
 	_test_controller_attachment_drives_behavior()
 	_test_removed_target_cleanup()
@@ -500,10 +500,10 @@ func _test_heading_movement_target_and_lifecycle() -> void:
 	)
 
 
-func _test_runtime_pause_freezes_halas_bridge() -> void:
-	var population := HalasNpcPopulation.new()
+func _test_runtime_pause_freezes_zone_population() -> void:
+	var population := ZoneNpcPopulation.new()
 	var actor := (
-		HalasNpcPopulation.NpcActor.new()
+		ZoneNpcPopulation.NpcActor.new()
 	)
 
 	actor.node = Node3D.new()
@@ -539,20 +539,20 @@ func _test_runtime_pause_freezes_halas_bridge() -> void:
 
 	_expect(
 		population.is_runtime_paused(),
-		"Halas population did not enter runtime pause."
+		"Zone NPC population did not enter runtime pause."
 	)
 	_expect(
 		is_equal_approx(
 			actor.pause_remaining,
 			5.0
 		),
-		"Paused Halas patrol timer advanced."
+		"Paused zone NPC patrol timer advanced."
 	)
 	_expect(
 		population.movement_velocity_for_spawn(
 			actor.spawn2_id
 		) == Vector3.ZERO,
-		"Paused Halas actor retained mirrored movement velocity."
+		"Paused zone NPC actor retained mirrored movement velocity."
 	)
 
 	population.set_runtime_paused(
@@ -568,7 +568,7 @@ func _test_runtime_pause_freezes_halas_bridge() -> void:
 			actor.pause_remaining,
 			3.0
 		),
-		"Halas patrol did not resume from frozen state."
+		"Zone NPC patrol did not resume from frozen state."
 	)
 
 	actor.node.free()
