@@ -81,6 +81,8 @@ OVERLAY_TOP_LEVEL_FIELDS = {
     "zone",
     "target_era",
     "description",
+    "review",
+    "review_notes",
     "npc_types",
     "spawns",
     "grids",
@@ -252,6 +254,14 @@ def validate_overlay(overlay: dict[str, Any], source_data: dict[str, Any]) -> No
         fail(f"overlay zone must be 'halas', got {overlay.get('zone')!r}")
     if overlay.get("target_era") != "classic_p1999":
         fail(f"overlay target_era must be 'classic_p1999', got {overlay.get('target_era')!r}")
+    review = overlay.get("review", {})
+    allowed_groups = {"roster", "identity", "appearance", "patrol", "combat_reference", "movement_reference", "faction_reference", "economy_reference"}
+    if not isinstance(review, dict) or set(review) - allowed_groups:
+        fail("overlay.review must contain only known authority groups")
+    if review.get("combat_reference") == "confirmed_p1999":
+        fail("overlay.review cannot claim confirmed_p1999 combat_reference without stat corrections")
+    if not isinstance(overlay.get("review_notes", []), list):
+        fail("overlay.review_notes must be a list")
 
     source_npc_ids = {npc["id"] for npc in source_data.get("npc_types", [])}
     source_spawn_ids = {spawn["spawn2_id"] for spawn in source_data.get("spawns", [])}
@@ -541,6 +551,8 @@ def apply_overlay(
         "grids": sorted_grids,
         "npc_types": sorted_npc_types,
         "source": derived_source,
+        "review": copy.deepcopy(overlay_data.get("review", {})),
+        "review_notes": copy.deepcopy(overlay_data.get("review_notes", [])),
         "spawns": sorted_spawns,
         "spawn_groups": derived_groups,
     }

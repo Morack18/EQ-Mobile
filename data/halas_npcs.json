@@ -1814,7 +1814,7 @@
       "dataset_id": "eqm:overlay:halas-npcs-p1999-v1",
       "review_state": "pending_reviewed_corrections",
       "schema_version": 1,
-      "sha256": "e5ef0fa4e2a6487e1834f050296cb0b7dd63000e151169c2beb51c58d396b967"
+      "sha256": "55c0b9db55e684a5e48b600310f3a9f0ced931c2a01e1eb6a264c1f420d7d1e7"
     },
     "review_state": "current_unreviewed_peq",
     "sources": [
@@ -4350,6 +4350,21 @@
       "texture": 0,
       "walk_speed": 0.0
     }
+  ],
+  "review": {
+    "appearance": "source_preserved_with_runtime_model_contract",
+    "combat_reference": "unreviewed_peq_conflicts_known",
+    "economy_reference": "review_deferred",
+    "faction_reference": "review_deferred",
+    "identity": "reviewed_mixed_evidence",
+    "movement_reference": "unreviewed_peq",
+    "patrol": "best_available_reference_peq",
+    "roster": "confirmed_p1999_classic_scope"
+  },
+  "review_notes": [
+    "Arantir Karondor is a triggered Wizard Epic transformation, not a base roster spawn.",
+    "Elgar Donbrand is Non-P99 and min_expansion=3; Raven and Cet Hydorn are min_expansion=12.",
+    "bind_trap is a non-visible server helper; duplicate a_Sled_Dog rows are legitimate separate source definitions."
   ],
   "schema_id": "eqm.halas.npcs.derived",
   "schema_version": 1,

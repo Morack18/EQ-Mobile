@@ -2,6 +2,8 @@
 
 Player race/model size is source-backed. Exact Classic/P99 physical collision-hull dimensions are not established by available authoritative evidence; the current Godot capsule/controller is an explicit mobile/offline implementation adaptation. Later-client eqoxide dimensions are not labeled Classic/P99 values.
 
+Category 6 remains YELLOW: the era-filtered Halas base roster is structurally reviewed, including the four non-base/non-classic apparent wiki extras. PEQ remains the best available reference for exact path grids, while demonstrated PEQ combat-stat conflicts remain explicitly non-authoritative pending detailed stat and patrol review.
+
 This audit is the pre-Phase-7 gate for deciding whether current EQ Mobile
 gameplay/world data may be described as matching the selected
 `original_classic_pre_kunark` / P1999 target.

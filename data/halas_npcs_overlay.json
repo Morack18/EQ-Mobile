@@ -1,5 +1,20 @@
 {
   "description": "Reviewed P1999 correction overlay for Halas NPC roster, spawns, and pathgrids.",
+  "review": {
+    "roster": "confirmed_p1999_classic_scope",
+    "identity": "reviewed_mixed_evidence",
+    "appearance": "source_preserved_with_runtime_model_contract",
+    "patrol": "best_available_reference_peq",
+    "combat_reference": "unreviewed_peq_conflicts_known",
+    "movement_reference": "unreviewed_peq",
+    "faction_reference": "review_deferred",
+    "economy_reference": "review_deferred"
+  },
+  "review_notes": [
+    "Arantir Karondor is a triggered Wizard Epic transformation, not a base roster spawn.",
+    "Elgar Donbrand is Non-P99 and min_expansion=3; Raven and Cet Hydorn are min_expansion=12.",
+    "bind_trap is a non-visible server helper; duplicate a_Sled_Dog rows are legitimate separate source definitions."
+  ],
   "grids": {
     "deletions": [],
     "replacements": {}
