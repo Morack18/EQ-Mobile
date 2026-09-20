@@ -6,14 +6,17 @@ set -euo pipefail
 # GLB material set as part of its PackedScene.
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 exports_dir="${EQ_MOBILE_LANTERN_EXPORTS:-/tmp/lantern-halas-intermediate/Exports}"
+# Classic BAM combines global4_chr model data with global3_chr shared ELM
+# animations in one Intermediate export root.
+classic_bam_exports_dir="${EQ_MOBILE_CLASSIC_BAM_EXPORTS:-/tmp/lantern-player-bam-intermediate/Exports}"
 output_dir="${1:-$project_dir/assets/imported/halas/characters}"
 builder="$project_dir/resources/LanternExtractor/tools/eqmob-gui/backend/eqmob_glb.py"
 
 mkdir -p "$output_dir"
 
 build_humanoid() {
-  local family="$1" skin="$2" head="$3"
-  python3 "$builder" --exports "$exports_dir" --game \
+  local family="$1" skin="$2" head="$3" source_exports="${4:-$exports_dir}"
+  python3 "$builder" --exports "$source_exports" --game \
     --animation swimming='l06|l09' --animation treading='l08|p07' \
     --skin "$skin" --head "$head" \
     --face-uv normal --torso-uv normal \
@@ -37,6 +40,8 @@ build_wolf() {
 # skin/head tables.
 build_humanoid baf 2 3
 build_humanoid baf 3 3
+# This player fixture variant is not part of the Halas NPC source roster.
+build_humanoid bam 0 0 "$classic_bam_exports_dir"
 build_humanoid bam 2 0
 build_humanoid bam 2 1
 build_humanoid bam 2 2

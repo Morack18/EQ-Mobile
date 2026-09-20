@@ -40,7 +40,8 @@ const CAMERA_COLLISION_MARGIN := 0.35
 const PLAYER_ATTACK_ANIMATION_SECONDS := 0.45
 const NPC_LONG_PRESS_SECONDS := 0.55
 const NPC_LONG_PRESS_CANCEL_DISTANCE := 28.0
-const CHARACTER_MODEL_FACING_OFFSET := PI * 0.5
+const PlayerCharacterContractScript = preload("res://scripts/domain/player_character_contract.gd")
+const CharacterModelContractScript = preload("res://scripts/presentation/character_model_contract.gd")
 
 var zone_definition_loader: ZoneDefinitionLoader
 var current_zone_key := ""
@@ -268,6 +269,10 @@ func _configure_simulation() -> void:
 		"identity",
 		{}
 	)
+	var player_combat_size := PlayerCharacterContractScript.size_for_race(
+		int(player_identity.get("race_id", 0))
+	)
+	assert(player_combat_size > 0.0, "Player identity must resolve to a supported race size")
 
 	var player_entity := EntityFactory.create({
 		"entity_id": PLAYER_ENTITY_ID,
@@ -283,7 +288,7 @@ func _configure_simulation() -> void:
 		"base_stats": player_fixture.get("base_stats", {}).duplicate(true),
 		"derived_stats": {},
 		"spawn_position": _array_to_vector3(zone.get("player_spawn", [0.0, 0.0, 0.0])),
-		"combat_size": float(player_fixture.get("combat_size", 7.0)),
+		"combat_size": player_combat_size,
 		"max_health": float(player_fixture.get("max_health", 100.0)),
 		"max_mana": float(player_fixture.get("max_mana", 0.0)),
 		"max_endurance": float(player_fixture.get("max_endurance", 0.0)),
@@ -1668,30 +1673,38 @@ func _build_player() -> void:
 	collision_shape.shape = capsule
 	collision_shape.position.y = entity.combat_size * 0.5
 	player.add_child(collision_shape)
-	var player_model_path := str(
-		entity.appearance.get(
-			"model_path",
-			"res://assets/imported/halas/characters/hlm_s0_h0.glb"
-		)
+	var player_descriptor := CharacterModelContractScript.resolve(
+		{
+			"race_id": entity.race_id,
+			"gender_id": entity.gender_id,
+		},
+		entity.appearance,
+		_npc_presentation_profile()
 	)
+	var player_model_name := str(player_descriptor.get("model_name", ""))
+	assert(not player_model_name.is_empty(), "Player identity has no matching character model rule")
+	var player_model_path := "%s/%s.glb" % [
+		str(zone.get("npc_model_directory", "")),
+		player_model_name,
+	]
 	var player_scene := load(player_model_path) as PackedScene
 	assert(
 		player_scene != null,
 		"Missing player appearance model: %s" % player_model_path
 	)
 	player_visual = player_scene.instantiate() as Node3D
-	player_visual.name = str(
-		entity.appearance.get(
-			"model_name",
-			"HLMPlaceholder"
+	player_visual.name = player_model_name
+	player_visual.rotation.y = deg_to_rad(
+		CharacterModelContractScript.visual_facing_offset_degrees(
+			_npc_presentation_profile(),
+			player_descriptor
 		)
 	)
-	player_visual.rotation.y = CHARACTER_MODEL_FACING_OFFSET
 	player.add_child(player_visual)
 	player_animator = _animation_player_below(player_visual)
-	assert(player_animator != null, "HLM placeholder model has no AnimationPlayer")
+	assert(player_animator != null, "Player character model has no AnimationPlayer")
 	for clip in ["idle", "walk", "attack", "death", "swimming", "treading"]:
-		assert(player_animator.has_animation(clip), "HLM placeholder is missing %s animation" % clip)
+		assert(player_animator.has_animation(clip), "Player character model is missing %s animation" % clip)
 	player_animator.play("idle")
 	player_animator.advance(0.0)
 	_normalize_player_model_to_height(player_visual, entity.combat_size)

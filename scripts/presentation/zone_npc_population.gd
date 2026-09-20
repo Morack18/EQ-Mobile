@@ -9,6 +9,7 @@ extends Node3D
 const TARGET_PICK_COLLISION_LAYER := EqWorldSpace.COLLISION_LAYER_TARGET_PICK
 const TARGET_TINT := Color(0.97, 0.32, 0.29, 1.0)
 const NpcSizeContractScript = preload("res://scripts/domain/npc_size_contract.gd")
+const CharacterModelContractScript = preload("res://scripts/presentation/character_model_contract.gd")
 
 var _content: Dictionary = {}
 var _resolved_spawns: Dictionary = {}
@@ -290,10 +291,13 @@ func _build_population(content: Dictionary) -> void:
 			% spawn_key
 		)
 
-		var model_descriptor := (
-			_model_descriptor(
-				npc_type
-			)
+		var model_descriptor := CharacterModelContractScript.resolve(
+			{
+				"race_id": npc_type.get("race", 0),
+				"gender_id": npc_type.get("gender", 0),
+			},
+			npc_type,
+			_presentation_profile
 		)
 		var model_name := str(
 			model_descriptor.get(
@@ -308,15 +312,6 @@ func _build_population(content: Dictionary) -> void:
 			== "skip"
 		):
 			continue
-
-		var heading_yaw_offset := deg_to_rad(
-			float(
-				model_descriptor.get(
-					"heading_yaw_offset_degrees",
-					0.0
-				)
-			)
-		)
 
 		var actor_node := Node3D.new()
 		actor_node.name = (
@@ -372,7 +367,12 @@ func _build_population(content: Dictionary) -> void:
 				).instantiate()
 				as Node3D
 			)
-		visual.rotation.y = deg_to_rad(_visual_facing_offset_degrees()) + heading_yaw_offset
+		visual.rotation.y = deg_to_rad(
+			CharacterModelContractScript.visual_facing_offset_degrees(
+				_presentation_profile,
+				model_descriptor
+			)
+		)
 
 		visual.name = "Model"
 		actor_node.add_child(
@@ -716,182 +716,6 @@ func _terrain_cast_height() -> float:
 			)
 		)
 	)
-
-
-func _model_descriptor(
-	npc_type: Dictionary
-) -> Dictionary:
-	var explicit_model := str(
-		npc_type.get(
-			"model_name",
-			""
-		)
-	)
-
-	if not explicit_model.is_empty():
-		return {
-			"model_name":
-				explicit_model,
-			"default_size":
-				float(
-					_presentation_profile.get(
-						"default_height",
-						1.0
-					)
-				),
-			"heading_yaw_offset_degrees":
-				0.0,
-		}
-
-	var rules_variant: Variant = (
-		_presentation_profile.get(
-			"model_rules",
-			[]
-		)
-	)
-
-	if not rules_variant is Array:
-		return {}
-
-	var race_id := int(
-		npc_type.get(
-			"race",
-			0
-		)
-	)
-	var gender_id := int(
-		npc_type.get(
-			"gender",
-			0
-		)
-	)
-	var texture := int(
-		npc_type.get(
-			"texture",
-			0
-		)
-	)
-	var face := maxi(
-		0,
-		int(
-			npc_type.get(
-				"face",
-				0
-			)
-		)
-	)
-
-	for rule_variant in (
-		rules_variant as Array
-	):
-		if not rule_variant is Dictionary:
-			continue
-
-		var rule: Dictionary = (
-			rule_variant
-		)
-
-		if int(
-			rule.get(
-				"race_id",
-				-1
-			)
-		) != race_id:
-			continue
-
-		if (
-			rule.has(
-				"gender_id"
-			)
-			and int(
-				rule.get(
-					"gender_id",
-					-1
-				)
-			) != gender_id
-		):
-			continue
-
-		var descriptor := (
-			rule.duplicate(true)
-		)
-
-		var model_name := str(
-			rule.get(
-				"model_name",
-				""
-			)
-		)
-
-		if model_name.is_empty():
-			var family := str(
-				rule.get(
-					"family",
-					""
-				)
-			)
-
-			if family.is_empty():
-				return {}
-
-			model_name = (
-				_appearance_model(
-					family,
-					texture,
-					face,
-					maxi(
-						1,
-						int(
-							rule.get(
-								"skin_count",
-								1
-							)
-						)
-					),
-					maxi(
-						1,
-						int(
-							rule.get(
-								"head_count",
-								1
-							)
-						)
-					)
-				)
-			)
-
-		descriptor[
-			"model_name"
-		] = model_name
-
-		return descriptor
-
-	return {}
-
-
-func _appearance_model(
-	family: String,
-	texture: int,
-	face: int,
-	skin_count: int,
-	head_count: int
-) -> String:
-	var skin := clampi(
-		texture,
-		0,
-		skin_count - 1
-	)
-	var head := clampi(
-		face,
-		0,
-		head_count - 1
-	)
-
-	return "%s_s%d_h%d" % [
-		family,
-		skin,
-		head,
-	]
 
 
 func _presentation_scale_mode(model_descriptor: Dictionary) -> String:
