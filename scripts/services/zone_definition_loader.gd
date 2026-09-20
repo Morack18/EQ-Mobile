@@ -547,7 +547,7 @@ func validate_definition(
     if safe_point_variant is Dictionary:
         has_safe_point = _valid_vector3_array(
             safe_point_variant.get(
-                "position",
+                "position_eq",
                 []
             )
         )

@@ -1,5 +1,7 @@
 # Classic/P1999 Data Fidelity Audit
 
+Player race/model size is source-backed. Exact Classic/P99 physical collision-hull dimensions are not established by available authoritative evidence; the current Godot capsule/controller is an explicit mobile/offline implementation adaptation. Later-client eqoxide dimensions are not labeled Classic/P99 values.
+
 This audit is the pre-Phase-7 gate for deciding whether current EQ Mobile
 gameplay/world data may be described as matching the selected
 `original_classic_pre_kunark` / P1999 target.

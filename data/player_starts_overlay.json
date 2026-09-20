@@ -1,0 +1,9 @@
+{
+  "schema_id": "eqm.player_start_review_overlay",
+  "schema_version": 1,
+  "corrections": [{
+    "match": {"player_choice": 2, "race_id": 2, "class_id": 1, "deity_id": 396, "start_zone": 29},
+    "override": {"x": 54.0, "y": 139.0, "z": -0.0001220703125},
+    "evidence": {"target": "classic_p1999", "horizontal_source": "reviewed P99 Halas starting location", "source_display_loc": [139, 54], "converted_source_server_xy": [54, 139], "elevation_evidence": "derived_client_geometry"}
+  }]
+}

@@ -149,15 +149,10 @@
     "max_level": 50,
     "era_cap_basis": "original_classic_pre_kunark"
   },
-  "player_spawn_revision": 6,
+  "player_spawn_revision": 7,
   "bounds": {
     "half_extent": 820.0
   },
-  "player_spawn": [
-    -13.0,
-    4.38,
-    -10.0
-  ],
   "spawns": [
     {
       "id": "training_spark",
@@ -207,13 +202,9 @@
   },
   "safe_point": {
     "kind": "zone_safe_point",
-    "position": [
-      -13.0,
-      4.38,
-      -10.0
-    ],
+    "position_eq": [0.0, 0.0, 3.0],
     "heading_eq": 0.0,
-    "evidence": "current_eq_mobile_runtime_spawn"
+    "evidence": "PEQ zone safe point with P99 horizontal corroboration"
   },
   "content_refs": {
     "npc_population": "res://data/halas_npcs.json",

@@ -16,6 +16,9 @@
     "gender_id": 0,
     "deity_id": 396
   },
+  "start_selection": {
+    "player_choice": 2
+  },
   "base_stats": {},
   "appearance": {
     "texture": 0,

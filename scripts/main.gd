@@ -9,6 +9,8 @@ const GLOBAL_CONTENT_PATHS := {
 	"items": "res://data/items.json",
 	"player_classes": "res://data/player_classes.json",
 	"player_fixture": "res://data/player_fixture.json",
+	"player_starts_source": "res://data/player_starts_source.json",
+	"player_starts_overlay": "res://data/player_starts_overlay.json",
 	"eqemu_default_heights": "res://data/eqemu_default_heights.json",
 }
 
@@ -42,6 +44,7 @@ const NPC_LONG_PRESS_SECONDS := 0.55
 const NPC_LONG_PRESS_CANCEL_DISTANCE := 28.0
 const PlayerCharacterContractScript = preload("res://scripts/domain/player_character_contract.gd")
 const CharacterModelContractScript = preload("res://scripts/presentation/character_model_contract.gd")
+const PlayerStartContractScript = preload("res://scripts/domain/player_start_contract.gd")
 
 var zone_definition_loader: ZoneDefinitionLoader
 var current_zone_key := ""
@@ -273,6 +276,16 @@ func _configure_simulation() -> void:
 		int(player_identity.get("race_id", 0))
 	)
 	assert(player_combat_size > 0.0, "Player identity must resolve to a supported race size")
+	var start_selection: Dictionary = player_fixture.get("start_selection", {})
+	var resolved_start := PlayerStartContractScript.resolve({
+		"player_choice": int(start_selection.get("player_choice", 0)),
+		"race_id": int(player_identity.get("race_id", 0)),
+		"class_id": int(player_identity.get("class_id", 0)),
+		"deity_id": int(player_identity.get("deity_id", 0)),
+	}, content_service.player_starts_source(), content_service.player_starts_overlay())
+	assert(not resolved_start.is_empty(), "Player identity has no character-start row")
+	assert(int(resolved_start.get("start_zone", 0)) == int(zone.get("source_refs", {}).get("peq_zone", {}).get("zone_id", 0)), "Player start zone must match the initial zone")
+	var player_start_position := zone_world_space.server_position(resolved_start.get("source_position_eq", []) as Array)
 
 	var player_entity := EntityFactory.create({
 		"entity_id": PLAYER_ENTITY_ID,
@@ -287,7 +300,8 @@ func _configure_simulation() -> void:
 		"level": simulation.progression.level,
 		"base_stats": player_fixture.get("base_stats", {}).duplicate(true),
 		"derived_stats": {},
-		"spawn_position": _array_to_vector3(zone.get("player_spawn", [0.0, 0.0, 0.0])),
+		"spawn_position": player_start_position,
+		"facing": zone_world_space.server_heading_direction(float(resolved_start.get("source_heading_eq", 0.0))),
 		"combat_size": player_combat_size,
 		"max_health": float(player_fixture.get("max_health", 100.0)),
 		"max_mana": float(player_fixture.get("max_mana", 0.0)),
@@ -2354,21 +2368,13 @@ func _transition_placement(
 				"Entry-reference transition execution requires a resolved entry dataset",
 		}
 
-	# A valid request normally supplies coordinates or an entry reference.
-	# Retain the target spawn only as a defensive fixture fallback.
+	# A valid request normally supplies coordinates or an entry reference. Use
+	# only the target zone's safe/recovery point for the defensive fallback.
+	var target_world_space := ZoneWorldSpace.new(target_definition)
+	var safe_point: Dictionary = target_definition.get("safe_point", {})
 	return {
 		"ok": true,
-		"position":
-			_array_to_vector3(
-				target_definition.get(
-					"player_spawn",
-					[
-						0.0,
-						0.0,
-						0.0,
-					]
-				)
-			),
+		"position": target_world_space.server_position(safe_point.get("position_eq", []) as Array),
 	}
 
 
@@ -2388,20 +2394,7 @@ func _place_persistent_player_after_transition(
 		)
 		return false
 
-	# Death/respawn belongs to the newly active zone's configured player spawn;
-	# the transition coordinate is only the immediate entry position.
-	player_entity.spawn_position = (
-		_array_to_vector3(
-			zone.get(
-				"player_spawn",
-				[
-					0.0,
-					0.0,
-					0.0,
-				]
-			)
-		)
-	)
+	# Bind/spawn_position is character state and survives zone entry.
 	player_entity.position = (
 		target_position
 	)

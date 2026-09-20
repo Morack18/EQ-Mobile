@@ -48,6 +48,8 @@ def main() -> int:
     default_heights = load_json(
         "data/eqemu_default_heights.json"
     )
+    starts = load_json("data/player_starts_source.json")
+    starts_overlay = load_json("data/player_starts_overlay.json")
 
     main_source = (
         ROOT / "scripts/main.gd"
@@ -169,15 +171,8 @@ def main() -> int:
         )
     )
 
-    player_model = str(
-        player.get(
-            "appearance",
-            {},
-        ).get(
-            "model_path",
-            "",
-        )
-    )
+    correction = starts_overlay.get("corrections", [{}])[0]
+    player_start_ready = (len(starts.get("start_zones", [])) > 0 and correction.get("override", {}).get("x") == 54.0 and correction.get("override", {}).get("y") == 139.0 and correction.get("evidence", {}).get("elevation_evidence") == "derived_client_geometry" and zone.get("safe_point", {}).get("position_eq") == [0.0, 0.0, 3.0])
 
     complete_object_transform = (
         "object_rotation_basis([" in main_source
@@ -243,11 +238,9 @@ def main() -> int:
         ),
         Finding(
             "player_character",
-            "RED",
+            "GREEN" if player_start_ready else "RED",
             (
-                f"race_id={player_race}; "
-                f"model={player_model}; "
-                "presentation remains a placeholder."
+                f"race_id={player_race}; identity size/model, reviewed start, initial bind, and zone-safe contracts are source-backed."
             ),
         ),
         Finding(

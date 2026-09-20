@@ -56,6 +56,14 @@ func player_fixture_definition() -> Dictionary:
 	return definition.duplicate(true)
 
 
+func player_starts_source() -> Dictionary:
+	return (_documents.get("player_starts_source", {}) as Dictionary).duplicate(true)
+
+
+func player_starts_overlay() -> Dictionary:
+	return (_documents.get("player_starts_overlay", {}) as Dictionary).duplicate(true)
+
+
 func player_class_catalog() -> Dictionary:
 	var catalog: Dictionary = _documents.get("player_classes", {})
 	assert(catalog.get("classes") is Dictionary and catalog.get("abilities") is Dictionary, "Invalid player class catalog")
